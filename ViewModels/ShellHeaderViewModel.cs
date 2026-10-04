@@ -104,6 +104,7 @@ namespace Packo.ViewModels
                     await _tripRepository.UnsubscribeFromTripChangesAsync();
                     await _packingItemRepository.UnsubscribeFromPackingItemChangesAsync();
                     await _supabase.Client.Auth.SignOut();
+                    await _tripRepository.DeleteLocalTrips();
 
                     WeakReferenceMessenger.Default.Send(new LogoutCompletedMessage());
                     await Shell.Current.GoToAsync("//Home");

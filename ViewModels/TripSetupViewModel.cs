@@ -188,7 +188,7 @@ namespace Packo.ViewModels
 
             if (Session.LocalUserId == null)
             {
-                var localUser = await _localUserService.CreateLocalUserAsync();
+                var localUser = await _localUserService.GetOrCreateLocalUserAsync();
 
                 Session.SetLocalUser(localUser.LocalUserId);
             }

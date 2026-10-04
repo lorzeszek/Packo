@@ -16,6 +16,8 @@ namespace Packo.ViewModels
 
         private int _remoteTripId { get; set; }
         private int _localTripId { get; set; }
+        private bool _channelsInitialized;
+        private bool _isLoading;
 
         private string _newItemName = string.Empty;
         public string NewItemName
@@ -129,26 +131,40 @@ namespace Packo.ViewModels
 
         private async Task LoadData()
         {
+            if (_isLoading)
+                return;
+
+            _isLoading = true;
             SetBusy(true);
 
-            var tripsWithStats = await _packingItemRepository.GetPackingItemsForTripAsync(_localTripId, _remoteTripId);
-
-            MainThread.BeginInvokeOnMainThread(() =>
+            try
             {
-                Items.ReplaceRange(tripsWithStats.Select(Mappers.MapToPackingItem));
-            });
+                var tripsWithStats = await _packingItemRepository.GetPackingItemsForTripAsync(_localTripId, _remoteTripId);
 
-            //Items.ReplaceRange(tripsWithStats);
-
-            SetBusy(false);
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    Items.ReplaceRange(tripsWithStats.Select(Mappers.MapToPackingItem));
+                });
+            }
+            finally
+            {
+                SetBusy(false);
+                _isLoading = false;
+            }
         }
 
         protected override async Task OnNavigatedToAsync(IDictionary<string, object> query)
         {
             if (query.TryGetValue("remoteTripId", out var remoteTripIdObj) && query.TryGetValue("localTripId", out var localTripIdObj))
             {
-                _remoteTripId = Convert.ToInt32(remoteTripIdObj);
-                _localTripId = Convert.ToInt32(localTripIdObj);
+                var newRemoteTripId = Convert.ToInt32(remoteTripIdObj);
+                var newLocalTripId = Convert.ToInt32(localTripIdObj);
+
+                if (_channelsInitialized && newRemoteTripId == _remoteTripId && newLocalTripId == _localTripId)
+                    return;
+
+                _remoteTripId = newRemoteTripId;
+                _localTripId = newLocalTripId;
 
                 if (Session.IsAuthenticated && !await _packingItemRepository.IsChannelCreatedAsync())
                 {
@@ -158,7 +174,7 @@ namespace Packo.ViewModels
                 _packingItemRepository.PackingItemChanged -= OnPackingItemChanged;
                 _packingItemRepository.PackingItemChanged += OnPackingItemChanged;
 
-
+                _channelsInitialized = true;
 
                 await LoadData();
 
@@ -168,6 +184,7 @@ namespace Packo.ViewModels
         public override async Task OnNavigatedFromAsync(IDictionary<string, object> query)
         {
             _packingItemRepository.PackingItemChanged -= OnPackingItemChanged;
+            _channelsInitialized = false;
         }
     }
 }

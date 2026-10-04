@@ -175,7 +175,7 @@ namespace Packo
 
             //await _localUserService.GetOrCreateAsync();
 
-            var localUser = await _localUserService.GetLocalUserAsync();
+            var localUser = await _localUserService.GetOrCreateLocalUserAsync();
 
             if (localUser != null)
             {

@@ -25,9 +25,9 @@ namespace Packo.Services
             return user;
         }
 
-        public async Task<SQLiteUser?> GetLocalUserAsync()
+        public async Task<SQLiteUser> GetOrCreateLocalUserAsync()
         {
-            return await _db.Table<SQLiteUser>().FirstOrDefaultAsync();
+            return await _db.Table<SQLiteUser>().FirstOrDefaultAsync() ?? await CreateLocalUserAsync();
         }
 
         //public async Task<SQLiteUser> GetOrCreateAsync()

@@ -5,7 +5,7 @@ namespace Packo.Services.Interfaces
     public interface ILocalUserService
     {
         //Task<SQLiteUser> GetOrCreateAsync();
-        Task<SQLiteUser?> GetLocalUserAsync();
+        Task<SQLiteUser> GetOrCreateLocalUserAsync();
         Task<SQLiteUser> CreateLocalUserAsync();
         Task LinkSupabaseUserAsync(string supabaseUserId);
     }

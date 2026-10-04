@@ -1,4 +1,6 @@
-﻿using Packo.Services.Interfaces;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using Packo.Messages;
+using Packo.Services.Interfaces;
 using Supabase.Gotrue;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -128,14 +130,23 @@ namespace Packo.Services
                 if (string.IsNullOrWhiteSpace(accessToken) || string.IsNullOrWhiteSpace(refreshToken))
                     return;
 
-                _ = _supabase.Client.Auth.SetSession(accessToken, refreshToken, true);
+                // Must be awaited: this is what actually refreshes an expired access_token
+                // using the refresh_token. Previously it was fire-and-forget, which raced
+                // against GetUser(accessToken) below using the (possibly expired) stale token.
+                var session = await _supabase.Client.Auth.SetSession(accessToken, refreshToken, true);
 
-                var user = await _supabase.Client.Auth.GetUser(accessToken);
+                //var user = await _supabase.Client.Auth.GetUser(accessToken);
+
+                var user = session?.User ?? _supabase.Client.Auth.CurrentSession?.User;
 
                 if (user == null)
                     throw new Exception("User returned null");
 
                 SetUser(user);
+
+                // Notify listeners (e.g. TripListViewModel) that a session was restored,
+                // so data gets loaded even when no explicit interactive login occurred.
+                WeakReferenceMessenger.Default.Send(new LoginCompletedMessage());
             }
             catch (Exception ex)
             {
