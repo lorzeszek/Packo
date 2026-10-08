@@ -6,6 +6,7 @@ namespace Packo.Views;
 public partial class TripListPage : BasePage// ContentPage
 {
     private readonly TripListViewModel _viewModel;
+    private bool _suppressNextAppearing;
 
     public TripListPage(TripListViewModel viewModel)
     {
@@ -17,6 +18,13 @@ public partial class TripListPage : BasePage// ContentPage
     protected override async void OnDisappearing()
     {
         base.OnDisappearing();
+
+        if (_viewModel.IsLoadingModalActive)
+        {
+            _suppressNextAppearing = true;
+            return;
+        }
+
         await _viewModel.DisposeRealtimeAsync();
     }
 
@@ -24,6 +32,11 @@ public partial class TripListPage : BasePage// ContentPage
     {
         base.OnAppearing();
 
+        if (_suppressNextAppearing)
+        {
+            _suppressNextAppearing = false;
+            return;
+        }
         if (BindingContext is TripListViewModel vm)
             await vm.OnAppearingAsync();
     }

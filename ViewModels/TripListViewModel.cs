@@ -263,28 +263,41 @@ namespace Packo.ViewModels
 
         private async Task LoadData()
         {
-            var tripsWithStats = await _tripRepository.GetActiveTripsWithStatsAsync();
-
-            var tripViewModels = new List<TripViewModel>();
-
-            foreach (var item in tripsWithStats)
+            try
             {
-                item.Trip.CoverImagePath = _coverCacheService.GetOrCreateCover(item.Trip, item.PackingSummary);
+                SetBusy(true, null);
 
-                item.Trip.IsActive = item.Trip.EndDate > DateTime.Now;
+                var tripsWithStats = await _tripRepository.GetActiveTripsWithStatsAsync();
 
-                tripViewModels.Add(new TripViewModel(item.Trip)
+                var tripViewModels = new List<TripViewModel>();
+
+                foreach (var item in tripsWithStats)
                 {
-                    PackingSummary = item.PackingSummary,
-                });
+                    item.Trip.CoverImagePath = _coverCacheService.GetOrCreateCover(item.Trip, item.PackingSummary);
+
+                    item.Trip.IsActive = item.Trip.EndDate > DateTime.Now;
+
+                    tripViewModels.Add(new TripViewModel(item.Trip)
+                    {
+                        PackingSummary = item.PackingSummary,
+                    });
+                }
+
+                var orderedTrips = tripViewModels
+                    .OrderByDescending(x => x.TripModel.IsActive)
+                    .ThenBy(x => x.TripModel.StartDate);
+
+                Trips.Clear();
+                Trips.AddRange(orderedTrips);
             }
-
-            var orderedTrips = tripViewModels
-                .OrderByDescending(x => x.TripModel.IsActive)
-                .ThenBy(x => x.TripModel.StartDate);
-
-            Trips.Clear();
-            Trips.AddRange(orderedTrips);
+            catch (Exception ex)
+            {
+                // obsługa błędu
+            }
+            finally
+            {
+                SetBusy(false, null);
+            }
         }
 
         //protected override async Task OnNavigatedToAsync(IDictionary<string, object> query)
@@ -300,22 +313,36 @@ namespace Packo.ViewModels
         //    await LoadData();
         //}
 
+        private bool _isAppearing;
+
+        public bool IsLoadingModalActive => _isAppearing || Session.GlobalIsBusy;
+
         public async Task OnAppearingAsync()
         {
-            if (Session.IsAuthenticated)
+            if (_isAppearing)
+                return;
+
+            _isAppearing = true;
+
+            try
             {
-                if (!await _tripRepository.IsChannelCreatedAsync())
+                if (Session.IsAuthenticated)
                 {
-                    await _tripRepository.StartRealtimeAsync();
+                    if (!await _tripRepository.IsChannelCreatedAsync())
+                    {
+                        await _tripRepository.StartRealtimeAsync();
+                    }
+
+                    _tripRepository.TripChanged -= OnTripChanged;
+                    _tripRepository.TripChanged += OnTripChanged;
                 }
 
-                _tripRepository.TripChanged += OnTripChanged;
-
-                //_tripRepository.TripChanged -= OnTripChanged;
-
+                await LoadData();
             }
-
-            await LoadData();
+            finally
+            {
+                _isAppearing = false;
+            }
         }
 
         public override async Task OnNavigatedFromAsync(IDictionary<string, object> query)
