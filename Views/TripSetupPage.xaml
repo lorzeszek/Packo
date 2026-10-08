@@ -38,7 +38,7 @@
                             <TapGestureRecognizer Tapped="OnStartDateIconTapped" />
                         </Label.GestureRecognizers>
                     </Label>
-                    <DatePicker x:Name="StartDatePicker" Date="{Binding StartDate}" MinimumDate="{x:Static sys:DateTime.Today}" VerticalOptions="Center" />
+                    <DatePicker x:Name="StartDatePicker" Date="{Binding StartDate}" MinimumDate="{x:Static sys:DateTime.Today}" Format="dd MMM yyyy" VerticalOptions="Center" />
                 </HorizontalStackLayout>
             </StackLayout>
 
@@ -50,7 +50,7 @@
                             <TapGestureRecognizer Tapped="OnEndDateIconTapped" />
                         </Label.GestureRecognizers>
                     </Label>
-                    <DatePicker x:Name="EndDatePicker" Date="{Binding EndDate}" MinimumDate="{Binding StartDate}" VerticalOptions="Center" />
+                    <DatePicker x:Name="EndDatePicker" Date="{Binding EndDate}" MinimumDate="{Binding StartDate}" Format="dd MMM yyyy" VerticalOptions="Center" />
                 </HorizontalStackLayout>
             </StackLayout>
 

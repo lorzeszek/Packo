@@ -9,11 +9,64 @@ namespace Packo.ViewModels
 {
     public class StartViewModel : BaseViewModel
     {
-        //private readonly IGoogleAuthService _googleAuthService;
-
         public IRelayCommand LoginWithGoogleCommand => new AsyncRelayCommand(LoginWithGoogle);
 
         public ICommand StartPackingCommand => new AsyncRelayCommand(StartPackingAsync);
+
+        private TripViewModel _trip;
+        public TripViewModel Trip
+        {
+            get => _trip;
+            set
+            {
+                if (_trip != value)
+                {
+                    _trip = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(TripDestination));
+                    OnPropertyChanged(nameof(TripDatesRange));
+                    OnPropertyChanged(nameof(TripCountdown));
+                }
+            }
+        }
+
+        public string TripDestination => Trip?.Destination ?? string.Empty;
+        public string TripDatesRange => Trip?.TripDatesRange ?? string.Empty;
+        public string TripCountdown => Trip?.TripCountdown ?? string.Empty;
+
+        private bool _hasActiveTrips;
+        public bool HasActiveTrips
+        {
+            get => _hasActiveTrips;
+            set
+            {
+                if (_hasActiveTrips != value)
+                {
+                    _hasActiveTrips = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(ShowStartButton));
+                }
+            }
+        }
+
+        private bool _isDataLoaded;
+        public bool IsDataLoaded
+        {
+            get => _isDataLoaded;
+            set
+            {
+                if (_isDataLoaded != value)
+                {
+                    _isDataLoaded = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(ShowStartButton));
+                }
+            }
+        }
+
+
+
+        public bool ShowStartButton => IsDataLoaded && !HasActiveTrips;
 
         public StartViewModel(ILocalUserService localUserService, ISupabaseService supabase, ISessionService sessionService, IPackingItemRepository packingItemRepository, ITripRepository tripRepository, IGoogleAuthService googleAuthService) : base(localUserService, supabase, sessionService, packingItemRepository, tripRepository, googleAuthService)
         {
@@ -81,11 +134,40 @@ namespace Packo.ViewModels
         }
 
 
+        public async Task OnAppearingAsync()
+        {
+            var tripsWithStats = await _tripRepository.GetActiveTripsWithStatsAsync();
+            var nearestTrip = tripsWithStats?.OrderBy(t => t.Trip.StartDate).FirstOrDefault(x => x.Trip.EndDate >= DateTime.Now);
+
+            HasActiveTrips = tripsWithStats != null && tripsWithStats.Any(x => x.Trip.IsActive);
+
+            if (HasActiveTrips && nearestTrip != null)
+            {
+                Title = nearestTrip.Trip.StartDate < DateTime.Now ? "Current Trip" : "Next Trip";
+                //Title = nearestTrip.Trip.StartDate < DateTime.Now ? "Current Trip: " + (nearestTrip?.Trip.Destination) : "Next Trip: " + (nearestTrip?.Trip.Destination);
+
+                Trip = new TripViewModel(nearestTrip.Trip)
+                {
+                    PackingSummary = nearestTrip.PackingSummary,
+                };
+            }
+            else
+            {
+                Title = "Ready for your next adventure?";
+            }
+
+            IsDataLoaded = true;
+        }
+
         //protected override async Task OnNavigatedToAsync(IDictionary<string, object> query)
         //{
-        //    if (Session.IsLoggedIn)
+        //    if (Session.IsAuthenticated)
         //    {
-        //        await Shell.Current.GoToAsync(nameof(TripListPage));
+        //        var tripsWithStats = await _tripRepository.GetActiveTripsWithStatsAsync();
+
+        //        var nearestTrip = tripsWithStats.OrderBy(t => t.Trip.StartDate).FirstOrDefault();
+
+        //        Title = "Next Trip: " + (nearestTrip?.Trip.Destination ?? "None");
         //    }
         //}
     }

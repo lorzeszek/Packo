@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Packo.Models.DTO;
+using System;
 
 namespace Packo.ViewModels
 {
@@ -11,6 +12,9 @@ namespace Packo.ViewModels
         public string Destination => TripModel.Destination;
 
         public string TripDatesRange => GetTripDatesRange();
+        public string TripDaysToGo => GetTripDaysToGo();
+        public string TripDaysRemaining => GetTripDaysRemaining();
+        public string TripCountdown => HasTripStarted() ? TripDaysRemaining : TripDaysToGo;
 
         private string _packingSummary = string.Empty;
         public string PackingSummary
@@ -52,6 +56,45 @@ namespace Packo.ViewModels
                 return $"{startDate:dd MMM yyyy} - {endDate:dd MMM yyyy}";
         }
 
+        private bool HasTripStarted()
+        {
+            var startDate = TripModel.StartDate;
+            return startDate.HasValue && startDate.Value.Date <= DateTime.Today;
+        }
+
+        private string GetTripDaysToGo()
+        {
+            var startDate = TripModel.StartDate;
+
+            if (!startDate.HasValue)
+                return string.Empty;
+
+            var days = (startDate.Value.Date - DateTime.Today).Days;
+
+            if (days <= 0)
+                return "Starts today";
+
+            return days == 1 ? "1 day to go" : $"{days} days to go";
+        }
+
+        private string GetTripDaysRemaining()
+        {
+            var endDate = TripModel.EndDate;
+
+            if (!endDate.HasValue)
+                return string.Empty;
+
+            var days = (endDate.Value.Date - DateTime.Today).Days;
+
+            if (days < 0)
+                return "Trip ended";
+
+            if (days == 0)
+                return "Last day";
+
+            return days == 1 ? "1 day remaining" : $"{days} days remaining";
+        }
+
         public void UpdateFromTrip(TripDTO trip)
         {
             TripModel.Destination = trip.Destination;
@@ -69,6 +112,10 @@ namespace Packo.ViewModels
             OnPropertyChanged(nameof(TripModel.EndDate));
             OnPropertyChanged(nameof(TripModel.ModifiedDate));
             OnPropertyChanged(nameof(TripModel.RemoteUserId));
+            OnPropertyChanged(nameof(TripDatesRange));
+            OnPropertyChanged(nameof(TripDaysToGo));
+            OnPropertyChanged(nameof(TripDaysRemaining));
+            OnPropertyChanged(nameof(TripCountdown));
         }
 
         //public event PropertyChangedEventHandler? PropertyChanged;

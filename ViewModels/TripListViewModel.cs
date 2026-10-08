@@ -265,18 +265,26 @@ namespace Packo.ViewModels
         {
             var tripsWithStats = await _tripRepository.GetActiveTripsWithStatsAsync();
 
-            Trips.Clear();
+            var tripViewModels = new List<TripViewModel>();
 
             foreach (var item in tripsWithStats)
             {
                 item.Trip.CoverImagePath = _coverCacheService.GetOrCreateCover(item.Trip, item.PackingSummary);
 
-                Trips.Add(new TripViewModel(item.Trip)
+                item.Trip.IsActive = item.Trip.EndDate > DateTime.Now;
+
+                tripViewModels.Add(new TripViewModel(item.Trip)
                 {
                     PackingSummary = item.PackingSummary,
                 });
             }
 
+            var orderedTrips = tripViewModels
+                .OrderByDescending(x => x.TripModel.IsActive)
+                .ThenBy(x => x.TripModel.StartDate);
+
+            Trips.Clear();
+            Trips.AddRange(orderedTrips);
         }
 
         //protected override async Task OnNavigatedToAsync(IDictionary<string, object> query)

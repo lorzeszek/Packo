@@ -74,7 +74,7 @@ namespace Packo.ViewModels
 
         [ObservableProperty]
         [NotifyCanExecuteChangedFor("CreateTripCommand")]
-        private DateTime endDate = DateTime.Today.AddDays(1);
+        private DateTime endDate = DateTime.Today.AddDays(1).Add(new TimeSpan(23, 59, 0));
 
         [ObservableProperty]
         [NotifyCanExecuteChangedFor("CreateTripCommand")]
@@ -97,17 +97,34 @@ namespace Packo.ViewModels
 
         partial void OnStartDateChanged(DateTime value)
         {
-            if (value < DateTime.Today)
-                StartDate = DateTime.Today;
+            var normalized = value.Date;
+            if (normalized != value)
+            {
+                StartDate = normalized;
+                return;
+            }
 
-            if (EndDate < value)
-                EndDate = value;
+            if (normalized < DateTime.Today)
+            {
+                StartDate = DateTime.Today;
+                return;
+            }
+
+            if (EndDate.Date < normalized)
+                EndDate = normalized.Date.Add(new TimeSpan(23, 59, 0));
         }
 
         partial void OnEndDateChanged(DateTime value)
         {
-            if (value < StartDate)
-                EndDate = StartDate;
+            var endOfDay = value.Date.Add(new TimeSpan(23, 59, 0));
+            if (value != endOfDay)
+            {
+                EndDate = endOfDay;
+                return;
+            }
+
+            if (value.Date < StartDate.Date)
+                EndDate = StartDate.Date.Add(new TimeSpan(23, 59, 0));
         }
 
         [RelayCommand]

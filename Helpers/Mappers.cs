@@ -15,12 +15,12 @@ namespace Packo.Helpers
                 LocalTripId = trip.LocalTripId,
                 RemoteUserId = trip.User_id,
                 LocalUserId = trip.ClientId,
-                IsActive = trip.IsActive,
+                IsActive = trip.EndDate > DateTime.Now,
                 Destination = trip.Destination,
                 CreatedDate = trip.CreatedDate,
                 ModifiedDate = null,
-                StartDate = trip.StartDate,
-                EndDate = trip.EndDate,
+                StartDate = trip.StartDate.HasValue ? DateTime.SpecifyKind(trip.StartDate.Value, DateTimeKind.Unspecified) : null,
+                EndDate = trip.EndDate.HasValue ? DateTime.SpecifyKind(trip.EndDate.Value, DateTimeKind.Unspecified) : null,
                 IsInTrash = trip.IsInTrash,
                 CoverTheme = Enum.TryParse<CoverThemeType>(trip.CoverTheme, true, out var parsedTheme) ? parsedTheme : CoverThemeType.big_city
             };
@@ -38,8 +38,8 @@ namespace Packo.Helpers
                 Destination = trip.Destination,
                 CreatedDate = trip.CreatedDate,
                 ModifiedDate = null,
-                StartDate = trip.StartDate,
-                EndDate = trip.EndDate,
+                StartDate = trip.StartDate.HasValue ? DateTime.SpecifyKind(trip.StartDate.Value, DateTimeKind.Utc) : null,
+                EndDate = trip.EndDate.HasValue ? DateTime.SpecifyKind(trip.EndDate.Value, DateTimeKind.Utc) : null,
                 IsInTrash = trip.IsInTrash,
                 CoverTheme = trip.CoverTheme.ToString()
             };

@@ -15,13 +15,33 @@
     </ContentPage.Resources>
 
     <Grid>
-        <StackLayout VerticalOptions="Center" HorizontalOptions="Center">
-            <Label Text="Witaj w Packo!" Style="{StaticResource Headline}" />
-            <Button Text="Zacznijmy pakowanie"
-					Clicked="StartButton_Clicked"
-					HorizontalOptions="Center" IsVisible="{Binding Session.HasLocalUser, Converter={StaticResource BoolToVisibilityConverter}}" />
+        <Grid.RowDefinitions>
+            <RowDefinition Height ="Auto"/>
+            <RowDefinition Height ="Auto"/>
+            <RowDefinition Height ="Auto"/>
+            <RowDefinition Height ="Auto"/>
+            <RowDefinition Height ="*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="0.2*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        
+        <Label Grid.Column = "1" Grid.Row="0" Text="{Binding Title}" Style="{StaticResource Headline}" />
 
-            <Button Text="Start packing (TEST)" Command="{Binding StartPackingCommand}" />
+        <Label Grid.Column = "1" Grid.Row="1" Text="{Binding TripDestination}" IsVisible="{Binding HasActiveTrips}" />
+        <Label Grid.Column = "1" Grid.Row="2" Text="{Binding TripDatesRange}" IsVisible="{Binding HasActiveTrips}" />
+        <Label Grid.Column = "1" Grid.Row="3" Text="{Binding TripCountdown}" IsVisible="{Binding HasActiveTrips}" />
+
+
+
+        <StackLayout Grid.Column = "1" Grid.Row="4" VerticalOptions="Center" HorizontalOptions="Start">
+            <!--<Label Text="Witaj w Packo!" Style="{StaticResource Headline}" />-->
+            <!--<Button Text="Zacznijmy pakowanie"
+					Clicked="StartButton_Clicked"
+					HorizontalOptions="Center" IsVisible="{Binding Session.HasLocalUser, Converter={StaticResource BoolToVisibilityConverter}}" />-->
+
+            <Button Text="Create a trip and start packing." Command="{Binding StartPackingCommand}" IsVisible="{Binding ShowStartButton}" />
             <!--<Button Text="Start packing (TEST)" Command="{Binding StartPackingCommand}" IsVisible="{Binding Session.HasLocalUser, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}" />-->
             <!--<Button Text="Zaloguj przez Google" Command="{Binding LoginWithGoogleCommand}" IsVisible="{Binding Session.IsAuthenticated, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}" />-->
         </StackLayout>

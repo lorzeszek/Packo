@@ -19,8 +19,16 @@ public partial class StartPage : ContentPage
     //    await _viewModel.InitializeAsync();
     //}
 
-    private async void StartButton_Clicked(object? sender, EventArgs e)
+    protected override async void OnAppearing()
     {
-        await Shell.Current.GoToAsync("//TripList");
+        base.OnAppearing();
+
+        if (BindingContext is StartViewModel vm)
+            await vm.OnAppearingAsync();
     }
+
+    //private async void StartButton_Clicked(object? sender, EventArgs e)
+    //{
+    //    await Shell.Current.GoToAsync("//TripList");
+    //}
 }

@@ -189,14 +189,16 @@ namespace Packo
             {
                 MainPage = new AppShell();
 
-                if (_sessionService.HasLocalUser)
-                {
-                    await Shell.Current.GoToAsync("//TripList");
-                }
-                else
-                {
-                    await Shell.Current.GoToAsync("//Home");
-                }
+                await Shell.Current.GoToAsync("//Home");
+
+                //if (_sessionService.HasLocalUser)
+                //{
+                //    await Shell.Current.GoToAsync("//TripList");
+                //}
+                //else
+                //{
+                //    await Shell.Current.GoToAsync("//Home");
+                //}
             });
         }
     }
