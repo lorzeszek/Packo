@@ -79,4 +79,41 @@
     <Color x:Key="CardTextColor">#1B1B1B</Color>
     <Color x:Key="CardBackgroundColorDark">#1E1E1E</Color>
     <Color x:Key="CardTextColorDark">#FFFFFF</Color>
+
+    <!-- Packo warm UI palette used by the redesigned pages and shell. -->
+    <Color x:Key="PackoPageBackgroundLight">#F8F7F4</Color>
+    <Color x:Key="PackoPageBackgroundDark">#151515</Color>
+    <Color x:Key="PackoSurfaceLight">#FFFDF9</Color>
+    <Color x:Key="PackoSurfaceDark">#242321</Color>
+    <Color x:Key="PackoRaisedSurfaceLight">#F5F2ED</Color>
+    <Color x:Key="PackoRaisedSurfaceDark">#302F2C</Color>
+    <Color x:Key="PackoPrimaryTextLight">#282723</Color>
+    <Color x:Key="PackoPrimaryTextDark">#F7F4EF</Color>
+    <Color x:Key="PackoSecondaryTextLight">#77756F</Color>
+    <Color x:Key="PackoSecondaryTextDark">#B6B3AC</Color>
+    <Color x:Key="PackoAccentLight">#E88D68</Color>
+    <Color x:Key="PackoAccentDark">#F3A886</Color>
+    <Color x:Key="PackoAccentStrongLight">#A85D3C</Color>
+    <Color x:Key="PackoAccentStrongDark">#F3A886</Color>
+    <Color x:Key="PackoAccentSoftLight">#FCE9DE</Color>
+    <Color x:Key="PackoAccentSoftDark">#382A24</Color>
+    <Color x:Key="PackoBorderLight">#EEEAE3</Color>
+    <Color x:Key="PackoBorderDark">#383632</Color>
+    <Color x:Key="PackoControlBorderLight">#EEEAE3</Color>
+    <Color x:Key="PackoControlBorderDark">#48453F</Color>
+    <Color x:Key="PackoSubtleSurfaceLight">#F1EFEA</Color>
+    <Color x:Key="PackoSubtleSurfaceDark">#363431</Color>
+    <Color x:Key="PackoInsetSurfaceDark">#252522</Color>
+    <Color x:Key="PackoInsetSurfaceDeepDark">#1D1C1A</Color>
+    <Color x:Key="PackoSecondaryTextAltLight">#5E5B55</Color>
+    <Color x:Key="PackoSecondaryTextAltDark">#C4BEB6</Color>
+    <Color x:Key="PackoTertiaryTextDark">#D1CCC5</Color>
+    <Color x:Key="PackoShellAccentLight">#D97855</Color>
+    <Color x:Key="PackoShellAccentDark">#F3A886</Color>
+    <Color x:Key="PackoShellUnselectedLight">#9A948C</Color>
+    <Color x:Key="PackoShellUnselectedDark">#8B8780</Color>
+    <Color x:Key="PackoShellDisabledLight">#D4D0C9</Color>
+    <Color x:Key="PackoShellDisabledDark">#5C5954</Color>
+    <Color x:Key="PackoWhite">#FFFFFF</Color>
+
 </ResourceDictionary>

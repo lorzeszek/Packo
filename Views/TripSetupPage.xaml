@@ -1,126 +1,189 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<local:BasePage xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" 
-             xmlns="http://schemas.microsoft.com/dotnet/maui/global"
-              x:Name="TripSetupPageRoot"
-             x:Class="Packo.Views.TripSetupPage"
-             xmlns:viewmodels="clr-namespace:Packo.ViewModels"
-             xmlns:local="clr-namespace:Packo.Models.Pages"
-             xmlns:sys="clr-namespace:System;assembly=System.Runtime"
-             x:DataType="TripSetupViewModel"                
-             Title="TripSetupPage">
+<local:BasePage xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                xmlns="http://schemas.microsoft.com/dotnet/maui/global"
+                xmlns:local="clr-namespace:Packo.Models.Pages"
+                xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+                x:Name="TripSetupPageRoot"
+                x:Class="Packo.Views.TripSetupPage"
+                x:DataType="TripSetupViewModel"
+                Title="Create a trip"
+                BackgroundColor="{AppThemeBinding Light={StaticResource PackoPageBackgroundLight}, Dark={StaticResource PackoPageBackgroundDark}}">
 
-    <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="25">
+    <ContentPage.Resources>
+        <ResourceDictionary>
+        </ResourceDictionary>
+    </ContentPage.Resources>
 
-            <Grid RowSpacing="20">
-            <Grid.RowDefinitions>
-                <RowDefinition />
-                <RowDefinition />
-                <RowDefinition />
-                <RowDefinition />
-                <RowDefinition />
-            </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="0.5*"/>
-                <ColumnDefinition Width="0.5*"/>
-            </Grid.ColumnDefinitions>
-
-            <StackLayout Grid.Row="0" Grid.ColumnSpan="2">
-                <Label Text="Destination:" FontSize="20" />
-                <Entry Placeholder="Destination..." Text="{Binding Destination}"/>
-            </StackLayout>
-
-            <StackLayout Grid.Row="1" Grid.Column="0">
-                <Label Text="Start date" FontSize="20" />
-                <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
-                    <Label Text="&#xe935;" FontFamily="MaterialIcons" FontSize="24" VerticalOptions="Center">
-                        <Label.GestureRecognizers>
-                            <TapGestureRecognizer Tapped="OnStartDateIconTapped" />
-                        </Label.GestureRecognizers>
-                    </Label>
-                    <DatePicker x:Name="StartDatePicker" Date="{Binding StartDate}" MinimumDate="{x:Static sys:DateTime.Today}" Format="dd MMM yyyy" VerticalOptions="Center" />
-                </HorizontalStackLayout>
-            </StackLayout>
-
-            <StackLayout Grid.Row="1" Grid.Column="1">
-                <Label Text="End date" FontSize="20" />
-                <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
-                    <Label Text="&#xe935;" FontFamily="MaterialIcons" FontSize="24" VerticalOptions="Center">
-                        <Label.GestureRecognizers>
-                            <TapGestureRecognizer Tapped="OnEndDateIconTapped" />
-                        </Label.GestureRecognizers>
-                    </Label>
-                    <DatePicker x:Name="EndDatePicker" Date="{Binding EndDate}" MinimumDate="{Binding StartDate}" Format="dd MMM yyyy" VerticalOptions="Center" />
-                </HorizontalStackLayout>
-            </StackLayout>
-
-            <StackLayout Grid.Row="2" Grid.ColumnSpan="2">
-                <Label Text="Participants:" FontSize="20" />
-
-                <Label Text="Adults" Margin="0,12,0,0"/>
-                <HorizontalStackLayout Spacing="12" VerticalOptions="Center">
-                    <!--<Label Text="Adults" FontSize="20"/>-->
-                    <Button Text="-" Command="{Binding DecreaseAdultsCountCommand}" WidthRequest="48" />
-                    <Label Text="{Binding AdultsCount}" FontSize="18" VerticalOptions="Center" />
-                    <Button Text="+" Command="{Binding IncreaseAdultsCountCommand}" WidthRequest="48" />
-                </HorizontalStackLayout>
-
-                <Label Text="Children" Margin="0,12,0,0"/>
-                <HorizontalStackLayout Spacing="12" VerticalOptions="Center">
-                    <!--<Label Text="Children" FontSize="20"/>-->
-                    <Button Text="-" Command="{Binding DecreaseChildrenCountCommand}" WidthRequest="48" />
-                    <Label Text="{Binding ChildrenCount}" FontSize="18" VerticalOptions="Center" />
-                    <Button Text="+" Command="{Binding IncreaseChildrenCountCommand}" WidthRequest="48" />
-                </HorizontalStackLayout>
-
-                <VerticalStackLayout Spacing="10" IsVisible="{Binding HasChildren}" BindableLayout.ItemsSource="{Binding Children}">
-                    <BindableLayout.ItemTemplate>
-                        <DataTemplate>
-                            <HorizontalStackLayout Spacing="12" VerticalOptions="Center">
-                                <Label Text="Child age" VerticalOptions="Center" FontSize="20" />
-                                <Button Text="-" Command="{Binding DecreaseAgeCommand}" WidthRequest="48" />
-                                <Label Text="{Binding Age}" FontSize="18" VerticalOptions="Center" />
-                                <Button Text="+" Command="{Binding IncreaseAgeCommand}" WidthRequest="48" />
-                            </HorizontalStackLayout>
-                        </DataTemplate>
-                    </BindableLayout.ItemTemplate>
+    <Grid RowDefinitions="*,Auto">
+        <ScrollView Grid.Row="0">
+            <VerticalStackLayout Padding="22,22,22,28" Spacing="22">
+                <VerticalStackLayout Spacing="7">
+                    <Label Text="PLAN YOUR GETAWAY" FontSize="11" CharacterSpacing="2.2"
+                           FontAttributes="Bold" TextColor="{StaticResource PackoAccentLight}" />
+                    <Label Text="Let’s make it a trip to remember." FontSize="29" LineHeight="1.05"
+                           FontAttributes="Bold" TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+                    <Label Text="A few details will help us build the right packing list for you."
+                           FontSize="14" LineBreakMode="WordWrap"
+                           TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
                 </VerticalStackLayout>
 
-                <!--<Label Text="Transport" Margin="0,20,0,0" FontSize="20"/>
-                <HorizontalStackLayout BindableLayout.ItemsSource="{Binding TransportOptions}">
-                    <BindableLayout.ItemTemplate>
-                        <DataTemplate>
-                            <HorizontalStackLayout VerticalOptions="Center">
-                                <CheckBox IsChecked="{Binding IsSelected}" VerticalOptions="Center" />
-                                <Label Text="{Binding Name}" VerticalOptions="Center" />
-                            </HorizontalStackLayout>
-                        </DataTemplate>
-                    </BindableLayout.ItemTemplate>
-                </HorizontalStackLayout>-->
-            </StackLayout>
+                <Border Padding="18" StrokeThickness="1" Stroke="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoBorderDark}}"
+                        StrokeShape="RoundRectangle 22" BackgroundColor="{AppThemeBinding Light={StaticResource PackoSurfaceLight}, Dark={StaticResource PackoSurfaceDark}}">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="Where are you headed?" Style="{StaticResource PackoSectionTitleStyle}" />
+                        <Border Padding="14,2" StrokeThickness="1" Stroke="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoControlBorderDark}}"
+                                StrokeShape="RoundRectangle 15" BackgroundColor="{AppThemeBinding Light={StaticResource PackoWhite}, Dark={StaticResource PackoInsetSurfaceDeepDark}}">
+                            <Entry Placeholder="e.g. Lisbon, Portugal" Text="{Binding Destination}"
+                                   FontSize="16" ClearButtonVisibility="WhileEditing" />
+                        </Border>
+                    </VerticalStackLayout>
+                </Border>
 
-            <StackLayout Grid.Row="3" Grid.ColumnSpan="2">
+                <Border Padding="18" StrokeThickness="1" Stroke="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoBorderDark}}"
+                        StrokeShape="RoundRectangle 22" BackgroundColor="{AppThemeBinding Light={StaticResource PackoSurfaceLight}, Dark={StaticResource PackoSurfaceDark}}">
+                    <VerticalStackLayout Spacing="14">
+                        <Label Text="When are you going?" Style="{StaticResource PackoSectionTitleStyle}" />
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <VerticalStackLayout Spacing="7">
+                                <Label Text="START" Style="{StaticResource PackoFieldCaptionStyle}" FontAttributes="Bold" CharacterSpacing="1" />
+                                <Border Padding="10,5" StrokeThickness="1" Stroke="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoControlBorderDark}}"
+                                        StrokeShape="RoundRectangle 15" BackgroundColor="{AppThemeBinding Light={StaticResource PackoWhite}, Dark={StaticResource PackoInsetSurfaceDeepDark}}">
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="7">
+                                        <Label Text="&#xe935;" FontFamily="MaterialIcons" FontSize="19"
+                                               TextColor="{StaticResource PackoAccentLight}" VerticalOptions="Center">
+                                            <Label.GestureRecognizers>
+                                                <TapGestureRecognizer Tapped="OnStartDateIconTapped" />
+                                            </Label.GestureRecognizers>
+                                        </Label>
+                                        <DatePicker x:Name="StartDatePicker" Grid.Column="1" Date="{Binding StartDate}"
+                                                    MinimumDate="{x:Static sys:DateTime.Today}" Format="dd MMM yyyy"
+                                                    FontSize="13" HorizontalOptions="Fill" />
+                                    </Grid>
+                                </Border>
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1" Spacing="7">
+                                <Label Text="END" Style="{StaticResource PackoFieldCaptionStyle}" FontAttributes="Bold" CharacterSpacing="1" />
+                                <Border Padding="10,5" StrokeThickness="1" Stroke="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoControlBorderDark}}"
+                                        StrokeShape="RoundRectangle 15" BackgroundColor="{AppThemeBinding Light={StaticResource PackoWhite}, Dark={StaticResource PackoInsetSurfaceDeepDark}}">
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="7">
+                                        <Label Text="&#xe935;" FontFamily="MaterialIcons" FontSize="19"
+                                               TextColor="{StaticResource PackoAccentLight}" VerticalOptions="Center">
+                                            <Label.GestureRecognizers>
+                                                <TapGestureRecognizer Tapped="OnEndDateIconTapped" />
+                                            </Label.GestureRecognizers>
+                                        </Label>
+                                        <DatePicker x:Name="EndDatePicker" Grid.Column="1" Date="{Binding EndDate}"
+                                                    MinimumDate="{Binding StartDate}" Format="dd MMM yyyy"
+                                                    FontSize="13" HorizontalOptions="Fill" />
+                                    </Grid>
+                                </Border>
+                            </VerticalStackLayout>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
 
-                <Label Text="Transport" Margin="0,20,0,0" FontSize="20"/>
-                <HorizontalStackLayout BindableLayout.ItemsSource="{Binding TransportOptions}">
-                    <BindableLayout.ItemTemplate>
-                        <DataTemplate>
-                            <HorizontalStackLayout VerticalOptions="Center">
-                                <CheckBox IsChecked="{Binding IsSelected}" VerticalOptions="Center" />
-                                <Label Text="{Binding Name}" VerticalOptions="Center" />
-                            </HorizontalStackLayout>
-                        </DataTemplate>
-                    </BindableLayout.ItemTemplate>
-                </HorizontalStackLayout>
-            </StackLayout>
+                <Border Padding="18" StrokeThickness="1" Stroke="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoBorderDark}}"
+                        StrokeShape="RoundRectangle 22" BackgroundColor="{AppThemeBinding Light={StaticResource PackoSurfaceLight}, Dark={StaticResource PackoSurfaceDark}}">
+                    <VerticalStackLayout Spacing="15">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Who’s coming along?" Style="{StaticResource PackoSectionTitleStyle}" />
+                            <Label Text="Set the number of travelers." Style="{StaticResource PackoFieldCaptionStyle}" />
+                        </VerticalStackLayout>
 
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <Border Padding="12" StrokeThickness="1" Stroke="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoControlBorderDark}}"
+                                    StrokeShape="RoundRectangle 17" BackgroundColor="{AppThemeBinding Light={StaticResource PackoWhite}, Dark={StaticResource PackoInsetSurfaceDeepDark}}">
+                                <VerticalStackLayout Spacing="9" HorizontalOptions="Center">
+                                    <Label Text="Adults" FontSize="14" FontAttributes="Bold"
+                                           TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+                                    <HorizontalStackLayout Spacing="12" VerticalOptions="Center">
+                                        <Button Text="−" Style="{StaticResource PackoCounterButtonStyle}" Command="{Binding DecreaseAdultsCountCommand}" />
+                                        <Label Text="{Binding AdultsCount}" FontSize="17" FontAttributes="Bold"
+                                               WidthRequest="20" HorizontalTextAlignment="Center" VerticalTextAlignment="Center"
+                                               TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+                                        <Button Text="+" Style="{StaticResource PackoCounterButtonStyle}" Command="{Binding IncreaseAdultsCountCommand}" />
+                                    </HorizontalStackLayout>
+                                </VerticalStackLayout>
+                            </Border>
+                            <Border Grid.Column="1" Padding="12" StrokeThickness="1" Stroke="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoControlBorderDark}}"
+                                    StrokeShape="RoundRectangle 17" BackgroundColor="{AppThemeBinding Light={StaticResource PackoWhite}, Dark={StaticResource PackoInsetSurfaceDeepDark}}">
+                                <VerticalStackLayout Spacing="9" HorizontalOptions="Center">
+                                    <Label Text="Children" FontSize="14" FontAttributes="Bold"
+                                           TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+                                    <HorizontalStackLayout Spacing="12" VerticalOptions="Center">
+                                        <Button Text="−" Style="{StaticResource PackoCounterButtonStyle}" Command="{Binding DecreaseChildrenCountCommand}" />
+                                        <Label Text="{Binding ChildrenCount}" FontSize="17" FontAttributes="Bold"
+                                               WidthRequest="20" HorizontalTextAlignment="Center" VerticalTextAlignment="Center"
+                                               TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+                                        <Button Text="+" Style="{StaticResource PackoCounterButtonStyle}" Command="{Binding IncreaseChildrenCountCommand}" />
+                                    </HorizontalStackLayout>
+                                </VerticalStackLayout>
+                            </Border>
+                        </Grid>
 
+                        <VerticalStackLayout IsVisible="{Binding HasChildren}" Spacing="10"
+                                             BindableLayout.ItemsSource="{Binding Children}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Padding="12,8" StrokeThickness="1" Stroke="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoControlBorderDark}}"
+                                            StrokeShape="RoundRectangle 16" BackgroundColor="{AppThemeBinding Light={StaticResource PackoWhite}, Dark={StaticResource PackoInsetSurfaceDeepDark}}">
+                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                            <VerticalStackLayout Spacing="2" VerticalOptions="Center">
+                                                <Label Text="Child" FontSize="14" FontAttributes="Bold"
+                                                       TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+                                                <Label Text="Age" Style="{StaticResource PackoFieldCaptionStyle}" />
+                                            </VerticalStackLayout>
+                                            <HorizontalStackLayout Grid.Column="1" Spacing="10" VerticalOptions="Center">
+                                                <Button Text="−" Style="{StaticResource PackoCounterButtonStyle}" Command="{Binding DecreaseAgeCommand}" />
+                                                <Label Text="{Binding Age}" FontSize="16" FontAttributes="Bold"
+                                                       WidthRequest="20" HorizontalTextAlignment="Center" VerticalTextAlignment="Center"
+                                                       TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+                                                <Button Text="+" Style="{StaticResource PackoCounterButtonStyle}" Command="{Binding IncreaseAgeCommand}" />
+                                            </HorizontalStackLayout>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
 
-            </Grid>
-            <Button
-                Text="Utwórz listę"
-                Command="{Binding CreateTripCommand}" />
-        </VerticalStackLayout>
-    </ScrollView>
-    
+                <Border Padding="18" StrokeThickness="1" Stroke="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoBorderDark}}"
+                        StrokeShape="RoundRectangle 22" BackgroundColor="{AppThemeBinding Light={StaticResource PackoSurfaceLight}, Dark={StaticResource PackoSurfaceDark}}">
+                    <VerticalStackLayout Spacing="13">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="How will you get there?" Style="{StaticResource PackoSectionTitleStyle}" />
+                            <Label Text="Choose all that apply." Style="{StaticResource PackoFieldCaptionStyle}" />
+                        </VerticalStackLayout>
+                        <FlexLayout BindableLayout.ItemsSource="{Binding TransportOptions}"
+                                     Wrap="Wrap" JustifyContent="SpaceBetween" AlignItems="Start">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate>
+                                    <Border WidthRequest="145" Margin="0,0,0,8" Padding="8,4"
+                                            StrokeThickness="1" Stroke="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoControlBorderDark}}"
+                                            StrokeShape="RoundRectangle 14"
+                                            BackgroundColor="{AppThemeBinding Light={StaticResource PackoWhite}, Dark={StaticResource PackoInsetSurfaceDeepDark}}">
+                                        <HorizontalStackLayout Spacing="5" VerticalOptions="Center">
+                                            <CheckBox IsChecked="{Binding IsSelected}" Color="{StaticResource PackoAccentLight}"
+                                                      MinimumWidthRequest="38" MinimumHeightRequest="42" />
+                                            <Label Text="{Binding Name}" FontSize="14" VerticalTextAlignment="Center"
+                                                   TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+                                        </HorizontalStackLayout>
+                                    </Border>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </FlexLayout>
+                    </VerticalStackLayout>
+                </Border>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <Border Grid.Row="1" Padding="20,12,20,18" StrokeThickness="0"
+                BackgroundColor="{AppThemeBinding Light={StaticResource PackoPageBackgroundLight}, Dark={StaticResource PackoPageBackgroundDark}}">
+            <Button Text="Utwórz listę   →" Command="{Binding CreateTripCommand}"
+                    BackgroundColor="{StaticResource PackoAccentLight}" TextColor="{StaticResource PackoWhite}"
+                    FontSize="16" FontAttributes="Bold" CornerRadius="18"
+                    HeightRequest="56" Padding="20,12" HorizontalOptions="Fill" />
+        </Border>
+    </Grid>
 </local:BasePage>

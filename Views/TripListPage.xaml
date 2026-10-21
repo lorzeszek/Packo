@@ -1,75 +1,102 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<local:BasePage xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" 
-             xmlns="http://schemas.microsoft.com/dotnet/maui/global"
-             xmlns:viewModels="clr-namespace:Packo.ViewModels"
-             x:DataType="TripListViewModel"
-             x:Class="Packo.Views.TripListPage"
-             xmlns:local="clr-namespace:Packo.Models.Pages"
-             x:Name="TripListView"
-             Title="{Binding Title}"
-             Shell.NavBarIsVisible="True">
+<local:BasePage xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                xmlns="http://schemas.microsoft.com/dotnet/maui/global"
+                xmlns:local="clr-namespace:Packo.Models.Pages"
+                x:DataType="TripListViewModel"
+                x:Class="Packo.Views.TripListPage"
+                x:Name="TripListView"
+                Title="{Binding Title}"
+                Shell.NavBarIsVisible="True"
+                BackgroundColor="{AppThemeBinding Light={StaticResource PackoPageBackgroundLight}, Dark={StaticResource PackoPageBackgroundDark}}">
 
     <ContentPage.Resources>
         <ResourceDictionary>
-            <BoolToOpacityConverter x:Key="BoolToOpacityConverter" TrueOpacity="1" FalseOpacity="0.5"/>
-            <BoolToOppositeConverter x:Key="BoolToOppositeConverter"/>
-            <BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+            <BoolToOpacityConverter x:Key="BoolToOpacityConverter" TrueOpacity="1" FalseOpacity="0.72" />
+            <BoolToOppositeConverter x:Key="BoolToOppositeConverter" />
         </ResourceDictionary>
     </ContentPage.Resources>
-    
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height ="*"/>
-            <RowDefinition Height ="Auto"/>
-        </Grid.RowDefinitions>
-        <CollectionView Grid.Row="0" ItemsSource="{Binding Trips}" SelectionMode="None">
-        <CollectionView.ItemsLayout>
-                <GridItemsLayout Orientation="Vertical" Span="1" />
-            </CollectionView.ItemsLayout>
 
-        <CollectionView.ItemTemplate>
+    <Grid RowDefinitions="Auto,*,Auto" RowSpacing="0">
+        <VerticalStackLayout Grid.Row="0" Padding="22,20,22,14" Spacing="6">
+            <Label Text="YOUR GETAWAYS" FontSize="11" CharacterSpacing="2.2"
+                   FontAttributes="Bold" TextColor="{StaticResource PackoAccentLight}" />
+            <Label Text="{Binding Title}" FontSize="29" FontAttributes="Bold"
+                   TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+            <Label Text="All your plans and memories, in one place."
+                   FontSize="14" LineBreakMode="WordWrap"
+                   TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+        </VerticalStackLayout>
+
+        <CollectionView Grid.Row="1" ItemsSource="{Binding Trips}" SelectionMode="None"
+                        ItemsLayout="VerticalList" VerticalScrollBarVisibility="Never">
+            <CollectionView.EmptyView>
+                <VerticalStackLayout Padding="32" Spacing="14" VerticalOptions="Center"
+                                     HorizontalOptions="Center">
+                    <Border WidthRequest="76" HeightRequest="76" StrokeThickness="0"
+                            StrokeShape="RoundRectangle 26" BackgroundColor="{StaticResource PackoAccentSoftLight}"
+                            HorizontalOptions="Center">
+                        <Label Text="✈" FontSize="32" Rotation="-12" HorizontalTextAlignment="Center"
+                               VerticalTextAlignment="Center" TextColor="{StaticResource PackoAccentLight}" />
+                    </Border>
+                    <Label Text="Your next adventure is waiting" FontSize="20" FontAttributes="Bold"
+                           HorizontalTextAlignment="Center"
+                           TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+                    <Label Text="Create a trip to start planning what to pack."
+                           FontSize="14" HorizontalTextAlignment="Center" LineBreakMode="WordWrap"
+                           TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+
+            <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="TripViewModel">
-                <Border
-                    Margin="10"
-                    StrokeThickness="0"
-                    StrokeShape="RoundRectangle 12"
-                    HeightRequest="212"
-                    Opacity="{Binding TripModel.IsActive, Converter={StaticResource BoolToOpacityConverter}}">
+                    <Border Margin="20,8" Padding="0" StrokeThickness="0"
+                            StrokeShape="RoundRectangle 24" HeightRequest="194"
+                            Opacity="{Binding TripModel.IsActive, Converter={StaticResource BoolToOpacityConverter}}">
+                        <Grid>
+                            <Image Source="{Binding TripModel.CoverImagePath}" Aspect="AspectFill" />
+                            <BoxView IsVisible="{Binding TripModel.IsActive, Converter={StaticResource BoolToOppositeConverter}}"
+                                     BackgroundColor="#241D19" Opacity="0.35" />
 
-                    <Grid>
-                        <Image Source="{Binding TripModel.CoverImagePath}" Aspect="AspectFill"/>
+                            <Border IsVisible="{Binding TripModel.IsActive, Converter={StaticResource BoolToOppositeConverter}}"
+                                    HorizontalOptions="Start" VerticalOptions="Start" Margin="14"
+                                    Padding="10,6" StrokeThickness="0" StrokeShape="RoundRectangle 13"
+                                    BackgroundColor="#EFFFFFFF">
+                                <Label Text="PAST TRIP" FontSize="10" CharacterSpacing="1.2"
+                                       FontAttributes="Bold" TextColor="#5D514B" />
+                            </Border>
 
-                            <LottieView
-                                Source="RecycleBin.lottie"
-                                HorizontalOptions="End"
-                                VerticalOptions="Start"
-                                WidthRequest="34"
-                                AutoPlay="True"
-                                HeightRequest="34">
-                                <LottieView.GestureRecognizers>
-                                    <TapGestureRecognizer 
-                                        Command="{Binding BindingContext.TrashTripCommand, Source={x:Reference TripListView}}" 
-                                        CommandParameter="{Binding .}" />
-                                </LottieView.GestureRecognizers>
-                            </LottieView>
+                            <Border HorizontalOptions="End" VerticalOptions="Start" Margin="10"
+                                    WidthRequest="46" HeightRequest="46" Padding="6"
+                                    StrokeThickness="0" StrokeShape="RoundRectangle 16"
+                                    BackgroundColor="#FFFFFFE8">
+                                <LottieView Source="RecycleBin.lottie" AutoPlay="True"
+                                            WidthRequest="34" HeightRequest="34"
+                                            HorizontalOptions="Center" VerticalOptions="Center">
+                                    <LottieView.GestureRecognizers>
+                                        <TapGestureRecognizer
+                                            Command="{Binding BindingContext.TrashTripCommand, Source={x:Reference TripListView}}"
+                                            CommandParameter="{Binding .}" />
+                                    </LottieView.GestureRecognizers>
+                                </LottieView>
+                            </Border>
+                        </Grid>
 
-                            <BoxView IsVisible="{Binding TripModel.IsActive, Converter={StaticResource BoolToOppositeConverter}}" BackgroundColor="Black" Opacity="0.5"/>
-                    </Grid>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer
+                                Command="{Binding BindingContext.TripTappedCommand, Source={x:Reference TripListView}}"
+                                CommandParameter="{Binding .}" />
+                        </Border.GestureRecognizers>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
 
-                    <Border.GestureRecognizers>
-                        <TapGestureRecognizer 
-                            Command="{Binding BindingContext.TripTappedCommand, Source={x:Reference TripListView}}" 
-                            CommandParameter="{Binding .}" />
-                    </Border.GestureRecognizers>
-                </Border>
-            </DataTemplate>
-        </CollectionView.ItemTemplate>
-
-    </CollectionView>
-        <Button Grid.Row="1" BackgroundColor="#4285F4" Margin="10" HorizontalOptions="Fill" Text="+" FontSize="Title" Padding="0" Command="{Binding AddTripCommand}" />
-
+        <Border Grid.Row="2" Padding="20,10,20,16" StrokeThickness="0"
+                BackgroundColor="{AppThemeBinding Light={StaticResource PackoPageBackgroundLight}, Dark={StaticResource PackoPageBackgroundDark}}">
+            <Button Text="Plan a trip   +" Command="{Binding AddTripCommand}"
+                    BackgroundColor="{StaticResource PackoAccentLight}" TextColor="{StaticResource PackoWhite}"
+                    FontSize="16" FontAttributes="Bold" CornerRadius="18"
+                    HeightRequest="56" Padding="20,12" HorizontalOptions="Fill" />
+        </Border>
     </Grid>
 </local:BasePage>
-
-
-

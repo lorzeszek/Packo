@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="460" height="564" viewBox="0 0 424 520">
+  <g transform="translate(-14.8 -18.2) scale(1.07)">
+  <g fill="none" stroke="#E88D68" stroke-linecap="round" stroke-width="5">
+    <path d="M91 184c-14-33-3-72 26-93" stroke-dasharray="2 12"/>
+    <circle cx="91" cy="184" r="6" fill="#E88D68" stroke="none"/>
+    <circle cx="117" cy="91" r="5" fill="#E88D68" stroke="none"/>
+  </g>
+  <circle cx="212" cy="201" r="112" fill="#FCE9DE"/>
+  <g>
+    <path d="M174 135v-17c0-12 9-21 21-21h34c12 0 21 9 21 21v17h-17v-17c0-3-2-5-5-5h-32c-3 0-5 2-5 5v17z" fill="#A85D3C"/>
+    <rect x="133" y="130" width="158" height="142" rx="25" fill="#E88D68"/>
+    <rect x="148" y="151" width="128" height="102" rx="16" fill="#F3A886"/>
+    <path d="m178 200 23 23 46-49" fill="none" stroke="#FFFDF9" stroke-linecap="round" stroke-linejoin="round" stroke-width="13"/>
+    <circle cx="153" cy="250" r="5" fill="#A85D3C"/>
+    <circle cx="271" cy="250" r="5" fill="#A85D3C"/>
+  </g>
+  <path d="M103 306h218" stroke="#EADFD5" stroke-linecap="round" stroke-width="2"/>
+  <text x="212" y="374" fill="#282723" font-family="Arial, Helvetica, sans-serif" font-size="58" font-weight="700" letter-spacing="-2" text-anchor="middle">packo</text>
+  <text x="212" y="410" fill="#77756F" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="600" letter-spacing="3" text-anchor="middle">TRAVEL LIGHT · PACK RIGHT</text>
+  </g>
+</svg>

@@ -1,79 +1,122 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <local:BasePage xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns="http://schemas.microsoft.com/dotnet/maui/global"
-             xmlns:viewmodels="clr-namespace:Packo.ViewModels"
-			 xmlns:local="clr-namespace:Packo.Models.Pages"
-             x:DataType="viewmodels:WeatherViewModel"
-             x:Class="Packo.Views.WeatherPage"
-             Title="Weather">
+                xmlns="http://schemas.microsoft.com/dotnet/maui/global"
+                xmlns:viewmodels="clr-namespace:Packo.ViewModels"
+                xmlns:local="clr-namespace:Packo.Models.Pages"
+                x:DataType="viewmodels:WeatherViewModel"
+                x:Class="Packo.Views.WeatherPage"
+                Title="Weather"
+                BackgroundColor="{AppThemeBinding Light={StaticResource PackoPageBackgroundLight}, Dark={StaticResource PackoPageBackgroundDark}}">
 
-    <!--<Grid Padding="20">
-        <StackLayout VerticalOptions="Center" HorizontalOptions="Center">
-            <Label Text="🌤️" FontSize="64" HorizontalTextAlignment="Center" />
-            <Label Text="Weather Forecast" 
-                   FontSize="24" 
-                   HorizontalTextAlignment="Center"
-                   Margin="0,20,0,10"/>
-            <Label Text="Weather information for your destinations will appear here." 
-                   FontSize="16" 
-                   HorizontalTextAlignment="Center"
-                   TextColor="Gray"/>
-        </StackLayout>
-    </Grid>-->
+    <ContentPage.Resources>
+        <ResourceDictionary>
+        </ResourceDictionary>
+    </ContentPage.Resources>
 
-    <CollectionView ItemsSource="{Binding Destinations}">
+    <Grid RowDefinitions="Auto,*">
+        <VerticalStackLayout Grid.Row="0" Padding="22,20,22,14" Spacing="6">
+            <Label Text="BE READY FOR THE ROAD" FontSize="11" CharacterSpacing="2.1"
+                   FontAttributes="Bold" TextColor="{StaticResource PackoAccentLight}" />
+            <Label Text="Weather" FontSize="29" FontAttributes="Bold"
+                   TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+            <Label Text="A quick look at the forecast for your upcoming trips."
+                   FontSize="14" LineBreakMode="WordWrap"
+                   TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+        </VerticalStackLayout>
 
-        <CollectionView.ItemTemplate>
-            <DataTemplate>
+        <CollectionView Grid.Row="1" ItemsSource="{Binding Destinations}"
+                        SelectionMode="None" VerticalScrollBarVisibility="Never">
+            <CollectionView.EmptyView>
+                <VerticalStackLayout Padding="32" Spacing="14" HorizontalOptions="Center" VerticalOptions="Center">
+                    <Border WidthRequest="76" HeightRequest="76" StrokeThickness="0"
+                            StrokeShape="RoundRectangle 26" BackgroundColor="{StaticResource PackoAccentSoftLight}"
+                            HorizontalOptions="Center">
+                        <Label Text="☼" FontSize="42" HorizontalTextAlignment="Center"
+                               VerticalTextAlignment="Center" TextColor="{StaticResource PackoAccentLight}" />
+                    </Border>
+                    <Label Text="No trip forecasts yet" FontSize="20" FontAttributes="Bold"
+                           HorizontalTextAlignment="Center"
+                           TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+                    <Label Text="Add an upcoming trip and its local forecast will show up here."
+                           FontSize="14" HorizontalTextAlignment="Center" LineBreakMode="WordWrap"
+                           TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
 
-                <Border Padding="10"
-                    Margin="5">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Border Margin="20,8" Padding="18" StrokeThickness="1"
+                            Stroke="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoBorderDark}}"
+                            StrokeShape="RoundRectangle 24"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource PackoSurfaceLight}, Dark={StaticResource PackoSurfaceDark}}">
+                        <VerticalStackLayout Spacing="16">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                <VerticalStackLayout Spacing="3" VerticalOptions="Center">
+                                    <Label Text="{Binding Destination}" FontSize="20" FontAttributes="Bold"
+                                           LineBreakMode="TailTruncation"
+                                           TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+                                    <Label Text="CURRENT CONDITIONS" FontSize="10" CharacterSpacing="1.4"
+                                           FontAttributes="Bold" TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+                                </VerticalStackLayout>
+                                <Border Grid.Column="1" Padding="13,9" StrokeThickness="0"
+                                        StrokeShape="RoundRectangle 16" BackgroundColor="{StaticResource PackoAccentSoftLight}">
+                                    <Label Text="{Binding CurrentWeather.Temperature, StringFormat='{}{0:0}°'}"
+                                           FontSize="25" FontAttributes="Bold" TextColor="{StaticResource PackoAccentStrongLight}" />
+                                </Border>
+                            </Grid>
 
-                    <VerticalStackLayout>
-
-                        <Label
-                        FontSize="20"
-                        Text="{Binding Destination}" />
-
-                        <Label
-                        FontSize="32"
-                        Text="{Binding CurrentWeather.Temperature,
-                               StringFormat='{}{0}°C'}" />
-
-                        <CollectionView ItemsSource="{Binding ForecastDays}" ItemsLayout="HorizontalList">
-
-                            <CollectionView.ItemTemplate>
-                                <DataTemplate>
-
-                                    <VerticalStackLayout
-                                    Padding="5">
-
-                                        <Label
-                                        Text="{Binding Date,
-                                               StringFormat='{0:ddd}'}" />
-
-                                        <Label
-                                        Text="{Binding MaxTemp,
-                                               StringFormat='{}{0}°'}" />
-
-                                        <Label
-                                        Text="{Binding MinTemp,
-                                               StringFormat='{}{0}°'}" />
-
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                                <Border Padding="12,10" StrokeThickness="0" StrokeShape="RoundRectangle 15"
+                                        BackgroundColor="{AppThemeBinding Light={StaticResource PackoRaisedSurfaceLight}, Dark={StaticResource PackoRaisedSurfaceDark}}">
+                                    <VerticalStackLayout Spacing="3">
+                                        <Label Text="HUMIDITY" FontSize="9" CharacterSpacing="1"
+                                               FontAttributes="Bold" TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+                                        <Label Text="{Binding CurrentWeather.Humidity, StringFormat='{}{0}%'}" FontSize="15"
+                                               FontAttributes="Bold" TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
                                     </VerticalStackLayout>
+                                </Border>
+                                <Border Grid.Column="1" Padding="12,10" StrokeThickness="0" StrokeShape="RoundRectangle 15"
+                                        BackgroundColor="{AppThemeBinding Light={StaticResource PackoRaisedSurfaceLight}, Dark={StaticResource PackoRaisedSurfaceDark}}">
+                                    <VerticalStackLayout Spacing="3">
+                                        <Label Text="WIND" FontSize="9" CharacterSpacing="1"
+                                               FontAttributes="Bold" TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+                                        <Label Text="{Binding CurrentWeather.WindSpeed, StringFormat='{}{0:0} km/h'}" FontSize="15"
+                                               FontAttributes="Bold" TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+                                    </VerticalStackLayout>
+                                </Border>
+                            </Grid>
 
-                                </DataTemplate>
-                            </CollectionView.ItemTemplate>
+                            <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoBorderDark}}" />
+                            <Label Text="15-DAY FORECAST" FontSize="10" CharacterSpacing="1.4"
+                                   FontAttributes="Bold" TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
 
-                        </CollectionView>
-
-                    </VerticalStackLayout>
-
-                </Border>
-
-            </DataTemplate>
-        </CollectionView.ItemTemplate>
-
-    </CollectionView>
-
+                            <CollectionView ItemsSource="{Binding ForecastDays}" ItemsLayout="HorizontalList"
+                                            HeightRequest="92" SelectionMode="None"
+                                            HorizontalScrollBarVisibility="Never">
+                                <CollectionView.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Margin="0,0,8,0" Padding="10,9" StrokeThickness="0"
+                                                StrokeShape="RoundRectangle 15"
+                                                BackgroundColor="{AppThemeBinding Light={StaticResource PackoRaisedSurfaceLight}, Dark={StaticResource PackoRaisedSurfaceDark}}">
+                                            <VerticalStackLayout Spacing="5" HorizontalOptions="Center">
+                                                <Label Text="{Binding Date, StringFormat='{0:ddd}'}" FontSize="11"
+                                                       HorizontalTextAlignment="Center"
+                                                       TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+                                                <Label Text="{Binding MaxTemp, StringFormat='{}{0:0}°'}" FontSize="15"
+                                                       FontAttributes="Bold" HorizontalTextAlignment="Center"
+                                                       TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+                                                <Label Text="{Binding MinTemp, StringFormat='{}{0:0}°'}" FontSize="12"
+                                                       HorizontalTextAlignment="Center"
+                                                       TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+                                            </VerticalStackLayout>
+                                        </Border>
+                                    </DataTemplate>
+                                </CollectionView.ItemTemplate>
+                            </CollectionView>
+                        </VerticalStackLayout>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
 </local:BasePage>

@@ -1,49 +1,96 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <local:BasePage xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns="http://schemas.microsoft.com/dotnet/maui/global"
-             xmlns:viewmodels="clr-namespace:Packo.ViewModels"
-             x:DataType="viewmodels:DocsViewModel"
-             x:Class="Packo.Views.DocsPage"
-             xmlns:local="clr-namespace:Packo.Models.Pages"
-             Title="{Binding Title}">
+                xmlns="http://schemas.microsoft.com/dotnet/maui/global"
+                xmlns:viewmodels="clr-namespace:Packo.ViewModels"
+                xmlns:local="clr-namespace:Packo.Models.Pages"
+                x:DataType="viewmodels:DocsViewModel"
+                x:Class="Packo.Views.DocsPage"
+                x:Name="DocsPageRoot"
+                Title="Documents"
+                BackgroundColor="{AppThemeBinding Light={StaticResource PackoPageBackgroundLight}, Dark={StaticResource PackoPageBackgroundDark}}">
 
-    <Grid >
-        <Grid.RowDefinitions>
-            <RowDefinition Height ="*"/>
-            <RowDefinition Height ="Auto"/>
-        </Grid.RowDefinitions>
+    <ContentPage.Resources>
+        <ResourceDictionary>
+        </ResourceDictionary>
+    </ContentPage.Resources>
 
-        <CollectionView ItemsSource="{Binding Docs}">
+    <Grid RowDefinitions="Auto,*,Auto">
+        <VerticalStackLayout Grid.Row="0" Padding="22,20,22,14" Spacing="6">
+            <Label Text="KEEP THE IMPORTANT THINGS CLOSE" FontSize="11" CharacterSpacing="1.6"
+                   FontAttributes="Bold" TextColor="{StaticResource PackoAccentLight}" />
+            <Label Text="Documents" FontSize="29" FontAttributes="Bold"
+                   TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+            <Label Text="Tickets, reservations, and travel paperwork in one spot."
+                   FontSize="14" LineBreakMode="WordWrap"
+                   TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+        </VerticalStackLayout>
+
+        <CollectionView Grid.Row="1" ItemsSource="{Binding Docs}" SelectionMode="None"
+                        VerticalScrollBarVisibility="Never">
+            <CollectionView.EmptyView>
+                <VerticalStackLayout Padding="30" Spacing="13" HorizontalOptions="Center" VerticalOptions="Center">
+                    <Border WidthRequest="76" HeightRequest="76" StrokeThickness="0"
+                            StrokeShape="RoundRectangle 25" BackgroundColor="{StaticResource PackoAccentSoftLight}"
+                            HorizontalOptions="Center">
+                        <Label Text="▤" FontSize="34" HorizontalTextAlignment="Center"
+                               VerticalTextAlignment="Center" TextColor="{StaticResource PackoAccentLight}" />
+                    </Border>
+                    <Label Text="No documents added yet" FontSize="19" FontAttributes="Bold"
+                           HorizontalTextAlignment="Center"
+                           TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+                    <Label Text="Add your PDFs so your travel details are easy to find."
+                           FontSize="14" HorizontalTextAlignment="Center" LineBreakMode="WordWrap"
+                           TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="TripDocument">
-                    <Grid Padding="10">
+                    <Border Margin="20,6" Padding="12" StrokeThickness="1"
+                            Stroke="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoBorderDark}}"
+                            StrokeShape="RoundRectangle 18"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource PackoSurfaceLight}, Dark={StaticResource PackoSurfaceDark}}">
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                            <Border WidthRequest="48" HeightRequest="52" StrokeThickness="0"
+                                    StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource PackoAccentSoftLight}"
+                                    VerticalOptions="Center">
+                                <Label Text="PDF" FontSize="11" FontAttributes="Bold"
+                                       HorizontalTextAlignment="Center" VerticalTextAlignment="Center"
+                                       TextColor="{StaticResource PackoAccentStrongLight}" />
+                            </Border>
 
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        
-                        <Grid.GestureRecognizers>
+                            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="4">
+                                <Label Text="{Binding FileName}" FontSize="14" FontAttributes="Bold"
+                                       LineBreakMode="TailTruncation"
+                                       TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+                                <Label Text="{Binding AddedAt, StringFormat='Added {0:dd MMM yyyy}'}" FontSize="12"
+                                       TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+                            </VerticalStackLayout>
+
+                            <Button Grid.Column="2" Text="×" FontSize="23" Padding="0"
+                                    WidthRequest="42" HeightRequest="42" CornerRadius="14"
+                                    BackgroundColor="{AppThemeBinding Light={StaticResource PackoRaisedSurfaceLight}, Dark={StaticResource PackoSubtleSurfaceDark}}"
+                                    TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoTertiaryTextDark}}"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteDocumentCommand}"
+                                    CommandParameter="{Binding .}" />
+                        </Grid>
+
+                        <Border.GestureRecognizers>
                             <TapGestureRecognizer
-                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenDocumentCommand}"
-                        CommandParameter="{Binding .}" />
-                        </Grid.GestureRecognizers>
-
-                        <Label Grid.Column="0" Text="{Binding FileName}" VerticalOptions="Center" />
-
-                        <Button
-                        Grid.Column="1"
-                        Text="🗑"
-                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteDocumentCommand}"
-                        CommandParameter="{Binding .}" />
-
-                    </Grid>
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenDocumentCommand}"
+                                CommandParameter="{Binding .}" />
+                        </Border.GestureRecognizers>
+                    </Border>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
 
-        <Button Grid.Row="1" BackgroundColor="#4285F4" Margin="10" HorizontalOptions="Fill" Text="+" FontSize="Title" Padding="0" Command="{Binding AddDocumentCommand}" />
+        <Border Grid.Row="2" Padding="20,10,20,16" StrokeThickness="0"
+                BackgroundColor="{AppThemeBinding Light={StaticResource PackoPageBackgroundLight}, Dark={StaticResource PackoPageBackgroundDark}}">
+            <Button Text="Add a document   +" Command="{Binding AddDocumentCommand}"
+                    BackgroundColor="{StaticResource PackoAccentLight}" TextColor="{StaticResource PackoWhite}"
+                    FontSize="16" FontAttributes="Bold" CornerRadius="18"
+                    HeightRequest="56" Padding="20,12" HorizontalOptions="Fill" />
+        </Border>
     </Grid>
-
-
 </local:BasePage>

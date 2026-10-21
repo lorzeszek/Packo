@@ -70,7 +70,7 @@ namespace Packo.Helpers
 
             var font = new SKFont(SKTypeface.FromFamilyName(null, SKFontStyle.Bold), 72);
 
-            canvas.DrawText(text, 45, bitmapHeight - 105, SKTextAlign.Left, font, paint);
+            canvas.DrawText(text, 45, bitmapHeight - 130, SKTextAlign.Left, font, paint);
         }
 
         private static void DrawDates(SKCanvas canvas, int bitmapHeight, DateTime start, DateTime end)
@@ -81,9 +81,9 @@ namespace Packo.Helpers
                 IsAntialias = true
             };
 
-            using var font = new SKFont(SKTypeface.FromFamilyName(null), 34);
+            using var font = new SKFont(SKTypeface.FromFamilyName(null), 32);
 
-            canvas.DrawText($"{start:dd MMM} - {end:dd MMM yyyy}", 45, bitmapHeight - 60, SKTextAlign.Left, font, paint);
+            canvas.DrawText($"{start:dd MMM} - {end:dd MMM yyyy}", 45, bitmapHeight - 82, SKTextAlign.Left, font, paint);
         }
 
         private static void DrawPackingSummary(SKCanvas canvas, int bitmapHeight, string summary)
@@ -94,14 +94,14 @@ namespace Packo.Helpers
                 IsAntialias = true
             };
 
-            using var font = new SKFont(SKTypeface.FromFamilyName(null), 34);
+            using var font = new SKFont(SKTypeface.FromFamilyName(null), 28);
 
-            canvas.DrawText(summary, 45, bitmapHeight - 20, SKTextAlign.Left, font, paint);
+            canvas.DrawText(summary, 45, bitmapHeight - 40, SKTextAlign.Left, font, paint);
         }
 
         private void DrawBottomPanel(SKCanvas canvas, int bitmapWidth, int bitmapHeight)
         {
-            const float panelHeight = 220;
+            const float panelHeight = 260;
             var top = bitmapHeight - panelHeight;
 
             using var shader = SKShader.CreateLinearGradient(

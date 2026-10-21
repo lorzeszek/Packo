@@ -1,40 +1,87 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<local:BasePage xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" 
-             xmlns="http://schemas.microsoft.com/dotnet/maui/global"
-             x:Class="Packo.Views.PackingListPage"
-             xmlns:viewmodels="clr-namespace:Packo.ViewModels"
-             xmlns:local="clr-namespace:Packo.Models.Pages"
-             x:DataType="PackingListViewModel"
-             Title="{Binding Title}">
+<local:BasePage xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                xmlns="http://schemas.microsoft.com/dotnet/maui/global"
+                xmlns:viewmodels="clr-namespace:Packo.ViewModels"
+                xmlns:local="clr-namespace:Packo.Models.Pages"
+                x:Class="Packo.Views.PackingListPage"
+                x:Name="PackingListPageRoot"
+                x:DataType="viewmodels:PackingListViewModel"
+                Title="Packing list"
+                BackgroundColor="{AppThemeBinding Light={StaticResource PackoPageBackgroundLight}, Dark={StaticResource PackoPageBackgroundDark}}">
 
-    <Grid RowDefinitions="*,Auto" ColumnDefinitions="*,Auto">
-        <!-- Lista -->
-        <CollectionView x:Name="PackingListView" Grid.Row="0" Grid.ColumnSpan="2"
-                ItemsSource="{Binding Items}">
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <BoolToOpacityConverter x:Key="PackedOpacityConverter" TrueOpacity="0.55" FalseOpacity="1" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*,Auto">
+        <VerticalStackLayout Grid.Row="0" Padding="22,20,22,14" Spacing="6">
+            <Label Text="ONE THING AT A TIME" FontSize="11" CharacterSpacing="2.1"
+                   FontAttributes="Bold" TextColor="{StaticResource PackoAccentLight}" />
+            <Label Text="Packing list" FontSize="29" FontAttributes="Bold"
+                   TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+            <Label Text="Check items off as they find their way into your bag."
+                   FontSize="14" LineBreakMode="WordWrap"
+                   TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+        </VerticalStackLayout>
+
+        <CollectionView x:Name="PackingListView" Grid.Row="1" ItemsSource="{Binding Items}"
+                        SelectionMode="None" VerticalScrollBarVisibility="Never">
+            <CollectionView.EmptyView>
+                <VerticalStackLayout Padding="30" Spacing="12" HorizontalOptions="Center" VerticalOptions="Center">
+                    <Border WidthRequest="74" HeightRequest="74" StrokeThickness="0"
+                            StrokeShape="RoundRectangle 25" BackgroundColor="{StaticResource PackoAccentSoftLight}"
+                            HorizontalOptions="Center">
+                        <Label Text="✓" FontSize="34" FontAttributes="Bold" HorizontalTextAlignment="Center"
+                               VerticalTextAlignment="Center" TextColor="{StaticResource PackoAccentLight}" />
+                    </Border>
+                    <Label Text="Your list is ready for ideas" FontSize="19" FontAttributes="Bold"
+                           HorizontalTextAlignment="Center"
+                           TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+                    <Label Text="Add your first item below and start planning."
+                           FontSize="14" HorizontalTextAlignment="Center" LineBreakMode="WordWrap"
+                           TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="PackingItem">
-                    <Grid ColumnDefinitions="60,*,Auto">
-                        <CheckBox
-                            IsChecked="{Binding IsPacked}" 
-                            Command="{Binding BindingContext.ToggleIsPackedCommand, Source={x:Reference PackingListView}}"
-                            CommandParameter="{Binding .}"/>
-
-                        <Label Grid.Column="1" Text="{Binding Name}" VerticalOptions="Center" />
-                        <Label Grid.Column="2" Text="{Binding Category}" TextColor="Gray" Margin="0,0,25,0"/>
-                    </Grid>
+                    <Border Margin="20,5" Padding="10,7" StrokeThickness="1"
+                            Stroke="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoBorderDark}}"
+                            StrokeShape="RoundRectangle 17"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource PackoSurfaceLight}, Dark={StaticResource PackoSurfaceDark}}">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                            <CheckBox IsChecked="{Binding IsPacked}" Color="{StaticResource PackoAccentLight}"
+                                      Command="{Binding BindingContext.ToggleIsPackedCommand, Source={x:Reference PackingListView}}"
+                                      CommandParameter="{Binding .}" VerticalOptions="Center" />
+                            <Label Grid.Column="1" Text="{Binding Name}" FontSize="15"
+                                   VerticalTextAlignment="Center" LineBreakMode="WordWrap"
+                                   Opacity="{Binding IsPacked, Converter={StaticResource PackedOpacityConverter}}"
+                                   TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+                        </Grid>
+                    </Border>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
 
-        <Grid Grid.Row="1" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto" BackgroundColor="{AppThemeBinding Light=#F5F5F5, Dark=#1E1E1E}">
-            <Entry Grid.Column="0" Placeholder="Dodaj przedmiot..." Margin="10,10,0,0" ReturnType="Done" Text="{Binding NewItemName, Mode=TwoWay}">
-                <Entry.Behaviors>
-                    <EventToCommandBehavior EventName="Completed" Command="{Binding AddItemCommand}" />
-                </Entry.Behaviors>
-            </Entry>
-
-            <Button Grid.Column="1" BackgroundColor="#4285F4" Text="+" FontSize="Title" Margin="10,10,10,0" HorizontalOptions="End" Command="{Binding AddItemCommand}" />
-        </Grid>
+        <Border Grid.Row="2" Padding="16,10,16,16" StrokeThickness="0"
+                BackgroundColor="{AppThemeBinding Light={StaticResource PackoPageBackgroundLight}, Dark={StaticResource PackoPageBackgroundDark}}">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                <Border Padding="12,2" StrokeThickness="1" Stroke="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoBorderDark}}"
+                        StrokeShape="RoundRectangle 17" BackgroundColor="{AppThemeBinding Light={StaticResource PackoSurfaceLight}, Dark={StaticResource PackoSurfaceDark}}">
+                    <Entry Placeholder="Dodaj przedmiot..." ReturnType="Done"
+                           Text="{Binding NewItemName, Mode=TwoWay}" FontSize="15">
+                        <Entry.Behaviors>
+                            <EventToCommandBehavior EventName="Completed" Command="{Binding AddItemCommand}" />
+                        </Entry.Behaviors>
+                    </Entry>
+                </Border>
+                <Button Grid.Column="1" Text="+" FontSize="25" FontAttributes="Bold"
+                        WidthRequest="56" HeightRequest="56" Padding="0" CornerRadius="18"
+                        BackgroundColor="{StaticResource PackoAccentLight}" TextColor="{StaticResource PackoWhite}"
+                        Command="{Binding AddItemCommand}" />
+            </Grid>
+        </Border>
     </Grid>
-
 </local:BasePage>

@@ -6,9 +6,15 @@
     xmlns:views="clr-namespace:Packo.Views"
     FlyoutBehavior="Disabled"
     Title="Packo"
-    Shell.TabBarBackgroundColor="{AppThemeBinding Light=#F5F5F5, Dark=#1E1E1E}"
-    Shell.TabBarTitleColor="Red"
-    Shell.TabBarUnselectedColor="{AppThemeBinding Light=#888888, Dark=#888888}">
+    Shell.BackgroundColor="{AppThemeBinding Light={StaticResource PackoPageBackgroundLight}, Dark={StaticResource PackoPageBackgroundDark}}"
+    Shell.ForegroundColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}"
+    Shell.TitleColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}"
+    Shell.NavBarHasShadow="False"
+    Shell.TabBarBackgroundColor="{AppThemeBinding Light={StaticResource PackoSurfaceLight}, Dark={StaticResource PackoSurfaceDark}}"
+    Shell.TabBarForegroundColor="{AppThemeBinding Light={StaticResource PackoShellAccentLight}, Dark={StaticResource PackoAccentDark}}"
+    Shell.TabBarTitleColor="{AppThemeBinding Light={StaticResource PackoShellAccentLight}, Dark={StaticResource PackoAccentDark}}"
+    Shell.TabBarUnselectedColor="{AppThemeBinding Light={StaticResource PackoShellUnselectedLight}, Dark={StaticResource PackoShellUnselectedDark}}"
+    Shell.DisabledColor="{AppThemeBinding Light={StaticResource PackoShellDisabledLight}, Dark={StaticResource PackoShellDisabledDark}}">
 
     <Shell.TitleView>
         <views:ShellHeaderView />
@@ -17,31 +23,31 @@
     <TabBar>
         <ShellContent
             Title="Home"
-            Icon="home.png"
+            Icon="tab_home.svg"
             Route="Home"
             ContentTemplate="{DataTemplate views:StartPage}" />
 
         <ShellContent
             Title="Trips"
-            Icon="travel_bag.png"
+            Icon="tab_trips.svg"
             Route="TripList"
             ContentTemplate="{DataTemplate views:TripListPage}" />
 
         <ShellContent
             Title="Weather"
-            Icon="cloudy.png"
+            Icon="tab_weather.svg"
             Route="Weather"
             ContentTemplate="{DataTemplate views:WeatherPage}" />
 
         <ShellContent
             Title="Docs"
-            Icon="archive.png"
+            Icon="tab_docs.svg"
             Route="Docs"
             ContentTemplate="{DataTemplate views:DocsPage}" />
 
         <ShellContent
             Title="Settings"
-            Icon="settings.png"
+            Icon="tab_settings.svg"
             Route="Settings"
             ContentTemplate="{DataTemplate views:SettingsPage}" />
     </TabBar>

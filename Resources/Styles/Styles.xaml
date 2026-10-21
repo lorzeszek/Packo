@@ -436,4 +436,41 @@
         <Setter Property="SelectedTabColor" Value="{AppThemeBinding Light={StaticResource Gray950}, Dark={StaticResource Gray200}}" />
     </Style>
 
+    <!-- Explicit shared styles for the redesigned Packo screens. -->
+    <Style x:Key="PackoSectionTitleStyle" TargetType="Label">
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+    </Style>
+
+    <Style x:Key="PackoFieldCaptionStyle" TargetType="Label">
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+    </Style>
+
+    <Style x:Key="PackoCardBorderStyle" TargetType="Border">
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoBorderDark}}" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PackoSurfaceLight}, Dark={StaticResource PackoSurfaceDark}}" />
+    </Style>
+
+    <Style x:Key="PackoPrimaryActionButtonStyle" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PackoAccentLight}, Dark={StaticResource PackoShellAccentLight}}" />
+        <Setter Property="TextColor" Value="{StaticResource PackoWhite}" />
+        <Setter Property="CornerRadius" Value="16" />
+        <Setter Property="FontAttributes" Value="Bold" />
+    </Style>
+
+    <Style x:Key="PackoCounterButtonStyle" TargetType="Button">
+        <Setter Property="WidthRequest" Value="42" />
+        <Setter Property="HeightRequest" Value="42" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="CornerRadius" Value="14" />
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PackoAccentSoftLight}, Dark={StaticResource PackoAccentSoftDark}}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource PackoAccentLight}, Dark={StaticResource PackoAccentDark}}" />
+        <Setter Property="BorderWidth" Value="0" />
+    </Style>
+
 </ResourceDictionary>

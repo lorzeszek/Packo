@@ -12,6 +12,7 @@ namespace Packo.ViewModels
         public IRelayCommand LoginWithGoogleCommand => new AsyncRelayCommand(LoginWithGoogle);
 
         public ICommand StartPackingCommand => new AsyncRelayCommand(StartPackingAsync);
+        public ICommand OpenPackingListCommand => new AsyncRelayCommand(OpenPackingListAsync);
 
         private TripViewModel _trip;
         public TripViewModel Trip
@@ -26,9 +27,12 @@ namespace Packo.ViewModels
                     OnPropertyChanged(nameof(TripDestination));
                     OnPropertyChanged(nameof(TripDatesRange));
                     OnPropertyChanged(nameof(TripCountdown));
+                    OnPropertyChanged(nameof(PackingSummary));
                 }
             }
         }
+
+        public string PackingSummary => Trip?.PackingSummary ?? string.Empty;
 
         public string TripDestination => Trip?.Destination ?? string.Empty;
         public string TripDatesRange => Trip?.TripDatesRange ?? string.Empty;
@@ -91,6 +95,18 @@ namespace Packo.ViewModels
         {
             // przechodzisz do flow zbierania danych
             await Shell.Current.GoToAsync(nameof(TripSetupPage));
+        }
+
+        private async Task OpenPackingListAsync()
+        {
+            if (Trip == null)
+                return;
+
+            await Shell.Current.GoToAsync(nameof(PackingListPage), new Dictionary<string, object>
+            {
+                ["remoteTripId"] = Trip.TripModel.RemoteTripId,
+                ["localTripId"] = Trip.TripModel.LocalTripId
+            });
         }
 
         private async Task LoginWithGoogle()

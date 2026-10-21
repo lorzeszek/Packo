@@ -6,47 +6,59 @@
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     CanBeDismissedByTappingOutsideOfPopup="False">
 
-    <VerticalStackLayout Padding="5" Spacing="5"
-                         BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource OffBlack}}">
+    <Border Padding="20" Margin="20" Style="{StaticResource PackoCardBorderStyle}"
+            StrokeShape="RoundRectangle 26">
+        <VerticalStackLayout Spacing="16">
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="13">
+                <Border WidthRequest="46" HeightRequest="46" StrokeThickness="0"
+                        StrokeShape="RoundRectangle 15" BackgroundColor="{StaticResource PackoAccentSoftLight}">
+                    <Label Text="✓" FontSize="22" FontAttributes="Bold" HorizontalTextAlignment="Center"
+                           VerticalTextAlignment="Center" TextColor="{StaticResource PackoAccentLight}" />
+                </Border>
+                <VerticalStackLayout Grid.Column="1" Spacing="3" VerticalOptions="Center">
+                    <Label Text="Proponowana lista" FontSize="19" FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+                    <Label Text="Wybierz rzeczy do dodania" FontSize="13"
+                           TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+                </VerticalStackLayout>
+            </Grid>
 
-        <Label 
-            Text="Proponowana lista"
-            FontSize="18"
-            FontAttributes="Bold"
-            HorizontalOptions="Center" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                <Button Text="Zaznacz wszystko" Clicked="OnSelectAllClicked"
+                        BackgroundColor="{StaticResource PackoAccentSoftLight}" TextColor="{StaticResource PackoAccentStrongLight}"
+                        FontSize="12" FontAttributes="Bold" CornerRadius="13" Padding="8,10" />
+                <Button Grid.Column="1" Text="Odznacz wszystko" Clicked="OnDeselectAllClicked"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource PackoSubtleSurfaceLight}, Dark={StaticResource PackoSubtleSurfaceDark}}"
+                        TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}"
+                        FontSize="12" FontAttributes="Bold" CornerRadius="13" Padding="8,10" />
+            </Grid>
 
-        <Label 
-            Text="Wybierz rzeczy do dodania"
-            HorizontalOptions="Center" />
+            <Border Padding="8" StrokeThickness="1" Stroke="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoBorderDark}}"
+                    StrokeShape="RoundRectangle 18" BackgroundColor="{AppThemeBinding Light={StaticResource PackoWhite}, Dark={StaticResource PackoInsetSurfaceDeepDark}}">
+                <CollectionView ItemsSource="{Binding Items}" HeightRequest="300" SelectionMode="None">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8" Padding="5,2">
+                                <CheckBox IsChecked="{Binding IsSelected}" Color="{StaticResource PackoAccentLight}"
+                                          VerticalOptions="Center" />
+                                <Label Grid.Column="1" Text="{Binding Name}" FontSize="14"
+                                       VerticalTextAlignment="Center" LineBreakMode="WordWrap"
+                                       TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </Border>
 
-        <!-- Select / Deselect -->
-        <HorizontalStackLayout Spacing="10" HorizontalOptions="Center">
-
-            <Button Text="Zaznacz wszystko" Clicked="OnSelectAllClicked"/>
-            <Button Text="Odznacz wszystko" Clicked="OnDeselectAllClicked"/>
-
-        </HorizontalStackLayout>
-
-        <!-- Lista -->
-        <CollectionView ItemsSource="{Binding Items}" HeightRequest="300">
-            <CollectionView.ItemTemplate>
-                <DataTemplate>
-                    <HorizontalStackLayout>
-                        <CheckBox IsChecked="{Binding IsSelected}" />
-                        <Label Text="{Binding Name}" VerticalOptions="Center" LineBreakMode="WordWrap"/>
-                    </HorizontalStackLayout>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
-
-        <!-- Przyciski -->
-        <HorizontalStackLayout Spacing="10" HorizontalOptions="Center">
-
-            <Button Text="Anuluj" Clicked="OnCancelClicked" />
-
-            <Button Text="Dodaj" Clicked="OnConfirmClicked" />
-
-        </HorizontalStackLayout>
-
-    </VerticalStackLayout>
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                <Button Text="Anuluj" Clicked="OnCancelClicked"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource PackoSubtleSurfaceLight}, Dark={StaticResource PackoSubtleSurfaceDark}}"
+                        TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}"
+                        FontSize="15" FontAttributes="Bold" CornerRadius="15" HeightRequest="52" />
+                <Button Grid.Column="1" Text="Dodaj" Clicked="OnConfirmClicked"
+                        Style="{StaticResource PackoPrimaryActionButtonStyle}"
+                        FontSize="15" FontAttributes="Bold" CornerRadius="15" HeightRequest="52" />
+            </Grid>
+        </VerticalStackLayout>
+    </Border>
 </toolkit:Popup>

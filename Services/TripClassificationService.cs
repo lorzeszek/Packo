@@ -63,7 +63,44 @@ namespace Packo.Services
 
         private TripClassificationData Parse(string response)
         {
-            return JsonConvert.DeserializeObject<TripClassificationData>(response);
+            if (string.IsNullOrWhiteSpace(response))
+                throw new InvalidOperationException("The trip classification service returned an empty response.");
+
+            // The model may wrap its JSON in prose or a Markdown code block. Extract
+            // the object before deserializing so harmless formatting does not stop
+            // trip creation before the confirmation popup is shown.
+            var objectStart = response.IndexOf('{');
+            var objectEnd = response.LastIndexOf('}');
+            if (objectStart >= 0 && objectEnd > objectStart)
+            {
+                var json = response.Substring(objectStart, objectEnd - objectStart + 1);
+                try
+                {
+                    var parsed = JsonConvert.DeserializeObject<TripClassificationData>(json);
+                    if (!string.IsNullOrWhiteSpace(parsed?.CoverTheme))
+                        return parsed;
+                }
+                catch (JsonException)
+                {
+                    // Try the known theme names in the response below.
+                }
+            }
+
+            var themes = new[]
+            {
+                "big_city", "business_trip", "camping", "mountains_summer_01",
+                "mountains_summer_02", "mountains_winter", "road_trip",
+                "summer_beach_01", "summer_beach_02", "weekend_city_break"
+            };
+
+            var theme = themes.FirstOrDefault(candidate =>
+                response.Contains(candidate, StringComparison.OrdinalIgnoreCase));
+
+            if (theme != null)
+                return new TripClassificationData { CoverTheme = theme };
+
+            throw new InvalidOperationException(
+                $"The trip classification response did not contain a recognized cover theme. Response: {response}");
         }
     }
 }

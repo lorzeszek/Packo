@@ -7,7 +7,7 @@ namespace Packo.Services
 {
     public class CoverCacheService : ICoverCacheService
     {
-        private const int CoverCacheVersion = 1;
+        private const int CoverCacheVersion = 2;
 
         public string GetOrCreateCover(TripDTO trip, string packingSummary)
         {
