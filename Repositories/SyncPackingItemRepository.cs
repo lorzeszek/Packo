@@ -1,4 +1,5 @@
-﻿using Packo.Models.DTO;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using Packo.Models.DTO;
 using Packo.Repositories.Enums;
 using Packo.Repositories.Interfaces;
 using Packo.Repositories.Models;
@@ -33,6 +34,13 @@ namespace Packo.Repositories
         }
 
         public async Task<int> AddPackingItemAsync(PackingItemDTO item)
+        {
+            var id = await AddPackingItemCoreAsync(item);
+            CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger.Default.Send(new Packo.Messages.TripDataChangedMessage());
+            return id;
+        }
+
+        private async Task<int> AddPackingItemCoreAsync(PackingItemDTO item)
         {
             int packinItemId = await _local.AddPackingItemAsync(item);
 
@@ -83,6 +91,12 @@ namespace Packo.Repositories
         }
 
         public async Task DeletePackingItemAsync(PackingItemDTO item)
+        {
+            await DeletePackingItemCoreAsync(item);
+            WeakReferenceMessenger.Default.Send(new Packo.Messages.TripDataChangedMessage());
+        }
+
+        private async Task DeletePackingItemCoreAsync(PackingItemDTO item)
         {
             await _local.DeletePackingItemAsync(item);
 
@@ -142,6 +156,12 @@ namespace Packo.Repositories
         }
 
         public async Task UpdatePackingItemAsync(PackingItemDTO item)
+        {
+            await UpdatePackingItemCoreAsync(item);
+            WeakReferenceMessenger.Default.Send(new Packo.Messages.TripDataChangedMessage());
+        }
+
+        private async Task UpdatePackingItemCoreAsync(PackingItemDTO item)
         {
             await _local.UpdatePackingItemAsync(item);
 

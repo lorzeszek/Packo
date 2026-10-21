@@ -1,4 +1,5 @@
-﻿using Packo.Models.DTO;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using Packo.Models.DTO;
 using Packo.Models.SQLite;
 using Packo.Repositories.Interfaces;
 using Packo.Repositories.Models;
@@ -38,6 +39,13 @@ namespace Packo.Repositories
 
         public async Task<int> AddTripAsync(TripDTO trip)
         {
+            var id = await AddTripCoreAsync(trip);
+            CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger.Default.Send(new Packo.Messages.TripDataChangedMessage());
+            return id;
+        }
+
+        private async Task<int> AddTripCoreAsync(TripDTO trip)
+        {
             int localTripId = await _local.AddTripAsync(trip);
 
             trip.LocalTripId = localTripId;
@@ -76,6 +84,12 @@ namespace Packo.Repositories
         }
 
         public async Task DeleteTripAsync(TripDTO trip)
+        {
+            await DeleteTripCoreAsync(trip);
+            CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger.Default.Send(new Packo.Messages.TripDataChangedMessage());
+        }
+
+        private async Task DeleteTripCoreAsync(TripDTO trip)
         {
             await _local.DeleteTripAsync(trip);
 
@@ -124,6 +138,12 @@ namespace Packo.Repositories
         }
 
         public async Task UpdateTripAsync(TripDTO trip)
+        {
+            await UpdateTripCoreAsync(trip);
+            CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger.Default.Send(new Packo.Messages.TripDataChangedMessage());
+        }
+
+        private async Task UpdateTripCoreAsync(TripDTO trip)
         {
             await _local.UpdateTripAsync(trip);
 

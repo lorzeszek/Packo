@@ -11,21 +11,35 @@ namespace Packo.Services
 
         public string GetOrCreateCover(TripDTO trip, string packingSummary)
         {
-            var path = GetCoverPath(trip);
+            var path = GetCoverPath(trip, packingSummary);
 
             if (File.Exists(path))
                 return path;
 
+            DeleteOldCovers(trip);
+
             var renderer = new TripCoverRenderer();
-            var bitmap = renderer.Render(trip, packingSummary);
+            using var bitmap = renderer.Render(trip, packingSummary);
 
             SaveBitmap(bitmap, path);
 
             return path;
         }
 
-        private static string GetCoverPath(TripDTO trip)
+        private static void DeleteOldCovers(TripDTO trip)
         {
+            var prefix = $"trip_cover_v{CoverCacheVersion}_{trip.LocalTripId}_";
+
+            foreach (var file in Directory.GetFiles(FileSystem.AppDataDirectory, prefix + "*.png"))
+            {
+                try { File.Delete(file); } catch (IOException) { }
+            }
+        }
+
+        private static string GetCoverPath(TripDTO trip, string packingSummary)
+        {
+            var summaryKey = MakeSafeFileName(packingSummary).Replace("/", "-");
+
             var destination = MakeSafeFileName(trip.Destination);
 
             var fileName =
@@ -34,7 +48,8 @@ namespace Packo.Services
                 $"{destination}_" +
                 //$"{trip.CoverTheme}_" +
                 $"{trip.StartDate:yyyyMMdd}_" +
-                $"{trip.EndDate:yyyyMMdd}.png";
+                $"{trip.EndDate:yyyyMMdd}_" +
+                $"{summaryKey}.png";
 
             return Path.Combine(FileSystem.AppDataDirectory, fileName);
         }
@@ -59,7 +74,8 @@ namespace Packo.Services
             using var image = SKImage.FromBitmap(bitmap);
             using var data = image.Encode(SKEncodedImageFormat.Png, 90);
 
-            using var stream = File.OpenWrite(path);
+            using var stream = File.Create(path);
+
             data.SaveTo(stream);
         }
     }

@@ -47,6 +47,11 @@ namespace Packo.ViewModels
                 await OnLoginCompleted();
             });
 
+            WeakReferenceMessenger.Default.Register<TripDataChangedMessage>(this, (r, m) =>
+            {
+                _isDirty = true;
+            });
+
             WeakReferenceMessenger.Default.Register<LogoutCompletedMessage>(this, async (r, m) =>
             {
                 await OnLogoutCompleted();
@@ -63,6 +68,7 @@ namespace Packo.ViewModels
         private async Task OnLogoutCompleted()
         {
             Trips.Clear();
+            _isLoaded = false;
             await _tripRepository.DeleteLocalTrips();
         }
 
@@ -289,6 +295,8 @@ namespace Packo.ViewModels
 
                 Trips.Clear();
                 Trips.AddRange(orderedTrips);
+                _isLoaded = true;
+                _isDirty = false;
             }
             catch (Exception ex)
             {
@@ -314,6 +322,8 @@ namespace Packo.ViewModels
         //}
 
         private bool _isAppearing;
+        private bool _isLoaded;
+        private bool _isDirty;
 
         public bool IsLoadingModalActive => _isAppearing || Session.GlobalIsBusy;
 
@@ -334,10 +344,14 @@ namespace Packo.ViewModels
                     }
 
                     _tripRepository.TripChanged -= OnTripChanged;
+                    _tripRepository.TripChanged -= OnTripChangedWhileAway;
                     _tripRepository.TripChanged += OnTripChanged;
                 }
 
-                await LoadData();
+                if (!_isLoaded || _isDirty)
+                {
+                    await LoadData();
+                }
             }
             finally
             {
@@ -348,7 +362,11 @@ namespace Packo.ViewModels
         public override async Task OnNavigatedFromAsync(IDictionary<string, object> query)
         {
             _tripRepository.TripChanged -= OnTripChanged;
+            _tripRepository.TripChanged -= OnTripChangedWhileAway;
+            _tripRepository.TripChanged += OnTripChangedWhileAway;
             await _tripRepository.SyncPendingChangesAsync();
         }
+
+        private void OnTripChangedWhileAway(TripDTO trip, string operation) => _isDirty = true;
     }
 }

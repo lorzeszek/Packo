@@ -41,7 +41,15 @@ public partial class TripListPage : BasePage// ContentPage
             await vm.OnAppearingAsync();
     }
 
-    //private async void OnTripSelected(object sender, SelectionChangedEventArgs e)
+    protected override async void OnNavigatedTo(NavigatedToEventArgs args)
+    {
+        base.OnNavigatedTo(args);
+
+        if (BindingContext is TripListViewModel vm)
+            await vm.OnAppearingAsync();
+    }
+
+    //private async void OnTripSelected(
     //{
     //    if (e.CurrentSelection.FirstOrDefault() is Trip selectedTrip)
     //    {
