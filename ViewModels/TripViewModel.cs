@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Packo.Models.DTO;
+using Packo.Services;
 using System;
 
 namespace Packo.ViewModels
@@ -37,6 +38,15 @@ namespace Packo.ViewModels
         public TripViewModel(TripDTO trip)
         {
             TripModel = trip;
+            LocalizationResourceManager.Instance.PropertyChanged += OnLanguageChanged;
+        }
+
+        private void OnLanguageChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            OnPropertyChanged(nameof(TripDatesRange));
+            OnPropertyChanged(nameof(TripDaysToGo));
+            OnPropertyChanged(nameof(TripDaysRemaining));
+            OnPropertyChanged(nameof(TripCountdown));
         }
 
         private string GetTripDatesRange()
@@ -72,9 +82,10 @@ namespace Packo.ViewModels
             var days = (startDate.Value.Date - DateTime.Today).Days;
 
             if (days <= 0)
-                return "Starts today";
+                return LocalizationResourceManager.Instance["StartsToday"];
 
-            return days == 1 ? "1 day to go" : $"{days} days to go";
+            var key = days == 1 ? "DayToGo" : "DaysToGo";
+            return string.Format(System.Globalization.CultureInfo.CurrentUICulture, LocalizationResourceManager.Instance[key], days);
         }
 
         private string GetTripDaysRemaining()
@@ -87,12 +98,13 @@ namespace Packo.ViewModels
             var days = (endDate.Value.Date - DateTime.Today).Days;
 
             if (days < 0)
-                return "Trip ended";
+                return LocalizationResourceManager.Instance["TripEnded"];
 
             if (days == 0)
-                return "Last day";
+                return LocalizationResourceManager.Instance["LastDay"];
 
-            return days == 1 ? "1 day remaining" : $"{days} days remaining";
+            var key = days == 1 ? "DayRemaining" : "DaysRemaining";
+            return string.Format(System.Globalization.CultureInfo.CurrentUICulture, LocalizationResourceManager.Instance[key], days);
         }
 
         public void UpdateFromTrip(TripDTO trip)

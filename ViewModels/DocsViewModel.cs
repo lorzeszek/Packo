@@ -5,6 +5,8 @@ using Packo.Models;
 using Packo.Models.DTO;
 using Packo.Repositories.Interfaces;
 using Packo.Services.Interfaces;
+using Packo.Services;
+using System.Globalization;
 
 namespace Packo.ViewModels
 {
@@ -29,9 +31,9 @@ namespace Packo.ViewModels
             if (!File.Exists(document.LocalPath))
             {
                 await Shell.Current.DisplayAlertAsync(
-                    "Błąd",
-                    "Nie znaleziono pliku.",
-                    "OK");
+                    T("Error"),
+                    T("FileNotFound"),
+                    T("Ok"));
 
                 return;
             }
@@ -48,10 +50,10 @@ namespace Packo.ViewModels
                 return;
 
             var confirmed = await Shell.Current.DisplayAlertAsync(
-            "Usuń dokument",
-            $"Czy na pewno chcesz usunąć „{document.FileName}”?",
-            "Usuń",
-            "Anuluj");
+            T("DeleteDocument"),
+            string.Format(CultureInfo.CurrentUICulture, T("DeleteDocumentConfirm"), document.FileName),
+            T("Delete"),
+            T("Cancel"));
 
             if (!confirmed)
                 return;
@@ -70,7 +72,7 @@ namespace Packo.ViewModels
         {
             var result = await FilePicker.Default.PickAsync(new PickOptions
             {
-                PickerTitle = "Wybierz dokument",
+                PickerTitle = T("ChooseDocument"),
                 FileTypes = FilePickerFileType.Pdf
             });
 
@@ -86,9 +88,9 @@ namespace Packo.ViewModels
             if (alreadyExists)
             {
                 await Shell.Current.DisplayAlert(
-                    "Dokument już istnieje",
-                    "Ten dokument został już dodany.",
-                    "OK");
+                    T("DuplicateDocument"),
+                    T("DuplicateDocumentMessage"),
+                    T("Ok"));
 
                 return;
             }
@@ -130,6 +132,8 @@ namespace Packo.ViewModels
                 FileSize = document.FileSize
             });
         }
+
+        private static string T(string key) => LocalizationResourceManager.Instance[key];
 
         private async Task LoadDocumentsAsync()
         {

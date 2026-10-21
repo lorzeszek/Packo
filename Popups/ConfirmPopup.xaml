@@ -4,6 +4,7 @@
     x:Class="Packo.Popups.ConfirmPopup"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:loc="clr-namespace:Packo.Extensions"
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     CanBeDismissedByTappingOutsideOfPopup="False">
 
@@ -17,20 +18,20 @@
                        VerticalTextAlignment="Center" TextColor="{StaticResource PackoAccentLight}" />
             </Border>
 
-            <Label x:Name="TitleLabel" Text="Confirm" FontSize="20" FontAttributes="Bold"
+            <Label x:Name="TitleLabel" Text="{loc:Translate Confirm}" FontSize="20" FontAttributes="Bold"
                    HorizontalTextAlignment="Center"
                    TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
 
-            <Label x:Name="MessageLabel" Text="Are you sure?" FontSize="14"
+            <Label x:Name="MessageLabel" Text="{loc:Translate AreYouSure}" FontSize="14"
                    HorizontalTextAlignment="Center" LineBreakMode="WordWrap"
                    TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
 
             <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,4,0,0">
-                <Button Text="No" Clicked="OnCancelClicked"
+                <Button Text="{loc:Translate No}" Clicked="OnCancelClicked"
                         BackgroundColor="{AppThemeBinding Light={StaticResource PackoSubtleSurfaceLight}, Dark={StaticResource PackoSubtleSurfaceDark}}"
                         TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}"
                         FontSize="15" FontAttributes="Bold" CornerRadius="15" HeightRequest="52" />
-                <Button Grid.Column="1" Text="Yes" Clicked="OnConfirmClicked"
+                <Button Grid.Column="1" Text="{loc:Translate Yes}" Clicked="OnConfirmClicked"
                         Style="{StaticResource PackoPrimaryActionButtonStyle}"
                         FontSize="15" FontAttributes="Bold" CornerRadius="15" HeightRequest="52" />
             </Grid>

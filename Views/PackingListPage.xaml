@@ -2,11 +2,12 @@
 <local:BasePage xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
                 xmlns="http://schemas.microsoft.com/dotnet/maui/global"
                 xmlns:viewmodels="clr-namespace:Packo.ViewModels"
+                xmlns:loc="clr-namespace:Packo.Extensions"
                 xmlns:local="clr-namespace:Packo.Models.Pages"
                 x:Class="Packo.Views.PackingListPage"
                 x:Name="PackingListPageRoot"
                 x:DataType="viewmodels:PackingListViewModel"
-                Title="Packing list"
+                Title="{loc:Translate PackingListTitle}"
                 BackgroundColor="{AppThemeBinding Light={StaticResource PackoPageBackgroundLight}, Dark={StaticResource PackoPageBackgroundDark}}">
 
     <ContentPage.Resources>
@@ -17,11 +18,11 @@
 
     <Grid RowDefinitions="Auto,*,Auto">
         <VerticalStackLayout Grid.Row="0" Padding="22,20,22,14" Spacing="6">
-            <Label Text="ONE THING AT A TIME" FontSize="11" CharacterSpacing="2.1"
+            <Label Text="{loc:Translate PackingEyebrow}" FontSize="11" CharacterSpacing="2.1"
                    FontAttributes="Bold" TextColor="{StaticResource PackoAccentLight}" />
-            <Label Text="Packing list" FontSize="29" FontAttributes="Bold"
+            <Label Text="{loc:Translate PackingListTitle}" FontSize="29" FontAttributes="Bold"
                    TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
-            <Label Text="Check items off as they find their way into your bag."
+            <Label Text="{loc:Translate PackingDescription}"
                    FontSize="14" LineBreakMode="WordWrap"
                    TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
         </VerticalStackLayout>
@@ -36,10 +37,10 @@
                         <Label Text="✓" FontSize="34" FontAttributes="Bold" HorizontalTextAlignment="Center"
                                VerticalTextAlignment="Center" TextColor="{StaticResource PackoAccentLight}" />
                     </Border>
-                    <Label Text="Your list is ready for ideas" FontSize="19" FontAttributes="Bold"
+                    <Label Text="{loc:Translate ListReady}" FontSize="19" FontAttributes="Bold"
                            HorizontalTextAlignment="Center"
                            TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
-                    <Label Text="Add your first item below and start planning."
+                    <Label Text="{loc:Translate AddFirstItem}"
                            FontSize="14" HorizontalTextAlignment="Center" LineBreakMode="WordWrap"
                            TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
                 </VerticalStackLayout>
@@ -70,7 +71,7 @@
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
                 <Border Padding="12,2" StrokeThickness="1" Stroke="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoBorderDark}}"
                         StrokeShape="RoundRectangle 17" BackgroundColor="{AppThemeBinding Light={StaticResource PackoSurfaceLight}, Dark={StaticResource PackoSurfaceDark}}">
-                    <Entry Placeholder="Dodaj przedmiot..." ReturnType="Done"
+                    <Entry Placeholder="{loc:Translate AddItemPlaceholder}" ReturnType="Done"
                            Text="{Binding NewItemName, Mode=TwoWay}" FontSize="15">
                         <Entry.Behaviors>
                             <EventToCommandBehavior EventName="Completed" Command="{Binding AddItemCommand}" />

@@ -2,6 +2,7 @@
 using Packo.Interfaces;
 using Packo.Repositories.Interfaces;
 using Packo.Services.Interfaces;
+using Packo.Services;
 using Packo.Views;
 using System.Windows.Input;
 
@@ -75,6 +76,14 @@ namespace Packo.ViewModels
         public StartViewModel(ILocalUserService localUserService, ISupabaseService supabase, ISessionService sessionService, IPackingItemRepository packingItemRepository, ITripRepository tripRepository, IGoogleAuthService googleAuthService) : base(localUserService, supabase, sessionService, packingItemRepository, tripRepository, googleAuthService)
         {
             //_googleAuthService = googleAuthService;
+            LocalizationResourceManager.Instance.PropertyChanged += OnLanguageChanged;
+        }
+
+        private bool _isCurrentTrip;
+
+        private void OnLanguageChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            Title = LocalizationResourceManager.Instance[_isCurrentTrip ? "CurrentTrip" : HasActiveTrips ? "NextTrip" : "ReadyAdventure"];
         }
 
         //public async Task InitializeAsync()
@@ -159,7 +168,8 @@ namespace Packo.ViewModels
 
             if (HasActiveTrips && nearestTrip != null)
             {
-                Title = nearestTrip.Trip.StartDate < DateTime.Now ? "Current Trip" : "Next Trip";
+                _isCurrentTrip = nearestTrip.Trip.StartDate < DateTime.Now;
+                Title = LocalizationResourceManager.Instance[_isCurrentTrip ? "CurrentTrip" : "NextTrip"];
                 //Title = nearestTrip.Trip.StartDate < DateTime.Now ? "Current Trip: " + (nearestTrip?.Trip.Destination) : "Next Trip: " + (nearestTrip?.Trip.Destination);
 
                 Trip = new TripViewModel(nearestTrip.Trip)
@@ -169,7 +179,8 @@ namespace Packo.ViewModels
             }
             else
             {
-                Title = "Ready for your next adventure?";
+                _isCurrentTrip = false;
+                Title = LocalizationResourceManager.Instance["ReadyAdventure"];
             }
 
             IsDataLoaded = true;

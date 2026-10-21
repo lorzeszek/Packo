@@ -8,6 +8,7 @@ using Packo.Models.Enums;
 using Packo.Popups;
 using Packo.Repositories.Interfaces;
 using Packo.Services.Interfaces;
+using Packo.Services;
 using System.Collections.ObjectModel;
 
 namespace Packo.ViewModels
@@ -61,6 +62,7 @@ namespace Packo.ViewModels
 
             foreach (var transportOption in TransportOptions)
                 transportOption.PropertyChanged += OnTransportOptionChanged;
+            LocalizationResourceManager.Instance.PropertyChanged += (_, _) => SyncSelectedTransportTypes();
         }
 
         // ====== INPUT ======
@@ -240,7 +242,7 @@ namespace Packo.ViewModels
                 Session.GlobalIsBusy = false;
             });
 
-            var proposeListPopup = new ConfirmPopup("Lista pakowania", "Czy chcesz wygenerować listę rzeczy do spakowania?");
+            var proposeListPopup = new ConfirmPopup(LocalizationResourceManager.Instance["SuggestedPackingTitle"], LocalizationResourceManager.Instance["SuggestedPackingMessage"]);
 
             var result = await Application.Current.MainPage.ShowPopupAsync<bool>(proposeListPopup);
 
@@ -255,7 +257,14 @@ namespace Packo.ViewModels
 
                 try
                 {
-                    var proposeListItems = await _packingSuggestionService.GenerateItemsAsync(Destination, StartDate, EndDate, AdultsCount, ChildrenAge, SelectedTransportTypes);
+                    var proposeListItems = await _packingSuggestionService.GenerateItemsAsync(
+                        Destination,
+                        StartDate,
+                        EndDate,
+                        AdultsCount,
+                        ChildrenAge,
+                        SelectedTransportTypes,
+                        LocalizationResourceManager.Instance.CurrentLanguage);
 
                     var addSelectedItemsPopup = new PackingItemsPopup(proposeListItems);
 

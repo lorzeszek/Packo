@@ -8,6 +8,7 @@ using Packo.Models.DTO;
 using Packo.Popups;
 using Packo.Repositories.Interfaces;
 using Packo.Services.Interfaces;
+using Packo.Services;
 using Packo.Views;
 using System.Windows.Input;
 
@@ -34,7 +35,8 @@ namespace Packo.ViewModels
         {
             _coverCacheService = coverCacheService;
 
-            Title = "Moje wycieczki";
+            Title = LocalizationResourceManager.Instance["TabTrips"];
+            LocalizationResourceManager.Instance.PropertyChanged += (_, _) => Title = LocalizationResourceManager.Instance["TabTrips"];
 
             //LoginWithGoogleCommand = new AsyncRelayCommand(LoginWithGoogle, () => !IsBusy);
 
@@ -146,7 +148,7 @@ namespace Packo.ViewModels
 
         public async Task Logout()
         {
-            var popup = new ConfirmPopup("Log out", "Do you want to log out?");
+            var popup = new ConfirmPopup(LocalizationResourceManager.Instance["LogoutConfirmTitle"], LocalizationResourceManager.Instance["LogoutConfirmMessage"]);
 
             var result = await Application.Current.MainPage.ShowPopupAsync<bool>(popup);
 

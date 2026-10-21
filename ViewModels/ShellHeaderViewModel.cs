@@ -6,6 +6,7 @@ using Packo.Messages;
 using Packo.Popups;
 using Packo.Repositories.Interfaces;
 using Packo.Services.Interfaces;
+using Packo.Services;
 
 namespace Packo.ViewModels
 {
@@ -89,7 +90,7 @@ namespace Packo.ViewModels
         {
             try
             {
-                var popup = new ConfirmPopup("Log out", "Do you want to log out?");
+                var popup = new ConfirmPopup(LocalizationResourceManager.Instance["LogoutConfirmTitle"], LocalizationResourceManager.Instance["LogoutConfirmMessage"]);
 
                 var result = await Application.Current.MainPage.ShowPopupAsync<bool>(popup);
 

@@ -3,6 +3,7 @@
     x:Class="Packo.Popups.PackingItemsPopup"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:loc="clr-namespace:Packo.Extensions"
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     CanBeDismissedByTappingOutsideOfPopup="False">
 
@@ -16,18 +17,18 @@
                            VerticalTextAlignment="Center" TextColor="{StaticResource PackoAccentLight}" />
                 </Border>
                 <VerticalStackLayout Grid.Column="1" Spacing="3" VerticalOptions="Center">
-                    <Label Text="Proponowana lista" FontSize="19" FontAttributes="Bold"
+                    <Label Text="{loc:Translate SuggestedList}" FontSize="19" FontAttributes="Bold"
                            TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
-                    <Label Text="Wybierz rzeczy do dodania" FontSize="13"
+                    <Label Text="{loc:Translate SelectItemsToAdd}" FontSize="13"
                            TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
                 </VerticalStackLayout>
             </Grid>
 
             <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                <Button Text="Zaznacz wszystko" Clicked="OnSelectAllClicked"
+                <Button Text="{loc:Translate SelectAll}" Clicked="OnSelectAllClicked"
                         BackgroundColor="{StaticResource PackoAccentSoftLight}" TextColor="{StaticResource PackoAccentStrongLight}"
                         FontSize="12" FontAttributes="Bold" CornerRadius="13" Padding="8,10" />
-                <Button Grid.Column="1" Text="Odznacz wszystko" Clicked="OnDeselectAllClicked"
+                <Button Grid.Column="1" Text="{loc:Translate DeselectAll}" Clicked="OnDeselectAllClicked"
                         BackgroundColor="{AppThemeBinding Light={StaticResource PackoSubtleSurfaceLight}, Dark={StaticResource PackoSubtleSurfaceDark}}"
                         TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}"
                         FontSize="12" FontAttributes="Bold" CornerRadius="13" Padding="8,10" />
@@ -51,11 +52,11 @@
             </Border>
 
             <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                <Button Text="Anuluj" Clicked="OnCancelClicked"
+                <Button Text="{loc:Translate Cancel}" Clicked="OnCancelClicked"
                         BackgroundColor="{AppThemeBinding Light={StaticResource PackoSubtleSurfaceLight}, Dark={StaticResource PackoSubtleSurfaceDark}}"
                         TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}"
                         FontSize="15" FontAttributes="Bold" CornerRadius="15" HeightRequest="52" />
-                <Button Grid.Column="1" Text="Dodaj" Clicked="OnConfirmClicked"
+                <Button Grid.Column="1" Text="{loc:Translate Add}" Clicked="OnConfirmClicked"
                         Style="{StaticResource PackoPrimaryActionButtonStyle}"
                         FontSize="15" FontAttributes="Bold" CornerRadius="15" HeightRequest="52" />
             </Grid>

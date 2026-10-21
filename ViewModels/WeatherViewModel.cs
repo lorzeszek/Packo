@@ -4,6 +4,7 @@ using Packo.Models.DTO;
 using Packo.Repositories.Interfaces;
 using Packo.Services;
 using Packo.Services.Interfaces;
+using System.Collections.Concurrent;
 
 namespace Packo.ViewModels
 {
@@ -22,40 +23,41 @@ namespace Packo.ViewModels
         private async Task LoadWeatherForDestinationsAsync(IReadOnlyList<string> destinations)
         {
             destinations ??= Array.Empty<string>();
-
-            // Reconcile first so an empty trip list also clears previously loaded weather.
-            var destinationsToRemove = Destinations
-                .Where(d => !destinations.Contains(d.Destination, StringComparer.OrdinalIgnoreCase))
+            var orderedDestinations = destinations
+                .Where(destination => !string.IsNullOrWhiteSpace(destination))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
-            MainThread.BeginInvokeOnMainThread(() => Destinations.RemoveRange(destinationsToRemove));
+            var existingWeather = Destinations
+                .GroupBy(weather => weather.Destination, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(group => group.Key, group => group.First(), StringComparer.OrdinalIgnoreCase);
+            var newlyLoadedWeather = new ConcurrentDictionary<string, DestinationWeatherDTO>(StringComparer.OrdinalIgnoreCase);
 
-            if (destinations.Count == 0)
-                return;
-
-            await Parallel.ForEachAsync(destinations, async (destination, ct) =>
+            // Fetch missing forecasts concurrently, then restore the trip-date order
+            // supplied by the repository when replacing the visible collection.
+            await Parallel.ForEachAsync(orderedDestinations, async (destination, ct) =>
             {
-                if (Destinations.Any(d => string.Equals(d.Destination, destination, StringComparison.OrdinalIgnoreCase)))
-                {
+                if (string.IsNullOrWhiteSpace(destination)
+                    || existingWeather.ContainsKey(destination)
+                    || newlyLoadedWeather.ContainsKey(destination))
                     return;
-                }
-                else
-                {
-                    var weather = await GetWeatherForDestination(destination);
 
-                    if (weather != null)
-                    {
-                        MainThread.BeginInvokeOnMainThread(() =>
-                        {
-                            Destinations.Add(weather);
-                        });
-                    }
-                }
+                var weather = await GetWeatherForDestination(destination);
+                if (weather != null)
+                    newlyLoadedWeather.TryAdd(destination, weather);
             });
 
-            MainThread.BeginInvokeOnMainThread(() =>
+            var orderedWeather = orderedDestinations
+                .Select(destination =>
+                    existingWeather.TryGetValue(destination, out var existing)
+                        ? existing
+                        : newlyLoadedWeather.TryGetValue(destination, out var loaded) ? loaded : null)
+                .Where(weather => weather is not null)
+                .Cast<DestinationWeatherDTO>()
+                .ToList();
+
+            await MainThread.InvokeOnMainThreadAsync(() =>
             {
-                var existingWeatherToRemove = Destinations.Where(d => !destinations.Contains(d.Destination, StringComparer.OrdinalIgnoreCase)).ToList();
-                Destinations.RemoveRange(existingWeatherToRemove);
+                Destinations.ReplaceRange(orderedWeather);
             });
         }
 

@@ -4,6 +4,7 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:views="clr-namespace:Packo.Views"
+    xmlns:loc="clr-namespace:Packo.Extensions"
     FlyoutBehavior="Disabled"
     Title="Packo"
     Shell.BackgroundColor="{AppThemeBinding Light={StaticResource PackoPageBackgroundLight}, Dark={StaticResource PackoPageBackgroundDark}}"
@@ -22,31 +23,31 @@
 
     <TabBar>
         <ShellContent
-            Title="Home"
+            Title="{loc:Translate TabHome}"
             Icon="tab_home.svg"
             Route="Home"
             ContentTemplate="{DataTemplate views:StartPage}" />
 
         <ShellContent
-            Title="Trips"
+            Title="{loc:Translate TabTrips}"
             Icon="tab_trips.svg"
             Route="TripList"
             ContentTemplate="{DataTemplate views:TripListPage}" />
 
         <ShellContent
-            Title="Weather"
+            Title="{loc:Translate TabWeather}"
             Icon="tab_weather.svg"
             Route="Weather"
             ContentTemplate="{DataTemplate views:WeatherPage}" />
 
         <ShellContent
-            Title="Docs"
+            Title="{loc:Translate TabDocs}"
             Icon="tab_docs.svg"
             Route="Docs"
             ContentTemplate="{DataTemplate views:DocsPage}" />
 
         <ShellContent
-            Title="Settings"
+            Title="{loc:Translate TabSettings}"
             Icon="tab_settings.svg"
             Route="Settings"
             ContentTemplate="{DataTemplate views:SettingsPage}" />

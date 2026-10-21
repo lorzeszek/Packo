@@ -1,5 +1,6 @@
 ﻿using Packo.Helpers;
 using Packo.Models.SQLite;
+using Packo.Services;
 using Packo.Repositories.Models;
 using Packo.Services.Interfaces;
 using Packo.Views;
@@ -19,6 +20,7 @@ namespace Packo
         public App(ISessionService sessionService, SQLiteAsyncConnection db, ILocalUserService localUserService)
         {
             InitializeComponent();
+            LocalizationResourceManager.Instance.ApplySavedLanguage();
             AppThemeManager.ApplySavedTheme();
             _sessionService = sessionService;
             _db = db;

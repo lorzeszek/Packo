@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="TabHome" xml:space="preserve"><value>Home</value></data>
+  <data name="TabTrips" xml:space="preserve"><value>Trips</value></data>
+  <data name="TabWeather" xml:space="preserve"><value>Weather</value></data>
+  <data name="TabDocs" xml:space="preserve"><value>Docs</value></data>
+  <data name="TabSettings" xml:space="preserve"><value>Settings</value></data>
+  <data name="Login" xml:space="preserve"><value>Login</value></data><data name="Logout" xml:space="preserve"><value>Logout</value></data>
+  <data name="Loading" xml:space="preserve"><value>Loading...</value></data>
+  <data name="StartTagline" xml:space="preserve"><value>Your travel, together.</value></data>
+  <data name="StartIntro" xml:space="preserve"><value>A little preparation makes the journey even better.</value></data>
+  <data name="StartTripGlance" xml:space="preserve"><value>Your trip at a glance</value></data>
+  <data name="StartTripTip" xml:space="preserve"><value>Keep your plans close and your packing stress-free.</value></data>
+  <data name="PackingProgress" xml:space="preserve"><value>Packing progress</value></data>
+  <data name="LetsGo" xml:space="preserve"><value>LET'S GO!</value></data>
+  <data name="ReadyAdventure" xml:space="preserve"><value>Ready for your next adventure?</value></data>
+  <data name="PlanJourney" xml:space="preserve"><value>Plan your trip, gather your essentials, and enjoy every moment along the way.</value></data>
+  <data name="AllInOnePlace" xml:space="preserve"><value>Everything in one place</value></data>
+  <data name="DatesPlansPacking" xml:space="preserve"><value>Your dates, plans, and packing list.</value></data>
+  <data name="CreateFirstTrip" xml:space="preserve"><value>Create your first trip   →</value></data>
+  <data name="StoryStartsPlan" xml:space="preserve"><value>Your next great story starts with a plan.</value></data>
+  <data name="TripsEyebrow" xml:space="preserve"><value>YOUR GETAWAYS</value></data>
+  <data name="TripsIntro" xml:space="preserve"><value>All your plans and memories, in one place.</value></data>
+  <data name="NextAdventureWaiting" xml:space="preserve"><value>Your next adventure is waiting</value></data>
+  <data name="CreateTripToPack" xml:space="preserve"><value>Create a trip to start planning what to pack.</value></data>
+  <data name="PastTrip" xml:space="preserve"><value>PAST TRIP</value></data>
+  <data name="PlanTrip" xml:space="preserve"><value>Plan a trip   +</value></data>
+  <data name="PackingEyebrow" xml:space="preserve"><value>ONE THING AT A TIME</value></data>
+  <data name="PackingListTitle" xml:space="preserve"><value>Packing list</value></data>
+  <data name="PackingDescription" xml:space="preserve"><value>Check items off as they find their way into your bag.</value></data>
+  <data name="ListReady" xml:space="preserve"><value>Your list is ready for ideas</value></data>
+  <data name="AddFirstItem" xml:space="preserve"><value>Add your first item below and start planning.</value></data>
+  <data name="AddItemPlaceholder" xml:space="preserve"><value>Add an item...</value></data>
+  <data name="DocsEyebrow" xml:space="preserve"><value>KEEP THE IMPORTANT THINGS CLOSE</value></data>
+  <data name="DocsIntro" xml:space="preserve"><value>Tickets, reservations, and travel paperwork in one spot.</value></data>
+  <data name="NoDocs" xml:space="preserve"><value>No documents added yet</value></data>
+  <data name="AddPdfs" xml:space="preserve"><value>Add your PDFs so your travel details are easy to find.</value></data>
+  <data name="AddedAt" xml:space="preserve"><value>Added {0:dd MMM yyyy}</value></data>
+  <data name="AddDocument" xml:space="preserve"><value>Add a document   +</value></data>
+  <data name="WeatherEyebrow" xml:space="preserve"><value>BE READY FOR THE ROAD</value></data>
+  <data name="WeatherIntro" xml:space="preserve"><value>A quick look at the forecast for your upcoming trips.</value></data>
+  <data name="NoForecasts" xml:space="preserve"><value>No trip forecasts yet</value></data>
+  <data name="AddTripForecast" xml:space="preserve"><value>Add an upcoming trip and its local forecast will show up here.</value></data>
+  <data name="CurrentConditions" xml:space="preserve"><value>CURRENT CONDITIONS</value></data>
+  <data name="Humidity" xml:space="preserve"><value>HUMIDITY</value></data><data name="Wind" xml:space="preserve"><value>WIND</value></data>
+  <data name="Forecast15Day" xml:space="preserve"><value>15-DAY FORECAST</value></data>
+  <data name="TripSetupEyebrow" xml:space="preserve"><value>PLAN YOUR GETAWAY</value></data>
+  <data name="TripSetupHeading" xml:space="preserve"><value>Let’s make it a trip to remember.</value></data>
+  <data name="TripSetupIntro" xml:space="preserve"><value>A few details will help us build the right packing list for you.</value></data>
+  <data name="DestinationQuestion" xml:space="preserve"><value>Where are you headed?</value></data>
+  <data name="DestinationPlaceholder" xml:space="preserve"><value>e.g. Lisbon, Portugal</value></data>
+  <data name="DateQuestion" xml:space="preserve"><value>When are you going?</value></data>
+  <data name="Start" xml:space="preserve"><value>START</value></data><data name="End" xml:space="preserve"><value>END</value></data>
+  <data name="TravelersQuestion" xml:space="preserve"><value>Who’s coming along?</value></data>
+  <data name="TravelersDescription" xml:space="preserve"><value>Set the number of travelers.</value></data>
+  <data name="Adults" xml:space="preserve"><value>Adults</value></data><data name="Children" xml:space="preserve"><value>Children</value></data>
+  <data name="Child" xml:space="preserve"><value>Child</value></data><data name="Age" xml:space="preserve"><value>Age</value></data>
+  <data name="TransportQuestion" xml:space="preserve"><value>How will you get there?</value></data>
+  <data name="ChooseAllThatApply" xml:space="preserve"><value>Choose all that apply.</value></data>
+  <data name="CreatePackingList" xml:space="preserve"><value>Create packing list   →</value></data>
+  <data name="SettingsEyebrow" xml:space="preserve"><value>MAKE IT YOURS</value></data>
+  <data name="SettingsIntro" xml:space="preserve"><value>A few small touches to make Packo feel like home.</value></data>
+  <data name="Appearance" xml:space="preserve"><value>Appearance</value></data>
+  <data name="AppearanceIntro" xml:space="preserve"><value>Choose how Packo looks on this device.</value></data>
+  <data name="ColorTheme" xml:space="preserve"><value>Color theme</value></data><data name="SelectTheme" xml:space="preserve"><value>Select a theme</value></data>
+  <data name="ThemeHelp" xml:space="preserve"><value>System follows your device setting. Light and Dark stay fixed.</value></data>
+  <data name="ThemeSaved" xml:space="preserve"><value>Your theme choice is saved automatically.</value></data>
+  <data name="Language" xml:space="preserve"><value>Language</value></data>
+  <data name="SelectLanguage" xml:space="preserve"><value>Select a language</value></data>
+  <data name="LanguageHelp" xml:space="preserve"><value>Choose the language used throughout Packo.</value></data>
+  <data name="LanguageSaved" xml:space="preserve"><value>Your language choice is saved automatically.</value></data>
+  <data name="PreferencesSaved" xml:space="preserve"><value>Your appearance and language choices are saved automatically.</value></data>
+  <data name="SystemTheme" xml:space="preserve"><value>System</value></data><data name="LightTheme" xml:space="preserve"><value>Light</value></data><data name="DarkTheme" xml:space="preserve"><value>Dark</value></data>
+  <data name="Confirm" xml:space="preserve"><value>Confirm</value></data><data name="AreYouSure" xml:space="preserve"><value>Are you sure?</value></data>
+  <data name="No" xml:space="preserve"><value>No</value></data><data name="Yes" xml:space="preserve"><value>Yes</value></data>
+  <data name="SuggestedList" xml:space="preserve"><value>Suggested list</value></data>
+  <data name="SelectItemsToAdd" xml:space="preserve"><value>Select items to add</value></data>
+  <data name="SelectAll" xml:space="preserve"><value>Select all</value></data><data name="DeselectAll" xml:space="preserve"><value>Deselect all</value></data>
+  <data name="Cancel" xml:space="preserve"><value>Cancel</value></data><data name="Add" xml:space="preserve"><value>Add</value></data>
+  <data name="Error" xml:space="preserve"><value>Error</value></data><data name="FileNotFound" xml:space="preserve"><value>File not found.</value></data>
+  <data name="Ok" xml:space="preserve"><value>OK</value></data>
+  <data name="DeleteDocument" xml:space="preserve"><value>Delete document</value></data>
+  <data name="DeleteDocumentConfirm" xml:space="preserve"><value>Are you sure you want to delete “{0}”?</value></data>
+  <data name="Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="ChooseDocument" xml:space="preserve"><value>Choose a document</value></data>
+  <data name="DuplicateDocument" xml:space="preserve"><value>Document already exists</value></data><data name="DuplicateDocumentMessage" xml:space="preserve"><value>This document has already been added.</value></data>
+  <data name="SuggestedPackingTitle" xml:space="preserve"><value>Packing list</value></data><data name="SuggestedPackingMessage" xml:space="preserve"><value>Would you like to generate a packing list?</value></data>
+  <data name="Plane" xml:space="preserve"><value>Plane</value></data><data name="Train" xml:space="preserve"><value>Train</value></data><data name="Bus" xml:space="preserve"><value>Bus</value></data><data name="Car" xml:space="preserve"><value>Car</value></data>
+  <data name="LogoutConfirmTitle" xml:space="preserve"><value>Log out</value></data><data name="LogoutConfirmMessage" xml:space="preserve"><value>Do you want to log out?</value></data>
+  <data name="StartsToday" xml:space="preserve"><value>Starts today</value></data><data name="DayToGo" xml:space="preserve"><value>{0} day to go</value></data><data name="DaysToGo" xml:space="preserve"><value>{0} days to go</value></data>
+  <data name="TripEnded" xml:space="preserve"><value>Trip ended</value></data><data name="LastDay" xml:space="preserve"><value>Last day</value></data>
+  <data name="DayRemaining" xml:space="preserve"><value>{0} day remaining</value></data><data name="DaysRemaining" xml:space="preserve"><value>{0} days remaining</value></data>
+  <data name="CurrentTrip" xml:space="preserve"><value>Current Trip</value></data><data name="NextTrip" xml:space="preserve"><value>Next Trip</value></data>
+</root>

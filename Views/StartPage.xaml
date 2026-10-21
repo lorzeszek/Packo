@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns="http://schemas.microsoft.com/dotnet/maui/global"
+             xmlns:loc="clr-namespace:Packo.Extensions"
              x:DataType="StartViewModel"
              x:Name="StartView"
              x:Class="Packo.Views.StartPage"
-             Title="Witamy"
+             Title="{loc:Translate TabHome}"
              Shell.NavBarIsVisible="True"
              NavigationPage.HasBackButton="False"
              BackgroundColor="{AppThemeBinding Light={StaticResource PackoPageBackgroundLight}, Dark={StaticResource PackoPageBackgroundDark}}">
@@ -21,7 +22,7 @@
                 <VerticalStackLayout Spacing="2">
                     <Label Text="PACKO" FontSize="12" CharacterSpacing="3"
                            FontAttributes="Bold" TextColor="{StaticResource PackoAccentLight}" />
-                    <Label Text="Your travel, together." FontSize="14"
+                    <Label Text="{loc:Translate StartTagline}" FontSize="14"
                            TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
                 </VerticalStackLayout>
                 <Border Grid.Column="1" WidthRequest="46" HeightRequest="46"
@@ -41,7 +42,7 @@
                 <VerticalStackLayout Spacing="6">
                     <Label Text="{Binding Title}" FontSize="30" FontAttributes="Bold"
                            TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
-                    <Label Text="A little preparation makes the journey even better."
+                    <Label Text="{loc:Translate StartIntro}"
                            FontSize="15" LineBreakMode="WordWrap"
                            TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
                 </VerticalStackLayout>
@@ -73,9 +74,9 @@
                         </Grid>
 
                         <VerticalStackLayout Padding="22,20" Spacing="8">
-                            <Label Text="Your trip at a glance" FontSize="18" FontAttributes="Bold"
+                            <Label Text="{loc:Translate StartTripGlance}" FontSize="18" FontAttributes="Bold"
                                    TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
-                            <Label Text="Keep your plans close and your packing stress-free."
+                            <Label Text="{loc:Translate StartTripTip}"
                                    FontSize="14" LineBreakMode="WordWrap"
                                    TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
                         </VerticalStackLayout>
@@ -88,7 +89,7 @@
                         <Label Text="✓" FontSize="20" FontAttributes="Bold" TextColor="{StaticResource PackoAccentLight}"
                                VerticalTextAlignment="Center" />
                         <VerticalStackLayout Grid.Column="1" Spacing="3">
-                            <Label Text="Packing progress" FontSize="13" FontAttributes="Bold"
+                            <Label Text="{loc:Translate PackingProgress}" FontSize="13" FontAttributes="Bold"
                                    TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
                             <Label Text="{Binding PackingSummary, Mode=OneWay}"
                                    TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextAltDark}}" />
@@ -116,16 +117,16 @@
                         <Border Padding="10,7" StrokeThickness="0" StrokeShape="RoundRectangle 16"
                                 BackgroundColor="{StaticResource PackoWhite}" HorizontalOptions="Start" VerticalOptions="Start"
                                 Margin="18,18,0,0">
-                            <Label Text="LET'S GO!" FontSize="10" CharacterSpacing="1.4" FontAttributes="Bold"
+                            <Label Text="{loc:Translate LetsGo}" FontSize="10" CharacterSpacing="1.4" FontAttributes="Bold"
                                    TextColor="#B96D4D" />
                         </Border>
                     </Grid>
                 </Border>
 
                 <VerticalStackLayout Spacing="10">
-                    <Label Text="Ready for your next adventure?" FontSize="30" FontAttributes="Bold"
+                    <Label Text="{loc:Translate ReadyAdventure}" FontSize="30" FontAttributes="Bold"
                            LineHeight="1.05" TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
-                    <Label Text="Plan your trip, gather your essentials, and enjoy every moment along the way."
+                    <Label Text="{loc:Translate PlanJourney}"
                            FontSize="15" LineHeight="1.25" LineBreakMode="WordWrap"
                            TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
                 </VerticalStackLayout>
@@ -139,21 +140,21 @@
                                    TextColor="{StaticResource PackoAccentLight}" />
                         </Border>
                         <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="3">
-                            <Label Text="Everything in one place" FontSize="14" FontAttributes="Bold"
+                            <Label Text="{loc:Translate AllInOnePlace}" FontSize="14" FontAttributes="Bold"
                                    TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
-                            <Label Text="Your dates, plans, and packing list." FontSize="12"
+                            <Label Text="{loc:Translate DatesPlansPacking}" FontSize="12"
                                    TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
                         </VerticalStackLayout>
                     </Grid>
                 </Border>
 
-                <Button Text="Create your first trip   →"
+                <Button Text="{loc:Translate CreateFirstTrip}"
                         Command="{Binding StartPackingCommand}"
                         BackgroundColor="{StaticResource PackoAccentLight}"
                         TextColor="{StaticResource PackoWhite}" FontSize="16" FontAttributes="Bold"
                         CornerRadius="18" HeightRequest="58" Padding="20,12"
                         HorizontalOptions="Fill" />
-                <Label Text="Your next great story starts with a plan."
+                <Label Text="{loc:Translate StoryStartsPlan}"
                        FontSize="12" HorizontalTextAlignment="Center"
                        TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
             </VerticalStackLayout>

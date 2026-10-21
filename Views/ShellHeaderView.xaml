@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                xmlns:loc="clr-namespace:Packo.Extensions"
              xmlns:viewmodels="clr-namespace:Packo.ViewModels"
              xmlns:converters="clr-namespace:Packo.Converters"
              x:Class="Packo.Views.ShellHeaderView"
@@ -26,7 +27,7 @@
                    TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
         </HorizontalStackLayout>
 
-        <Button Grid.Column="1" Text="Login"
+        <Button Grid.Column="1" Text="{loc:Translate Login}"
                 Command="{Binding LoginWithGoogleCommand}"
                 IsVisible="{Binding Session.IsAuthenticated, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}"
                 BackgroundColor="{AppThemeBinding Light={StaticResource PackoAccentLight}, Dark={StaticResource PackoShellAccentLight}}"
@@ -49,7 +50,7 @@
                        VerticalTextAlignment="Center" FontSize="12" LineBreakMode="TailTruncation"
                        MaximumWidthRequest="140"
                        TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextAltLight}, Dark={StaticResource PackoSecondaryTextAltDark}}" />
-                <Button Grid.Column="2" Text="Logout" Command="{Binding LogoutCommand}"
+                <Button Grid.Column="2" Text="{loc:Translate Logout}" Command="{Binding LogoutCommand}"
                         BackgroundColor="{AppThemeBinding Light={StaticResource PackoAccentSoftLight}, Dark={StaticResource PackoAccentSoftDark}}"
                         TextColor="{AppThemeBinding Light={StaticResource PackoAccentStrongLight}, Dark={StaticResource PackoAccentDark}}"
                         CornerRadius="12" Padding="10,5" MinimumHeightRequest="34"

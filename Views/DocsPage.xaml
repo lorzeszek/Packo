@@ -2,11 +2,12 @@
 <local:BasePage xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
                 xmlns="http://schemas.microsoft.com/dotnet/maui/global"
                 xmlns:viewmodels="clr-namespace:Packo.ViewModels"
+                xmlns:loc="clr-namespace:Packo.Extensions"
                 xmlns:local="clr-namespace:Packo.Models.Pages"
                 x:DataType="viewmodels:DocsViewModel"
                 x:Class="Packo.Views.DocsPage"
                 x:Name="DocsPageRoot"
-                Title="Documents"
+                Title="{loc:Translate TabDocs}"
                 BackgroundColor="{AppThemeBinding Light={StaticResource PackoPageBackgroundLight}, Dark={StaticResource PackoPageBackgroundDark}}">
 
     <ContentPage.Resources>
@@ -16,11 +17,11 @@
 
     <Grid RowDefinitions="Auto,*,Auto">
         <VerticalStackLayout Grid.Row="0" Padding="22,20,22,14" Spacing="6">
-            <Label Text="KEEP THE IMPORTANT THINGS CLOSE" FontSize="11" CharacterSpacing="1.6"
+            <Label Text="{loc:Translate DocsEyebrow}" FontSize="11" CharacterSpacing="1.6"
                    FontAttributes="Bold" TextColor="{StaticResource PackoAccentLight}" />
-            <Label Text="Documents" FontSize="29" FontAttributes="Bold"
+            <Label Text="{loc:Translate TabDocs}" FontSize="29" FontAttributes="Bold"
                    TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
-            <Label Text="Tickets, reservations, and travel paperwork in one spot."
+            <Label Text="{loc:Translate DocsIntro}"
                    FontSize="14" LineBreakMode="WordWrap"
                    TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
         </VerticalStackLayout>
@@ -35,10 +36,10 @@
                         <Label Text="▤" FontSize="34" HorizontalTextAlignment="Center"
                                VerticalTextAlignment="Center" TextColor="{StaticResource PackoAccentLight}" />
                     </Border>
-                    <Label Text="No documents added yet" FontSize="19" FontAttributes="Bold"
+                    <Label Text="{loc:Translate NoDocs}" FontSize="19" FontAttributes="Bold"
                            HorizontalTextAlignment="Center"
                            TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
-                    <Label Text="Add your PDFs so your travel details are easy to find."
+                    <Label Text="{loc:Translate AddPdfs}"
                            FontSize="14" HorizontalTextAlignment="Center" LineBreakMode="WordWrap"
                            TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
                 </VerticalStackLayout>
@@ -63,7 +64,7 @@
                                 <Label Text="{Binding FileName}" FontSize="14" FontAttributes="Bold"
                                        LineBreakMode="TailTruncation"
                                        TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
-                                <Label Text="{Binding AddedAt, StringFormat='Added {0:dd MMM yyyy}'}" FontSize="12"
+                                <Label Text="{Binding AddedAtDisplay}" FontSize="12"
                                        TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
                             </VerticalStackLayout>
 
@@ -87,7 +88,7 @@
 
         <Border Grid.Row="2" Padding="20,10,20,16" StrokeThickness="0"
                 BackgroundColor="{AppThemeBinding Light={StaticResource PackoPageBackgroundLight}, Dark={StaticResource PackoPageBackgroundDark}}">
-            <Button Text="Add a document   +" Command="{Binding AddDocumentCommand}"
+            <Button Text="{loc:Translate AddDocument}" Command="{Binding AddDocumentCommand}"
                     BackgroundColor="{StaticResource PackoAccentLight}" TextColor="{StaticResource PackoWhite}"
                     FontSize="16" FontAttributes="Bold" CornerRadius="18"
                     HeightRequest="56" Padding="20,12" HorizontalOptions="Fill" />
