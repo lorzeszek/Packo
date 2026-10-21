@@ -191,13 +191,24 @@ namespace Packo.Repositories.Supabase
 
         public async Task<IReadOnlyList<string>> GetActiveDestinationsAsync()
         {
-            var activeTrips = await GetActiveTripsAsync();
+            // Include upcoming trips even if their cached IsActive flag is false, and
+            // exclude trips that have already ended or were moved to trash.
+            var response = await _supabase.Client
+                .From<TripSupabase>()
+                .Select("*")
+                .Where(x => x.IsInTrash == false)
+                .Get();
+
+            var today = DateTime.Today;
+            var activeTrips = (response.Models ?? new List<TripSupabase>())
+                .Where(trip => trip.EndDate.HasValue && trip.EndDate.Value.Date >= today)
+                .Where(trip => !string.IsNullOrWhiteSpace(trip.Destination))
+                .OrderByDescending(trip => trip.StartDate.HasValue && trip.StartDate.Value.Date <= today)
+                .ThenBy(trip => trip.StartDate ?? DateTime.MaxValue);
 
             return activeTrips
                 .Select(trip => trip.Destination)
-                .Where(destination => !string.IsNullOrWhiteSpace(destination))
-                .Distinct()
-                .OrderBy(destination => destination)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
         }
 

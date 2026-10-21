@@ -12,6 +12,7 @@ namespace Packo.ViewModels
         public ObservableRangeCollection<DestinationWeatherDTO> Destinations { get; } = new ObservableRangeCollection<DestinationWeatherDTO>();
 
         private readonly WeatherService _weatherService;
+        private bool _isLoading;
 
         public WeatherViewModel(ILocalUserService localUserService, ISupabaseService supabase, ISessionService sessionService, IPackingItemRepository packingItemRepository, ITripRepository tripRepository, IGoogleAuthService googleAuthService, WeatherService weatherService) : base(localUserService, supabase, sessionService, packingItemRepository, tripRepository, googleAuthService)
         {
@@ -20,12 +21,20 @@ namespace Packo.ViewModels
 
         private async Task LoadWeatherForDestinationsAsync(IReadOnlyList<string> destinations)
         {
-            if (destinations == null || destinations.Count == 0)
+            destinations ??= Array.Empty<string>();
+
+            // Reconcile first so an empty trip list also clears previously loaded weather.
+            var destinationsToRemove = Destinations
+                .Where(d => !destinations.Contains(d.Destination, StringComparer.OrdinalIgnoreCase))
+                .ToList();
+            MainThread.BeginInvokeOnMainThread(() => Destinations.RemoveRange(destinationsToRemove));
+
+            if (destinations.Count == 0)
                 return;
 
             await Parallel.ForEachAsync(destinations, async (destination, ct) =>
             {
-                if (Destinations.Any(d => d.Destination == destination))
+                if (Destinations.Any(d => string.Equals(d.Destination, destination, StringComparison.OrdinalIgnoreCase)))
                 {
                     return;
                 }
@@ -45,11 +54,8 @@ namespace Packo.ViewModels
 
             MainThread.BeginInvokeOnMainThread(() =>
             {
-                var existingWeatherToRemove = Destinations.Where(d => !destinations.Contains(d.Destination)).ToList();
-                if (existingWeatherToRemove != null)
-                {
-                    Destinations.RemoveRange(existingWeatherToRemove);
-                }
+                var existingWeatherToRemove = Destinations.Where(d => !destinations.Contains(d.Destination, StringComparer.OrdinalIgnoreCase)).ToList();
+                Destinations.RemoveRange(existingWeatherToRemove);
             });
         }
 
@@ -97,8 +103,19 @@ namespace Packo.ViewModels
 
         public async Task OnAppearingAsync()
         {
-            var destinations = await _tripRepository.GetActiveDestinationsAsync();
-            await LoadWeatherForDestinationsAsync(destinations);
+            if (_isLoading)
+                return;
+
+            _isLoading = true;
+            try
+            {
+                var destinations = await _tripRepository.GetActiveDestinationsAsync();
+                await LoadWeatherForDestinationsAsync(destinations);
+            }
+            finally
+            {
+                _isLoading = false;
+            }
         }
 
         protected override async Task OnNavigatedToAsync(IDictionary<string, object> query)

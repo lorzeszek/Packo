@@ -106,14 +106,17 @@ namespace Packo.Repositories.Local
         public async Task<IReadOnlyList<string>> GetActiveDestinationsAsync()
         {
             var sqliteTrips = await _db.Table<SQLiteTrip>()
-                .Where(x => x.LocalUserId == _sessionService.LocalUserId && x.IsActive && !x.IsInTrash)
+                .Where(x => x.LocalUserId == _sessionService.LocalUserId && !x.IsInTrash)
                 .ToListAsync();
 
+            var today = DateTime.Today;
             return sqliteTrips
+                .Where(x => x.EndDate.HasValue && x.EndDate.Value.Date >= today)
+                .Where(x => !string.IsNullOrWhiteSpace(x.Destination))
+                .OrderByDescending(x => x.StartDate.HasValue && x.StartDate.Value.Date <= today)
+                .ThenBy(x => x.StartDate ?? DateTime.MaxValue)
                 .Select(x => x.Destination)
-                .Where(destination => !string.IsNullOrWhiteSpace(destination))
-                .Distinct()
-                .OrderBy(destination => destination)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
         }
 
