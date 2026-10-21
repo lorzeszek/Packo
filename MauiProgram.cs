@@ -27,6 +27,10 @@ namespace Packo
                 .UseMauiApp<App>()
                 .UseMauiCommunityToolkit(options =>
                 {
+                    options.SetPopupDefaults(new DefaultPopupSettings
+                    {
+                        BackgroundColor = Colors.Transparent
+                    });
                     options.SetPopupOptionsDefaults(new DefaultPopupOptionsSettings
                     {
                         Shape = new RoundRectangle
