@@ -124,6 +124,9 @@ namespace Packo.Repositories.Local
         {
             var sqliteTrip = await _db.Table<SQLiteTrip>().FirstOrDefaultAsync(x => x.LocalUserId == trip.LocalUserId && x.LocalTripId == trip.LocalTripId);
 
+            if (sqliteTrip is null)
+                return null;
+
             return new TripDTO
             {
                 LocalUserId = sqliteTrip.LocalUserId,
@@ -181,6 +184,9 @@ namespace Packo.Repositories.Local
         {
             //var sqliteTripall = await _db.Table<SQLiteTrip>().FirstOrDefaultAsync(x => x.LocalUserId == localUserId);
             var sqliteTrip = await _db.Table<SQLiteTrip>().FirstOrDefaultAsync(x => x.LocalUserId == localUserId && x.LocalTripId == localTripId);
+
+            if (sqliteTrip is null)
+                return null;
 
             return new TripDTO
             {

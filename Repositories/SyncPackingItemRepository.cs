@@ -259,6 +259,13 @@ namespace Packo.Repositories
             foreach (var pendingChange in pendingChanges)
             {
                 var packingItem = JsonSerializer.Deserialize<PackingItemDTO>(pendingChange.PackingItemJson);
+                if (packingItem is null)
+                {
+                    // A malformed entry can never be synced successfully.
+                    await _pendingDb.DeleteAsync(pendingChange);
+                    continue;
+                }
+
                 // Resolve RemoteTripId if it wasn't known when the change was queued.
                 if (pendingChange.RemoteTripId == 0)
                 {
@@ -269,7 +276,16 @@ namespace Packo.Repositories
                     //    LocalTripId = pendingChange.LocalTripId
                     //});
 
-                    if (trip?.RemoteTripId > 0)
+                    if (trip is null)
+                    {
+                        // The trip was removed during logout. This pending change
+                        // belongs to the previous account and must not be synced
+                        // to the account that has just signed in.
+                        await _pendingDb.DeleteAsync(pendingChange);
+                        continue;
+                    }
+
+                    if (trip.RemoteTripId > 0)
                     {
                         //pendingChange.RemoteTripId = trip.RemoteTripId;
                         packingItem.RemoteTripId = trip.RemoteTripId;
@@ -278,20 +294,20 @@ namespace Packo.Repositories
                 }
 
                 //packingItem.RemoteTripId = pendingChange.RemoteTripId;
-                packingItem.RemoteUserId = _sessionService.UserId;
+                packingItem.RemoteUserId = _sessionService.UserId ?? string.Empty;
 
                 try
                 {
                     switch (pendingChange.Operation)
                     {
                         case "Add":
-                            await _remote.AddPackingItemAsync(packingItem!);
+                            await _remote.AddPackingItemAsync(packingItem);
                             break;
                         case "Update":
-                            await _remote.UpdatePackingItemAsync(packingItem!);
+                            await _remote.UpdatePackingItemAsync(packingItem);
                             break;
                         case "Delete":
-                            await _remote.DeletePackingItemAsync(packingItem!);
+                            await _remote.DeletePackingItemAsync(packingItem);
                             break;
                     }
 
