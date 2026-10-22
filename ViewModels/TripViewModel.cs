@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Packo.Models.DTO;
+using Packo.Models.Enums;
 using Packo.Services;
 using System;
 
@@ -11,6 +12,20 @@ namespace Packo.ViewModels
         public TripDTO TripModel { get; }
 
         public string Destination => TripModel.Destination;
+        public string CoverImageSource => TripModel.CoverTheme switch
+        {
+            CoverThemeType.mountains_winter => "mountains_winter.png",
+            CoverThemeType.mountains_summer_01 => "mountains_summer_01.png",
+            CoverThemeType.mountains_summer_02 => "mountains_summer_02.png",
+            CoverThemeType.road_trip => "road_trip.png",
+            CoverThemeType.summer_beach_01 => "summer_beach_01.png",
+            CoverThemeType.summer_beach_02 => "summer_beach_02.png",
+            CoverThemeType.business_trip => "business_trip.png",
+            CoverThemeType.weekend_city_break => "weekend_city_break.png",
+            CoverThemeType.big_city => "big_city.png",
+            CoverThemeType.camping => "camping.png",
+            _ => "big_city.png"
+        };
 
         public string TripDatesRange => GetTripDatesRange();
         public string TripDaysToGo => GetTripDaysToGo();

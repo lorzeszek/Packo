@@ -10,6 +10,8 @@ namespace Packo.ViewModels
 {
     public class StartViewModel : BaseViewModel
     {
+        private readonly ITripListPreloadService _tripListPreloadService;
+
         public IRelayCommand LoginWithGoogleCommand => new AsyncRelayCommand(LoginWithGoogle);
 
         public ICommand StartPackingCommand => new AsyncRelayCommand(StartPackingAsync);
@@ -73,8 +75,9 @@ namespace Packo.ViewModels
 
         public bool ShowStartButton => IsDataLoaded && !HasActiveTrips;
 
-        public StartViewModel(ILocalUserService localUserService, ISupabaseService supabase, ISessionService sessionService, IPackingItemRepository packingItemRepository, ITripRepository tripRepository, IGoogleAuthService googleAuthService) : base(localUserService, supabase, sessionService, packingItemRepository, tripRepository, googleAuthService)
+        public StartViewModel(ILocalUserService localUserService, ISupabaseService supabase, ISessionService sessionService, IPackingItemRepository packingItemRepository, ITripRepository tripRepository, IGoogleAuthService googleAuthService, ITripListPreloadService tripListPreloadService) : base(localUserService, supabase, sessionService, packingItemRepository, tripRepository, googleAuthService)
         {
+            _tripListPreloadService = tripListPreloadService;
             //_googleAuthService = googleAuthService;
             LocalizationResourceManager.Instance.PropertyChanged += OnLanguageChanged;
         }
@@ -161,7 +164,7 @@ namespace Packo.ViewModels
 
         public async Task OnAppearingAsync()
         {
-            var tripsWithStats = await _tripRepository.GetActiveTripsWithStatsAsync();
+            var tripsWithStats = await _tripListPreloadService.GetTripsAsync();
             var nearestTrip = tripsWithStats?.OrderBy(t => t.Trip.StartDate).FirstOrDefault(x => x.Trip.EndDate >= DateTime.Now);
 
             HasActiveTrips = tripsWithStats != null && tripsWithStats.Any(x => x.Trip.IsActive);

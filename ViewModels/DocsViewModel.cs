@@ -12,15 +12,17 @@ namespace Packo.ViewModels
 {
     public class DocsViewModel : BaseViewModel
     {
+        private readonly IDocumentPreloadService _documentPreloadService;
         private int _localTripId { get; set; }
         public ObservableRangeCollection<TripDocument> Docs { get; } = new();
         public IAsyncRelayCommand AddDocumentCommand => new AsyncRelayCommand(AddDocumentAsync);
         public IAsyncRelayCommand<TripDocument> DeleteDocumentCommand => new AsyncRelayCommand<TripDocument>(DeleteDocumentAsync);
         public IAsyncRelayCommand<TripDocument> OpenDocumentCommand => new AsyncRelayCommand<TripDocument>(OpenDocumentAsync);
 
-        public DocsViewModel(ILocalUserService localUserService, ISupabaseService supabase, ISessionService sessionService, IPackingItemRepository packingItemRepository, ITripRepository tripRepository, IGoogleAuthService googleAuthService)
+        public DocsViewModel(ILocalUserService localUserService, ISupabaseService supabase, ISessionService sessionService, IPackingItemRepository packingItemRepository, ITripRepository tripRepository, IGoogleAuthService googleAuthService, IDocumentPreloadService documentPreloadService)
             : base(localUserService, supabase, sessionService, packingItemRepository, tripRepository, googleAuthService)
         {
+            _documentPreloadService = documentPreloadService;
         }
 
         private async Task OpenDocumentAsync(TripDocument? document)
@@ -64,6 +66,7 @@ namespace Packo.ViewModels
             }
 
             await _tripRepository.DeleteDocAsync(document.Id);
+            _documentPreloadService.Invalidate();
 
             Docs.Remove(document);
         }
@@ -121,6 +124,7 @@ namespace Packo.ViewModels
             };
 
             await _tripRepository.SaveDocAsync(document);
+            _documentPreloadService.Invalidate();
 
             Docs.Add(new TripDocument
             {
@@ -137,35 +141,23 @@ namespace Packo.ViewModels
 
         private async Task LoadDocumentsAsync()
         {
-            var documents = await _tripRepository.GetByTripDocsAsync();
+            var documents = await _documentPreloadService.GetDocumentsAsync();
 
-            var existingIds = Docs
-                .Select(x => x.Id)
-                .ToHashSet();
-
-            foreach (var document in documents)
-            {
-                if (!existingIds.Add(document.Id))
-                    continue;
-
-                Docs.Add(new TripDocument
+            var mappedDocuments = documents.Select(document => new TripDocument
                 {
                     Id = document.Id,
                     TripId = document.TripId,
                     FileName = document.FileName,
                     LocalPath = document.LocalPath,
-                    AddedAt = document.AddedAt
+                    AddedAt = document.AddedAt,
+                    FileSize = document.FileSize
                 });
-            }
+
+            Docs.ReplaceRange(mappedDocuments);
         }
 
         public async Task OnAppearingAsync()
         {
-            var destinations = await _tripRepository.GetActiveTripsWithStatsAsync();
-
-            //var docs = await _tripRepository.GetTripDocumentsAsync(_localTripId);
-            //Docs.ReplaceRange(docs);
-
             await LoadDocumentsAsync();
         }
 

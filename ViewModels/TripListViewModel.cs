@@ -7,6 +7,7 @@ using Packo.Messages;
 using Packo.Models.DTO;
 using Packo.Popups;
 using Packo.Repositories.Interfaces;
+using Packo.Repositories.Models;
 using Packo.Services.Interfaces;
 using Packo.Services;
 using Packo.Views;
@@ -16,7 +17,8 @@ namespace Packo.ViewModels
 {
     public partial class TripListViewModel : BaseViewModel
     {
-        private readonly ICoverCacheService _coverCacheService;
+        private readonly ITripListPreloadService _tripListPreloadService;
+        private readonly IWeatherPreloadService _weatherPreloadService;
 
         public ObservableRangeCollection<TripViewModel> Trips { get; } = new();
 
@@ -31,9 +33,10 @@ namespace Packo.ViewModels
 
         //public IAsyncRelayCommand LoginWithGoogleCommand { get; }
 
-        public TripListViewModel(ILocalUserService localUserService, ISupabaseService supabase, ISessionService sessionService, IPackingItemRepository packingItemRepository, ITripRepository tripRepository, IGoogleAuthService googleAuthService, ICoverCacheService coverCacheService) : base(localUserService, supabase, sessionService, packingItemRepository, tripRepository, googleAuthService)
+        public TripListViewModel(ILocalUserService localUserService, ISupabaseService supabase, ISessionService sessionService, IPackingItemRepository packingItemRepository, ITripRepository tripRepository, IGoogleAuthService googleAuthService, ITripListPreloadService tripListPreloadService, IWeatherPreloadService weatherPreloadService) : base(localUserService, supabase, sessionService, packingItemRepository, tripRepository, googleAuthService)
         {
-            _coverCacheService = coverCacheService;
+            _tripListPreloadService = tripListPreloadService;
+            _weatherPreloadService = weatherPreloadService;
 
             Title = LocalizationResourceManager.Instance["TabTrips"];
             LocalizationResourceManager.Instance.PropertyChanged += (_, _) => Title = LocalizationResourceManager.Instance["TabTrips"];
@@ -52,6 +55,8 @@ namespace Packo.ViewModels
             WeakReferenceMessenger.Default.Register<TripDataChangedMessage>(this, (r, m) =>
             {
                 _isDirty = true;
+                _tripListPreloadService.Invalidate();
+                _weatherPreloadService.Invalidate();
             });
 
             WeakReferenceMessenger.Default.Register<LogoutCompletedMessage>(this, async (r, m) =>
@@ -64,13 +69,15 @@ namespace Packo.ViewModels
         private async Task OnLoginCompleted()
         {
             _tripRepository.TripChanged += OnTripChanged;
-            await LoadData();
+            _tripListPreloadService.Invalidate();
+            await LoadData(forceRefresh: true);
         }
 
         private async Task OnLogoutCompleted()
         {
             Trips.Clear();
             _isLoaded = false;
+            _tripListPreloadService.Invalidate();
             await _tripRepository.DeleteLocalTrips();
         }
 
@@ -269,20 +276,18 @@ namespace Packo.ViewModels
             });
         }
 
-        private async Task LoadData()
+        private async Task LoadData(bool forceRefresh = false)
         {
             try
             {
                 SetBusy(true, null);
 
-                var tripsWithStats = await _tripRepository.GetActiveTripsWithStatsAsync();
+                var tripsWithStats = await _tripListPreloadService.GetTripsAsync(forceRefresh);
 
                 var tripViewModels = new List<TripViewModel>();
 
                 foreach (var item in tripsWithStats)
                 {
-                    item.Trip.CoverImagePath = _coverCacheService.GetOrCreateCover(item.Trip, item.PackingSummary);
-
                     item.Trip.IsActive = item.Trip.EndDate > DateTime.Now;
 
                     tripViewModels.Add(new TripViewModel(item.Trip)
@@ -299,6 +304,7 @@ namespace Packo.ViewModels
                 Trips.AddRange(orderedTrips);
                 _isLoaded = true;
                 _isDirty = false;
+
             }
             catch (Exception ex)
             {
@@ -352,7 +358,7 @@ namespace Packo.ViewModels
 
                 if (!_isLoaded || _isDirty)
                 {
-                    await LoadData();
+                    await LoadData(forceRefresh: _isDirty);
                 }
             }
             finally

@@ -54,9 +54,25 @@
                             StrokeShape="RoundRectangle 24" HeightRequest="194"
                             Opacity="{Binding TripModel.IsActive, Converter={StaticResource BoolToOpacityConverter}}">
                         <Grid>
-                            <Image Source="{Binding TripModel.CoverImagePath}" Aspect="AspectFill" />
+                            <Image Source="{Binding CoverImageSource}" Aspect="AspectFill" />
                             <BoxView IsVisible="{Binding TripModel.IsActive, Converter={StaticResource BoolToOppositeConverter}}"
                                      BackgroundColor="#241D19" Opacity="0.35" />
+
+                            <Border HorizontalOptions="Start" VerticalOptions="End" Margin="14"
+                                    Padding="14,10" StrokeThickness="0" StrokeShape="RoundRectangle 16"
+                                    BackgroundColor="#B8181413">
+                                <VerticalStackLayout Spacing="2">
+                                    <Label Text="{Binding Destination}" FontSize="21" FontAttributes="Bold"
+                                           LineBreakMode="TailTruncation" MaxLines="1" TextColor="White" />
+                                    <HorizontalStackLayout Spacing="8">
+                                        <Label Text="{Binding TripDatesRange}" FontSize="12" TextColor="#F5FFFFFF" />
+                                        <BoxView WidthRequest="3" HeightRequest="3" CornerRadius="2"
+                                                 VerticalOptions="Center" Color="#D9FFFFFF" />
+                                        <Label Text="{Binding PackingSummary}" FontSize="12" FontAttributes="Bold"
+                                               TextColor="#F5FFFFFF" />
+                                    </HorizontalStackLayout>
+                                </VerticalStackLayout>
+                            </Border>
 
                             <Border IsVisible="{Binding TripModel.IsActive, Converter={StaticResource BoolToOppositeConverter}}"
                                     HorizontalOptions="Start" VerticalOptions="Start" Margin="14"

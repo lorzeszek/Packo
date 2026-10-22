@@ -129,36 +129,36 @@
     <MauiImage Include="Resources\Images\Countries\italy.jpg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </MauiImage>
-    <MauiAsset Include="Resources\Images\Covers\big_city.png" LogicalName="big_city.png">
+    <MauiImage Include="Resources\Images\Covers\big_city.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </MauiAsset>
-    <MauiAsset Include="Resources\Images\Covers\business_trip.png" LogicalName="business_trip.png">
+    </MauiImage>
+    <MauiImage Include="Resources\Images\Covers\business_trip.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </MauiAsset>
-    <MauiAsset Include="Resources\Images\Covers\camping.png" LogicalName="camping.png">
+    </MauiImage>
+    <MauiImage Include="Resources\Images\Covers\camping.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </MauiAsset>
-    <MauiAsset Include="Resources\Images\Covers\mountains_summer_01.png" LogicalName="mountains_summer_01.png">
+    </MauiImage>
+    <MauiImage Include="Resources\Images\Covers\mountains_summer_01.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </MauiAsset>
-    <MauiAsset Include="Resources\Images\Covers\mountains_summer_02.png" LogicalName="mountains_summer_02.png">
+    </MauiImage>
+    <MauiImage Include="Resources\Images\Covers\mountains_summer_02.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </MauiAsset>
-    <MauiAsset Include="Resources\Images\Covers\mountains_winter.png" LogicalName="mountains_winter.png">
+    </MauiImage>
+    <MauiImage Include="Resources\Images\Covers\mountains_winter.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </MauiAsset>
-    <MauiAsset Include="Resources\Images\Covers\road_trip.png" LogicalName="road_trip.png">
+    </MauiImage>
+    <MauiImage Include="Resources\Images\Covers\road_trip.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </MauiAsset>
-    <MauiAsset Include="Resources\Images\Covers\summer_beach_01.png" LogicalName="summer_beach_01.png">
+    </MauiImage>
+    <MauiImage Include="Resources\Images\Covers\summer_beach_01.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </MauiAsset>
-    <MauiAsset Include="Resources\Images\Covers\summer_beach_02.png" LogicalName="summer_beach_02.png">
+    </MauiImage>
+    <MauiImage Include="Resources\Images\Covers\summer_beach_02.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </MauiAsset>
-    <MauiAsset Include="Resources\Images\Covers\weekend_city_break.png" LogicalName="weekend_city_break.png">
+    </MauiImage>
+    <MauiImage Include="Resources\Images\Covers\weekend_city_break.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </MauiAsset>
+    </MauiImage>
     <MauiAsset Include="Resources\Images\Countries\italy.webp">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </MauiAsset>

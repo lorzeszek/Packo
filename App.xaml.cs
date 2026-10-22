@@ -14,10 +14,19 @@ namespace Packo
         private readonly ISessionService _sessionService;
         private readonly SQLiteAsyncConnection _db;
         private readonly ILocalUserService _localUserService;
+        private readonly ITripListPreloadService _tripListPreloadService;
+        private readonly IWeatherPreloadService _weatherPreloadService;
+        private readonly IDocumentPreloadService _documentPreloadService;
         private LoadingPage? _loadingPage;
         //private Task _loadingModalTask = Task.CompletedTask;
 
-        public App(ISessionService sessionService, SQLiteAsyncConnection db, ILocalUserService localUserService)
+        public App(
+            ISessionService sessionService,
+            SQLiteAsyncConnection db,
+            ILocalUserService localUserService,
+            ITripListPreloadService tripListPreloadService,
+            IWeatherPreloadService weatherPreloadService,
+            IDocumentPreloadService documentPreloadService)
         {
             InitializeComponent();
             LocalizationResourceManager.Instance.ApplySavedLanguage();
@@ -25,6 +34,9 @@ namespace Packo
             _sessionService = sessionService;
             _db = db;
             _localUserService = localUserService;
+            _tripListPreloadService = tripListPreloadService;
+            _weatherPreloadService = weatherPreloadService;
+            _documentPreloadService = documentPreloadService;
 
             if (_sessionService is INotifyPropertyChanged npc)
             {
@@ -185,6 +197,14 @@ namespace Packo
             }
 
             await _sessionService.InitializeAsync();
+
+            // Begin the two remote Trips requests while the Home tab is shown. The
+            // TripListViewModel will await this same task instead of starting over.
+            if (_sessionService.IsAuthenticated)
+                _ = _tripListPreloadService.PrefetchAsync();
+
+            _ = _weatherPreloadService.PrefetchAsync();
+            _ = _documentPreloadService.PrefetchAsync();
 
 
             await MainThread.InvokeOnMainThreadAsync(async () =>

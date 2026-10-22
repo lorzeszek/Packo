@@ -108,6 +108,8 @@ namespace Packo
 
                 return new SyncTripRepository(local, remote, session, pendingDb);
             });
+            builder.Services.AddSingleton<ITripListPreloadService, TripListPreloadService>();
+            builder.Services.AddSingleton<IDocumentPreloadService, DocumentPreloadService>();
 
             builder.Services.AddSingleton<IPackingItemRepository>(sp =>
             {
@@ -179,8 +181,8 @@ namespace Packo
             builder.Services.AddSingleton<IAIService, AIService>();
             builder.Services.AddSingleton<IPackingSuggestionService, PackingSuggestionService>();
             builder.Services.AddSingleton<ITripClassificationService, TripClassificationService>();
-            builder.Services.AddSingleton<ICoverCacheService, CoverCacheService>();
             builder.Services.AddHttpClient<WeatherService>();
+            builder.Services.AddSingleton<IWeatherPreloadService, WeatherPreloadService>();
 
             //builder.Services.AddHttpClient<IAIService, AIService>(client =>
             //{
