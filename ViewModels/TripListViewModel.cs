@@ -78,6 +78,7 @@ namespace Packo.ViewModels
             Trips.Clear();
             _isLoaded = false;
             _tripListPreloadService.Invalidate();
+            _weatherPreloadService.Invalidate();
             await _tripRepository.DeleteLocalTrips();
         }
 

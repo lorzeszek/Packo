@@ -1,5 +1,7 @@
 using Packo.Extensions;
 using Packo.Interfaces;
+using CommunityToolkit.Mvvm.Messaging;
+using Packo.Messages;
 using Packo.Models.DTO;
 using Packo.Repositories.Interfaces;
 using Packo.Services;
@@ -17,6 +19,12 @@ namespace Packo.ViewModels
         public WeatherViewModel(ILocalUserService localUserService, ISupabaseService supabase, ISessionService sessionService, IPackingItemRepository packingItemRepository, ITripRepository tripRepository, IGoogleAuthService googleAuthService, IWeatherPreloadService weatherPreloadService) : base(localUserService, supabase, sessionService, packingItemRepository, tripRepository, googleAuthService)
         {
             _weatherPreloadService = weatherPreloadService;
+
+            WeakReferenceMessenger.Default.Register<LogoutCompletedMessage>(this, (_, _) =>
+            {
+                _weatherPreloadService.Invalidate();
+                MainThread.BeginInvokeOnMainThread(Destinations.Clear);
+            });
         }
 
         public async Task OnAppearingAsync()
@@ -24,11 +32,24 @@ namespace Packo.ViewModels
             if (_isLoading)
                 return;
 
+            if (!Session.IsAuthenticated)
+            {
+                _weatherPreloadService.Invalidate();
+                Destinations.Clear();
+                return;
+            }
+
             _isLoading = true;
             try
             {
                 var weather = await _weatherPreloadService.GetWeatherAsync();
-                await MainThread.InvokeOnMainThreadAsync(() => Destinations.ReplaceRange(weather));
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    if (Session.IsAuthenticated)
+                        Destinations.ReplaceRange(weather);
+                    else
+                        Destinations.Clear();
+                });
             }
             finally
             {
