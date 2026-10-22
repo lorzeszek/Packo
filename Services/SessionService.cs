@@ -30,6 +30,26 @@ namespace Packo.Services
         public bool IsAuthenticated => User != null;
         public bool HasLocalUser => !string.IsNullOrEmpty(LocalUserId); // SQLite
 
+        /// <summary>
+        /// The profile image supplied by the identity provider. Google stores this in
+        /// the user's metadata, although the exact key differs between providers.
+        /// </summary>
+        public string? AvatarUrl => GetProfileValue("avatar_url", "picture");
+
+        public bool HasAvatar => Uri.TryCreate(AvatarUrl, UriKind.Absolute, out var uri)
+            && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+
+        public string UserInitial
+        {
+            get
+            {
+                var name = GetProfileValue("full_name", "name") ?? User?.Email;
+                return string.IsNullOrWhiteSpace(name)
+                    ? "?"
+                    : name.Trim()[0].ToString().ToUpperInvariant();
+            }
+        }
+
         public string? LocalUserId { get; private set; }
 
         private string? _userId;
@@ -57,6 +77,9 @@ namespace Packo.Services
                     _user = value;
                     OnPropertyChanged();
                     OnPropertyChanged(nameof(IsAuthenticated));
+                    OnPropertyChanged(nameof(AvatarUrl));
+                    OnPropertyChanged(nameof(HasAvatar));
+                    OnPropertyChanged(nameof(UserInitial));
                 }
             }
         }
@@ -118,6 +141,32 @@ namespace Packo.Services
         {
             User = null;
             UserId = null;
+        }
+
+        private string? GetProfileValue(params string[] keys)
+        {
+            if (User is null)
+                return null;
+
+            foreach (var key in keys)
+            {
+                if (User.UserMetadata.TryGetValue(key, out var metadataValue)
+                    && metadataValue is not null
+                    && !string.IsNullOrWhiteSpace(metadataValue.ToString()))
+                {
+                    return metadataValue.ToString();
+                }
+
+                var identityValue = User.Identities?
+                    .FirstOrDefault(identity => identity.Provider == "google")?
+                    .IdentityData?
+                    .GetValueOrDefault(key);
+
+                if (identityValue is not null && !string.IsNullOrWhiteSpace(identityValue.ToString()))
+                    return identityValue.ToString();
+            }
+
+            return null;
         }
 
         private async Task TryRestoreSessionAsync()

@@ -40,17 +40,19 @@
                 Stroke="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoBorderDark}}"
                 StrokeShape="RoundRectangle 16"
                 BackgroundColor="{AppThemeBinding Light={StaticResource PackoSurfaceLight}, Dark={StaticResource PackoSurfaceDark}}">
-            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="7" VerticalOptions="Center">
+            <Grid ColumnDefinitions="Auto,Auto" ColumnSpacing="7" VerticalOptions="Center">
                 <Border WidthRequest="28" HeightRequest="28" StrokeThickness="0"
                         StrokeShape="RoundRectangle 10" BackgroundColor="{AppThemeBinding Light={StaticResource PackoAccentSoftLight}, Dark={StaticResource PackoAccentSoftDark}}">
-                    <Label Text="●" FontSize="12" HorizontalTextAlignment="Center"
-                           VerticalTextAlignment="Center" TextColor="{AppThemeBinding Light={StaticResource PackoAccentLight}, Dark={StaticResource PackoAccentDark}}" />
+                    <Grid>
+                        <Image Source="{Binding Session.AvatarUrl}" Aspect="AspectFill"
+                               IsVisible="{Binding Session.HasAvatar}" />
+                        <Label Text="{Binding Session.UserInitial}" FontSize="12" FontAttributes="Bold"
+                               HorizontalTextAlignment="Center" VerticalTextAlignment="Center"
+                               IsVisible="{Binding Session.HasAvatar, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}"
+                               TextColor="{AppThemeBinding Light={StaticResource PackoAccentLight}, Dark={StaticResource PackoAccentDark}}" />
+                    </Grid>
                 </Border>
-                <Label Grid.Column="1" Text="{Binding Session.User.Email}"
-                       VerticalTextAlignment="Center" FontSize="12" LineBreakMode="TailTruncation"
-                       MaximumWidthRequest="140"
-                       TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextAltLight}, Dark={StaticResource PackoSecondaryTextAltDark}}" />
-                <Button Grid.Column="2" Text="{loc:Translate Logout}" Command="{Binding LogoutCommand}"
+                <Button Grid.Column="1" Text="{loc:Translate Logout}" Command="{Binding LogoutCommand}"
                         BackgroundColor="{AppThemeBinding Light={StaticResource PackoAccentSoftLight}, Dark={StaticResource PackoAccentSoftDark}}"
                         TextColor="{AppThemeBinding Light={StaticResource PackoAccentStrongLight}, Dark={StaticResource PackoAccentDark}}"
                         CornerRadius="12" Padding="10,5" MinimumHeightRequest="34"

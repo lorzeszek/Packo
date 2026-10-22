@@ -7,6 +7,9 @@ namespace Packo.Services.Interfaces
         string? UserId { get; }
         User? User { get; }
         bool IsAuthenticated { get; }
+        string? AvatarUrl { get; }
+        bool HasAvatar { get; }
+        string UserInitial { get; }
         bool GlobalIsBusy { get; set; }
         bool HasLocalUser { get; }
         string? LocalUserId { get; }
