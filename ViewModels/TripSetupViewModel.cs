@@ -7,8 +7,8 @@ using Packo.Models.DTO;
 using Packo.Models.Enums;
 using Packo.Popups;
 using Packo.Repositories.Interfaces;
-using Packo.Services.Interfaces;
 using Packo.Services;
+using Packo.Services.Interfaces;
 using System.Collections.ObjectModel;
 
 namespace Packo.ViewModels
@@ -242,7 +242,7 @@ namespace Packo.ViewModels
                 Session.GlobalIsBusy = false;
             });
 
-            var proposeListPopup = new ConfirmPopup(LocalizationResourceManager.Instance["SuggestedPackingTitle"], LocalizationResourceManager.Instance["SuggestedPackingMessage"]);
+            var proposeListPopup = new ConfirmPopup(LocalizationResourceManager.Instance["SuggestedPackingTitle"], "");
 
             var result = await Application.Current.MainPage.ShowPopupAsync<bool>(proposeListPopup);
 
