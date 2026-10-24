@@ -102,9 +102,9 @@ namespace Packo.ViewModels
                     trip.Destination,
                     trip.StartDate.Value,
                     trip.EndDate.Value,
-                    adultsCount: 1,
-                    childrenCountWithAge: [],
-                    selectedTransportTypes: [],
+                    trip.AdultsCount,
+                    trip.ChildrenAges,
+                    trip.SelectedTransportTypes,
                     LocalizationResourceManager.Instance.CurrentLanguage);
 
                 var selectItemsPopup = new PackingItemsPopup(suggestedItems);

@@ -1,6 +1,7 @@
 ﻿using Supabase.Postgrest.Attributes;
 using Supabase.Postgrest.Models;
 using System.ComponentModel;
+using Newtonsoft.Json.Linq;
 
 namespace Packo.Models.Supabase
 {
@@ -31,6 +32,15 @@ namespace Packo.Models.Supabase
 
         [Column("EndDate")]
         public DateTime? EndDate { get; set; }
+
+        [Column("AdultsCount")]
+        public int AdultsCount { get; set; } = 1;
+
+        [Column("ChildrenAges")]
+        public JToken? ChildrenAges { get; set; }
+
+        [Column("SelectedTransportTypes")]
+        public JToken? SelectedTransportTypes { get; set; }
 
         [Column("user_id")]
         public string User_id { get; set; } = string.Empty;

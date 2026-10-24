@@ -5,6 +5,7 @@ using Packo.Repositories.Interfaces;
 using Packo.Repositories.Models;
 using Packo.Services.Interfaces;
 using SQLite;
+using System.Text.Json;
 
 namespace Packo.Repositories.Local
 {
@@ -35,6 +36,9 @@ namespace Packo.Repositories.Local
                 StartDate = trip.StartDate,
                 EndDate = trip.EndDate,
                 Destination = trip.Destination,
+                AdultsCount = trip.AdultsCount,
+                ChildrenAgesJson = JsonSerializer.Serialize(trip.ChildrenAges),
+                SelectedTransportTypesJson = JsonSerializer.Serialize(trip.SelectedTransportTypes),
                 IsActive = trip.IsActive,
                 IsInTrash = trip.IsInTrash,
                 CoverTheme = trip.CoverTheme,
@@ -58,6 +62,9 @@ namespace Packo.Repositories.Local
                 StartDate = trip.StartDate,
                 EndDate = trip.EndDate,
                 Destination = trip.Destination,
+                AdultsCount = trip.AdultsCount,
+                ChildrenAgesJson = JsonSerializer.Serialize(trip.ChildrenAges),
+                SelectedTransportTypesJson = JsonSerializer.Serialize(trip.SelectedTransportTypes),
                 IsActive = trip.IsActive,
                 IsInTrash = trip.IsInTrash,
                 CoverTheme = trip.CoverTheme,
@@ -82,6 +89,9 @@ namespace Packo.Repositories.Local
                 StartDate = x.StartDate,
                 EndDate = x.EndDate,
                 Destination = x.Destination,
+                AdultsCount = x.AdultsCount,
+                ChildrenAges = DeserializeOrEmpty<int>(x.ChildrenAgesJson),
+                SelectedTransportTypes = DeserializeOrEmpty<string>(x.SelectedTransportTypesJson),
                 IsActive = x.IsActive,
                 IsInTrash = x.IsInTrash,
                 CoverTheme = x.CoverTheme,
@@ -137,6 +147,9 @@ namespace Packo.Repositories.Local
                 StartDate = sqliteTrip.StartDate,
                 EndDate = sqliteTrip.EndDate,
                 Destination = sqliteTrip.Destination,
+                AdultsCount = sqliteTrip.AdultsCount,
+                ChildrenAges = DeserializeOrEmpty<int>(sqliteTrip.ChildrenAgesJson),
+                SelectedTransportTypes = DeserializeOrEmpty<string>(sqliteTrip.SelectedTransportTypesJson),
                 IsActive = sqliteTrip.IsActive,
                 IsInTrash = sqliteTrip.IsInTrash,
                 CoverTheme = sqliteTrip.CoverTheme,
@@ -156,6 +169,9 @@ namespace Packo.Repositories.Local
                 StartDate = trip.StartDate,
                 EndDate = trip.EndDate,
                 Destination = trip.Destination,
+                AdultsCount = trip.AdultsCount,
+                ChildrenAgesJson = JsonSerializer.Serialize(trip.ChildrenAges),
+                SelectedTransportTypesJson = JsonSerializer.Serialize(trip.SelectedTransportTypes),
                 IsActive = trip.IsActive,
                 IsInTrash = trip.IsInTrash,
                 CoverTheme = trip.CoverTheme,
@@ -198,6 +214,9 @@ namespace Packo.Repositories.Local
                 StartDate = sqliteTrip.StartDate,
                 EndDate = sqliteTrip.EndDate,
                 Destination = sqliteTrip.Destination,
+                AdultsCount = sqliteTrip.AdultsCount,
+                ChildrenAges = DeserializeOrEmpty<int>(sqliteTrip.ChildrenAgesJson),
+                SelectedTransportTypes = DeserializeOrEmpty<string>(sqliteTrip.SelectedTransportTypesJson),
                 IsActive = sqliteTrip.IsActive,
                 IsInTrash = sqliteTrip.IsInTrash,
                 CoverTheme = sqliteTrip.CoverTheme,
@@ -237,6 +256,21 @@ namespace Packo.Repositories.Local
         public async Task DeleteDocAsync(Guid id)
         {
             await _db.DeleteAsync<SQLiteTripDocument>(id);
+        }
+
+        private static List<T> DeserializeOrEmpty<T>(string? json)
+        {
+            if (string.IsNullOrWhiteSpace(json))
+                return [];
+
+            try
+            {
+                return JsonSerializer.Deserialize<List<T>>(json) ?? [];
+            }
+            catch (JsonException)
+            {
+                return [];
+            }
         }
     }
 }

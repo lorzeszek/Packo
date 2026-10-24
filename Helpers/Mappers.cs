@@ -2,6 +2,8 @@
 using Packo.Models.DTO;
 using Packo.Models.Enums;
 using Packo.Models.Supabase;
+using Newtonsoft.Json.Linq;
+using System.Globalization;
 
 namespace Packo.Helpers
 {
@@ -21,6 +23,9 @@ namespace Packo.Helpers
                 ModifiedDate = null,
                 StartDate = trip.StartDate.HasValue ? DateTime.SpecifyKind(trip.StartDate.Value, DateTimeKind.Unspecified) : null,
                 EndDate = trip.EndDate.HasValue ? DateTime.SpecifyKind(trip.EndDate.Value, DateTimeKind.Unspecified) : null,
+                AdultsCount = trip.AdultsCount,
+                ChildrenAges = ParseIntegerArray(trip.ChildrenAges),
+                SelectedTransportTypes = ParseTextArray(trip.SelectedTransportTypes),
                 IsInTrash = trip.IsInTrash,
                 CoverTheme = Enum.TryParse<CoverThemeType>(trip.CoverTheme, true, out var parsedTheme) ? parsedTheme : CoverThemeType.big_city
             };
@@ -40,6 +45,9 @@ namespace Packo.Helpers
                 ModifiedDate = null,
                 StartDate = trip.StartDate.HasValue ? DateTime.SpecifyKind(trip.StartDate.Value, DateTimeKind.Utc) : null,
                 EndDate = trip.EndDate.HasValue ? DateTime.SpecifyKind(trip.EndDate.Value, DateTimeKind.Utc) : null,
+                AdultsCount = trip.AdultsCount,
+                ChildrenAges = JArray.FromObject(trip.ChildrenAges),
+                SelectedTransportTypes = JArray.FromObject(trip.SelectedTransportTypes),
                 IsInTrash = trip.IsInTrash,
                 CoverTheme = trip.CoverTheme.ToString()
             };
@@ -110,5 +118,45 @@ namespace Packo.Helpers
                 Category = item.Category
             };
         }
+
+        private static List<int> ParseIntegerArray(JToken? value) =>
+            ParseTextArray(value)
+                .Select(item => int.TryParse(item, NumberStyles.Integer, CultureInfo.InvariantCulture, out var age) ? age : (int?)null)
+                .Where(age => age.HasValue)
+                .Select(age => age!.Value)
+                .ToList();
+
+        private static List<string> ParseTextArray(JToken? value)
+        {
+            if (value is JArray array)
+                return array.Values<string>().Where(item => !string.IsNullOrWhiteSpace(item)).ToList()!;
+
+            var serializedValue = value?.Value<string>();
+            if (string.IsNullOrWhiteSpace(serializedValue) || serializedValue == "{}")
+                return [];
+
+            var trimmed = serializedValue.Trim();
+            if (trimmed.StartsWith('['))
+            {
+                try
+                {
+                    return JArray.Parse(trimmed).Values<string>().Where(item => !string.IsNullOrWhiteSpace(item)).ToList()!;
+                }
+                catch
+                {
+                    return [];
+                }
+            }
+
+            if (trimmed.StartsWith('{') && trimmed.EndsWith('}'))
+                trimmed = trimmed[1..^1];
+
+            return trimmed
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(item => item.Trim('"').Replace("\\\"", "\"").Replace("\\\\", "\\"))
+                .Where(item => !string.IsNullOrWhiteSpace(item))
+                .ToList();
+        }
+
     }
 }

@@ -171,6 +171,9 @@ namespace Packo
 
             //await _db.ExecuteAsync("DROP TABLE IF EXISTS SQLiteTrip");
             await _db.CreateTableAsync<SQLiteTrip>();
+            await EnsureTripColumnAsync("AdultsCount", "INTEGER NOT NULL DEFAULT 1");
+            await EnsureTripColumnAsync("ChildrenAgesJson", "TEXT NOT NULL DEFAULT '[]'");
+            await EnsureTripColumnAsync("SelectedTransportTypesJson", "TEXT NOT NULL DEFAULT '[]'");
 
             //await _db.ExecuteAsync("DROP TABLE IF EXISTS SQLitePackingItem");
             await _db.CreateTableAsync<SQLitePackingItem>();
@@ -222,6 +225,20 @@ namespace Packo
                 //    await Shell.Current.GoToAsync("//Home");
                 //}
             });
+        }
+
+        private async Task EnsureTripColumnAsync(string columnName, string columnDefinition)
+        {
+            var columns = await _db.QueryAsync<SQLiteColumnInfo>("PRAGMA table_info(SQLiteTrip)");
+            if (columns.Any(column => string.Equals(column.Name, columnName, StringComparison.OrdinalIgnoreCase)))
+                return;
+
+            await _db.ExecuteAsync($"ALTER TABLE SQLiteTrip ADD COLUMN {columnName} {columnDefinition}");
+        }
+
+        private sealed class SQLiteColumnInfo
+        {
+            public string Name { get; set; } = string.Empty;
         }
     }
 }

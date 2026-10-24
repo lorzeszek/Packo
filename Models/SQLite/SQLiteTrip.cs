@@ -15,6 +15,9 @@ namespace Packo.Models.SQLite
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public string Destination { get; set; } = string.Empty;
+        public int AdultsCount { get; set; } = 1;
+        public string ChildrenAgesJson { get; set; } = "[]";
+        public string SelectedTransportTypesJson { get; set; } = "[]";
         public bool IsActive { get; set; }
         public bool IsInTrash { get; set; }
         public CoverThemeType CoverTheme { get; set; }

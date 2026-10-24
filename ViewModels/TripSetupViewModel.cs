@@ -224,6 +224,9 @@ namespace Packo.ViewModels
                 StartDate = StartDate,
                 EndDate = EndDate,
                 Destination = Destination,
+                AdultsCount = AdultsCount,
+                ChildrenAges = ChildrenAge.ToList(),
+                SelectedTransportTypes = SelectedTransportTypes.ToList(),
                 IsActive = true,
                 CoverTheme = coverTheme
             };
