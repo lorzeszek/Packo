@@ -1,11 +1,14 @@
 ﻿using Packo.Extensions;
+using CommunityToolkit.Maui.Extensions;
 using Packo.Helpers;
 using Packo.Interfaces;
 using Packo.Models;
 using Packo.Models.DTO;
 using Packo.Repositories.Enums;
 using Packo.Repositories.Interfaces;
+using Packo.Services;
 using Packo.Services.Interfaces;
+using Packo.Popups;
 using System.Windows.Input;
 
 namespace Packo.ViewModels
@@ -18,6 +21,14 @@ namespace Packo.ViewModels
         private int _localTripId { get; set; }
         private bool _channelsInitialized;
         private bool _isLoading;
+        private readonly IPackingSuggestionService _packingSuggestionService;
+
+        private bool _isGeneratingPackingList;
+        public bool IsGeneratingPackingList
+        {
+            get => _isGeneratingPackingList;
+            private set => SetProperty(ref _isGeneratingPackingList, value);
+        }
 
         private string _newItemName = string.Empty;
         public string NewItemName
@@ -34,10 +45,12 @@ namespace Packo.ViewModels
         }
 
         public ICommand AddItemCommand => new Command(async () => await AddItemAsync());
+        public ICommand GeneratePackingListCommand => new Command(async () => await GeneratePackingListAsync());
         public ICommand ToggleIsPackedCommand => new Command<PackingItem>(async packingItem => await ToggleIsPackedAsync(packingItem));
 
-        public PackingListViewModel(ILocalUserService localUserService, ISupabaseService supabase, ISessionService sessionService, IPackingItemRepository packingItemRepository, ITripRepository tripRepository, IGoogleAuthService googleAuthService) : base(localUserService, supabase, sessionService, packingItemRepository, tripRepository, googleAuthService)
+        public PackingListViewModel(ILocalUserService localUserService, ISupabaseService supabase, ISessionService sessionService, IPackingItemRepository packingItemRepository, ITripRepository tripRepository, IGoogleAuthService googleAuthService, IPackingSuggestionService packingSuggestionService) : base(localUserService, supabase, sessionService, packingItemRepository, tripRepository, googleAuthService)
         {
+            _packingSuggestionService = packingSuggestionService;
         }
 
         private async Task AddItemAsync()
@@ -54,6 +67,70 @@ namespace Packo.ViewModels
             if (!Session.IsAuthenticated)
             {
                 await LoadData();
+            }
+        }
+
+        private async Task GeneratePackingListAsync()
+        {
+            if (_isLoading || IsGeneratingPackingList)
+                return;
+
+            var confirmation = await Application.Current.MainPage.ShowPopupAsync<bool>(
+                new ConfirmPopup(LocalizationResourceManager.Instance["SuggestedPackingTitle"], string.Empty));
+
+            if (!confirmation.Result)
+                return;
+
+            IsGeneratingPackingList = true;
+            try
+            {
+                // Let MAUI render the loading overlay before the AI request starts.
+                await Task.Yield();
+
+                var trip = await _tripRepository.GetTripAsync(new TripDTO
+                {
+                    LocalTripId = _localTripId,
+                    RemoteTripId = _remoteTripId,
+                    LocalUserId = Session.LocalUserId ?? string.Empty,
+                    RemoteUserId = Session.UserId ?? string.Empty
+                });
+
+                if (trip?.StartDate is null || trip.EndDate is null || string.IsNullOrWhiteSpace(trip.Destination))
+                    return;
+
+                var suggestedItems = await _packingSuggestionService.GenerateItemsAsync(
+                    trip.Destination,
+                    trip.StartDate.Value,
+                    trip.EndDate.Value,
+                    adultsCount: 1,
+                    childrenCountWithAge: [],
+                    selectedTransportTypes: [],
+                    LocalizationResourceManager.Instance.CurrentLanguage);
+
+                var selectItemsPopup = new PackingItemsPopup(suggestedItems);
+                _ = Application.Current.MainPage.ShowPopupAsync(selectItemsPopup);
+                var selectedItemNames = await selectItemsPopup.ResultSource.Task;
+
+                if (selectedItemNames.Count == 0)
+                    return;
+
+                var newItems = selectedItemNames.Select(name => new PackingItemDTO
+                {
+                    Name = name,
+                    Category = 3,
+                    RemoteTripId = _remoteTripId,
+                    LocalTripId = _localTripId,
+                    RemoteUserId = Session.UserId ?? string.Empty,
+                    LocalUserId = Session.LocalUserId ?? string.Empty,
+                    CreatedDate = DateTime.Now
+                }).ToList();
+
+                await _packingItemRepository.AddPackingItemsAsync(newItems);
+                await LoadData();
+            }
+            finally
+            {
+                IsGeneratingPackingList = false;
             }
         }
 

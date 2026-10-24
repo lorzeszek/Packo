@@ -68,21 +68,36 @@
 
         <Border Grid.Row="2" Padding="16,10,16,16" StrokeThickness="0"
                 BackgroundColor="{AppThemeBinding Light={StaticResource PackoPageBackgroundLight}, Dark={StaticResource PackoPageBackgroundDark}}">
-            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-                <Border Padding="12,2" StrokeThickness="1" Stroke="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoBorderDark}}"
-                        StrokeShape="RoundRectangle 17" BackgroundColor="{AppThemeBinding Light={StaticResource PackoSurfaceLight}, Dark={StaticResource PackoSurfaceDark}}">
-                    <Entry Placeholder="{loc:Translate AddItemPlaceholder}" ReturnType="Done"
-                           Text="{Binding NewItemName, Mode=TwoWay}" FontSize="15">
-                        <Entry.Behaviors>
-                            <EventToCommandBehavior EventName="Completed" Command="{Binding AddItemCommand}" />
-                        </Entry.Behaviors>
-                    </Entry>
-                </Border>
-                <Button Grid.Column="1" Text="+" FontSize="25" FontAttributes="Bold"
-                        WidthRequest="56" HeightRequest="56" Padding="0" CornerRadius="18"
-                        BackgroundColor="{StaticResource PackoAccentLight}" TextColor="{StaticResource PackoWhite}"
-                        Command="{Binding AddItemCommand}" />
-            </Grid>
+            <VerticalStackLayout Spacing="10">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                    <Border Padding="12,2" StrokeThickness="1" Stroke="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoBorderDark}}"
+                            StrokeShape="RoundRectangle 17" BackgroundColor="{AppThemeBinding Light={StaticResource PackoSurfaceLight}, Dark={StaticResource PackoSurfaceDark}}">
+                        <Entry Placeholder="{loc:Translate AddItemPlaceholder}" ReturnType="Done"
+                               Text="{Binding NewItemName, Mode=TwoWay}" FontSize="15">
+                            <Entry.Behaviors>
+                                <EventToCommandBehavior EventName="Completed" Command="{Binding AddItemCommand}" />
+                            </Entry.Behaviors>
+                        </Entry>
+                    </Border>
+                    <Button Grid.Column="1" Text="+" FontSize="25" FontAttributes="Bold"
+                            WidthRequest="56" HeightRequest="56" Padding="0" CornerRadius="18"
+                            BackgroundColor="{StaticResource PackoAccentLight}" TextColor="{StaticResource PackoWhite}"
+                            Command="{Binding AddItemCommand}" />
+                </Grid>
+                <Button Text="{loc:Translate GeneratePackingList}" Command="{Binding GeneratePackingListCommand}"
+                        Style="{StaticResource PackoPrimaryActionButtonStyle}" FontSize="14" FontAttributes="Bold"
+                        HeightRequest="48" CornerRadius="15" />
+            </VerticalStackLayout>
         </Border>
+
+        <Grid Grid.RowSpan="3" IsVisible="{Binding IsGeneratingPackingList}"
+              BackgroundColor="#80000000" ZIndex="10">
+            <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Spacing="12">
+                <ActivityIndicator IsRunning="{Binding IsGeneratingPackingList}"
+                                   WidthRequest="40" HeightRequest="40" />
+                <Label Text="{loc:Translate Loading}" TextColor="White"
+                       HorizontalOptions="Center" />
+            </VerticalStackLayout>
+        </Grid>
     </Grid>
 </local:BasePage>
