@@ -42,6 +42,9 @@ namespace Packo.Models.Supabase
         [Column("SelectedTransportTypes")]
         public JToken? SelectedTransportTypes { get; set; }
 
+        [Column("TripType")]
+        public string TripType { get; set; } = "Leisure";
+
         [Column("user_id")]
         public string User_id { get; set; } = string.Empty;
 

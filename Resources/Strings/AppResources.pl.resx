@@ -21,6 +21,21 @@
   <data name="StartsToday" xml:space="preserve"><value>Rozpoczyna się dzisiaj</value></data><data name="DayToGo" xml:space="preserve"><value>Do wyjazdu: {0} dzień</value></data><data name="DaysToGo" xml:space="preserve"><value>Do wyjazdu: {0} dni</value></data><data name="TripEnded" xml:space="preserve"><value>Podróż zakończona</value></data><data name="LastDay" xml:space="preserve"><value>Ostatni dzień</value></data><data name="DayRemaining" xml:space="preserve"><value>Pozostał {0} dzień</value></data><data name="DaysRemaining" xml:space="preserve"><value>Pozostało {0} dni</value></data><data name="CurrentTrip" xml:space="preserve"><value>Trwająca podróż</value></data><data name="NextTrip" xml:space="preserve"><value>Następna podróż</value></data>
   <data name="DuplicateDocument" xml:space="preserve"><value>Dokument już istnieje</value></data><data name="DuplicateDocumentMessage" xml:space="preserve"><value>Ten dokument został już dodany.</value></data>
   <data name="SuggestedPackingTitle" xml:space="preserve"><value>Czy chcesz wygenerować listę rzeczy do spakowania?</value></data>
+  <data name="TripTypeQuestion" xml:space="preserve"><value>Jaki to typ wyjazdu?</value></data>
+  <data name="TripTypeDescription" xml:space="preserve"><value>Wybierz jeden główny cel, aby lepiej dopasować listę pakowania.</value></data>
+  <data name="TripTypeLeisure" xml:space="preserve"><value>Wypoczynek</value></data>
+  <data name="TripTypeSightseeing" xml:space="preserve"><value>Zwiedzanie / city break</value></data>
+  <data name="TripTypeBusiness" xml:space="preserve"><value>Biznesowy</value></data>
+  <data name="TripTypeFamily" xml:space="preserve"><value>Rodzinny</value></data>
+  <data name="TripTypeActiveAndSport" xml:space="preserve"><value>Aktywny / sportowy</value></data>
+  <data name="TripTypeWinterSports" xml:space="preserve"><value>Sporty zimowe</value></data>
+  <data name="TripTypeRoadTrip" xml:space="preserve"><value>Road trip</value></data>
+  <data name="TripTypeCamping" xml:space="preserve"><value>Camping</value></data>
+  <data name="TripTypeWellness" xml:space="preserve"><value>Wellness / spa</value></data>
+  <data name="TripTypeRomantic" xml:space="preserve"><value>Romantyczny</value></data>
+  <data name="TripTypeCelebration" xml:space="preserve"><value>Świętowanie / wieczór kawalerski lub panieński</value></data>
+  <data name="TripTypeFestivalOrEvent" xml:space="preserve"><value>Festiwal / wydarzenie</value></data>
+  <data name="TripTypeOther" xml:space="preserve"><value>Inny</value></data>
   <data name="Plane" xml:space="preserve"><value>Samolot</value></data><data name="Train" xml:space="preserve"><value>Pociąg</value></data><data name="Bus" xml:space="preserve"><value>Autobus</value></data><data name="Car" xml:space="preserve"><value>Samochód</value></data>
   <data name="PreferencesSaved" xml:space="preserve"><value>Wybrany wygląd i język są zapisywane automatycznie.</value></data>
   <data name="SystemTheme" xml:space="preserve"><value>Systemowy</value></data><data name="LightTheme" xml:space="preserve"><value>Jasny</value></data><data name="DarkTheme" xml:space="preserve"><value>Ciemny</value></data>

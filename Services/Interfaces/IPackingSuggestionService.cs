@@ -2,6 +2,6 @@
 {
     public interface IPackingSuggestionService
     {
-        Task<List<string>> GenerateItemsAsync(string destination, DateTime start, DateTime end, int adultsCount, List<int> childrenCountWithAge, List<string> selectedTransportTypes, string languageCode);
+        Task<List<string>> GenerateItemsAsync(string destination, DateTime start, DateTime end, int adultsCount, List<int> childrenCountWithAge, List<string> selectedTransportTypes, Packo.Models.Enums.TripType tripType, string languageCode);
     }
 }

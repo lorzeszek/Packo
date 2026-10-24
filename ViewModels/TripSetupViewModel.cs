@@ -60,6 +60,24 @@ namespace Packo.ViewModels
                 new("Car")
             };
 
+            TripTypeOptions = new ObservableCollection<TripTypeOption>
+            {
+                new(TripType.Leisure, "TripTypeLeisure"),
+                new(TripType.Sightseeing, "TripTypeSightseeing"),
+                new(TripType.Business, "TripTypeBusiness"),
+                new(TripType.Family, "TripTypeFamily"),
+                new(TripType.ActiveAndSport, "TripTypeActiveAndSport"),
+                new(TripType.WinterSports, "TripTypeWinterSports"),
+                new(TripType.RoadTrip, "TripTypeRoadTrip"),
+                new(TripType.Camping, "TripTypeCamping"),
+                new(TripType.Wellness, "TripTypeWellness"),
+                new(TripType.Romantic, "TripTypeRomantic"),
+                new(TripType.Celebration, "TripTypeCelebration"),
+                new(TripType.FestivalOrEvent, "TripTypeFestivalOrEvent"),
+                new(TripType.Other, "TripTypeOther")
+            };
+            SelectedTripTypeOption = TripTypeOptions.First();
+
             foreach (var transportOption in TransportOptions)
                 transportOption.PropertyChanged += OnTransportOptionChanged;
             LocalizationResourceManager.Instance.PropertyChanged += (_, _) => SyncSelectedTransportTypes();
@@ -89,6 +107,11 @@ namespace Packo.ViewModels
         public ObservableCollection<ChildAgeItem> Children { get; } = new();
 
         public ObservableCollection<TransportOptionItem> TransportOptions { get; }
+
+        public ObservableCollection<TripTypeOption> TripTypeOptions { get; }
+
+        [ObservableProperty]
+        private TripTypeOption selectedTripTypeOption = null!;
 
         [ObservableProperty]
         private List<string> selectedTransportTypes = new List<string>();
@@ -227,6 +250,7 @@ namespace Packo.ViewModels
                 AdultsCount = AdultsCount,
                 ChildrenAges = ChildrenAge.ToList(),
                 SelectedTransportTypes = SelectedTransportTypes.ToList(),
+                TripType = SelectedTripTypeOption.Value,
                 IsActive = true,
                 CoverTheme = coverTheme
             };
@@ -267,6 +291,7 @@ namespace Packo.ViewModels
                         AdultsCount,
                         ChildrenAge,
                         SelectedTransportTypes,
+                        SelectedTripTypeOption.Value,
                         LocalizationResourceManager.Instance.CurrentLanguage);
 
                     var addSelectedItemsPopup = new PackingItemsPopup(proposeListItems);

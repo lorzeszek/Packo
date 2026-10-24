@@ -16,6 +16,7 @@ namespace Packo.Models.DTO
         public int AdultsCount { get; set; } = 1;
         public List<int> ChildrenAges { get; set; } = [];
         public List<string> SelectedTransportTypes { get; set; } = [];
+        public TripType TripType { get; set; } = TripType.Leisure;
         public bool IsActive { get; set; }
         public bool IsInTrash { get; set; }
         public CoverThemeType CoverTheme { get; set; }

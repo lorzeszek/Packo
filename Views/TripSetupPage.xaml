@@ -176,6 +176,19 @@
                         </FlexLayout>
                     </VerticalStackLayout>
                 </Border>
+
+                <Border Padding="18" StrokeThickness="1" Stroke="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoBorderDark}}"
+                        StrokeShape="RoundRectangle 22" BackgroundColor="{AppThemeBinding Light={StaticResource PackoSurfaceLight}, Dark={StaticResource PackoSurfaceDark}}">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="{loc:Translate TripTypeQuestion}" Style="{StaticResource PackoSectionTitleStyle}" />
+                        <Label Text="{loc:Translate TripTypeDescription}" Style="{StaticResource PackoFieldCaptionStyle}" />
+                        <Border Padding="12,1" StrokeThickness="1" Stroke="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoControlBorderDark}}"
+                                StrokeShape="RoundRectangle 15" BackgroundColor="{AppThemeBinding Light={StaticResource PackoWhite}, Dark={StaticResource PackoInsetSurfaceDeepDark}}">
+                            <Picker ItemsSource="{Binding TripTypeOptions}" ItemDisplayBinding="{Binding Name}"
+                                    SelectedItem="{Binding SelectedTripTypeOption}" FontSize="15" />
+                        </Border>
+                    </VerticalStackLayout>
+                </Border>
             </VerticalStackLayout>
         </ScrollView>
 

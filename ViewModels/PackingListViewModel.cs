@@ -105,6 +105,7 @@ namespace Packo.ViewModels
                     trip.AdultsCount,
                     trip.ChildrenAges,
                     trip.SelectedTransportTypes,
+                    trip.TripType,
                     LocalizationResourceManager.Instance.CurrentLanguage);
 
                 var selectItemsPopup = new PackingItemsPopup(suggestedItems);

@@ -26,6 +26,7 @@ namespace Packo.Helpers
                 AdultsCount = trip.AdultsCount,
                 ChildrenAges = ParseIntegerArray(trip.ChildrenAges),
                 SelectedTransportTypes = ParseTextArray(trip.SelectedTransportTypes),
+                TripType = Enum.TryParse<TripType>(trip.TripType, true, out var tripType) ? tripType : TripType.Leisure,
                 IsInTrash = trip.IsInTrash,
                 CoverTheme = Enum.TryParse<CoverThemeType>(trip.CoverTheme, true, out var parsedTheme) ? parsedTheme : CoverThemeType.big_city
             };
@@ -48,6 +49,7 @@ namespace Packo.Helpers
                 AdultsCount = trip.AdultsCount,
                 ChildrenAges = JArray.FromObject(trip.ChildrenAges),
                 SelectedTransportTypes = JArray.FromObject(trip.SelectedTransportTypes),
+                TripType = trip.TripType.ToString(),
                 IsInTrash = trip.IsInTrash,
                 CoverTheme = trip.CoverTheme.ToString()
             };

@@ -39,6 +39,7 @@ namespace Packo.Repositories.Local
                 AdultsCount = trip.AdultsCount,
                 ChildrenAgesJson = JsonSerializer.Serialize(trip.ChildrenAges),
                 SelectedTransportTypesJson = JsonSerializer.Serialize(trip.SelectedTransportTypes),
+                TripType = trip.TripType.ToString(),
                 IsActive = trip.IsActive,
                 IsInTrash = trip.IsInTrash,
                 CoverTheme = trip.CoverTheme,
@@ -65,6 +66,7 @@ namespace Packo.Repositories.Local
                 AdultsCount = trip.AdultsCount,
                 ChildrenAgesJson = JsonSerializer.Serialize(trip.ChildrenAges),
                 SelectedTransportTypesJson = JsonSerializer.Serialize(trip.SelectedTransportTypes),
+                TripType = trip.TripType.ToString(),
                 IsActive = trip.IsActive,
                 IsInTrash = trip.IsInTrash,
                 CoverTheme = trip.CoverTheme,
@@ -92,6 +94,7 @@ namespace Packo.Repositories.Local
                 AdultsCount = x.AdultsCount,
                 ChildrenAges = DeserializeOrEmpty<int>(x.ChildrenAgesJson),
                 SelectedTransportTypes = DeserializeOrEmpty<string>(x.SelectedTransportTypesJson),
+                TripType = ParseTripType(x.TripType),
                 IsActive = x.IsActive,
                 IsInTrash = x.IsInTrash,
                 CoverTheme = x.CoverTheme,
@@ -150,6 +153,7 @@ namespace Packo.Repositories.Local
                 AdultsCount = sqliteTrip.AdultsCount,
                 ChildrenAges = DeserializeOrEmpty<int>(sqliteTrip.ChildrenAgesJson),
                 SelectedTransportTypes = DeserializeOrEmpty<string>(sqliteTrip.SelectedTransportTypesJson),
+                TripType = ParseTripType(sqliteTrip.TripType),
                 IsActive = sqliteTrip.IsActive,
                 IsInTrash = sqliteTrip.IsInTrash,
                 CoverTheme = sqliteTrip.CoverTheme,
@@ -172,6 +176,7 @@ namespace Packo.Repositories.Local
                 AdultsCount = trip.AdultsCount,
                 ChildrenAgesJson = JsonSerializer.Serialize(trip.ChildrenAges),
                 SelectedTransportTypesJson = JsonSerializer.Serialize(trip.SelectedTransportTypes),
+                TripType = trip.TripType.ToString(),
                 IsActive = trip.IsActive,
                 IsInTrash = trip.IsInTrash,
                 CoverTheme = trip.CoverTheme,
@@ -217,6 +222,7 @@ namespace Packo.Repositories.Local
                 AdultsCount = sqliteTrip.AdultsCount,
                 ChildrenAges = DeserializeOrEmpty<int>(sqliteTrip.ChildrenAgesJson),
                 SelectedTransportTypes = DeserializeOrEmpty<string>(sqliteTrip.SelectedTransportTypesJson),
+                TripType = ParseTripType(sqliteTrip.TripType),
                 IsActive = sqliteTrip.IsActive,
                 IsInTrash = sqliteTrip.IsInTrash,
                 CoverTheme = sqliteTrip.CoverTheme,
@@ -272,5 +278,10 @@ namespace Packo.Repositories.Local
                 return [];
             }
         }
+
+        private static Packo.Models.Enums.TripType ParseTripType(string? value) =>
+            Enum.TryParse<Packo.Models.Enums.TripType>(value, true, out var tripType)
+                ? tripType
+                : Packo.Models.Enums.TripType.Leisure;
     }
 }

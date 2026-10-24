@@ -174,6 +174,7 @@ namespace Packo
             await EnsureTripColumnAsync("AdultsCount", "INTEGER NOT NULL DEFAULT 1");
             await EnsureTripColumnAsync("ChildrenAgesJson", "TEXT NOT NULL DEFAULT '[]'");
             await EnsureTripColumnAsync("SelectedTransportTypesJson", "TEXT NOT NULL DEFAULT '[]'");
+            await EnsureTripColumnAsync("TripType", "TEXT NOT NULL DEFAULT 'Leisure'");
 
             //await _db.ExecuteAsync("DROP TABLE IF EXISTS SQLitePackingItem");
             await _db.CreateTableAsync<SQLitePackingItem>();

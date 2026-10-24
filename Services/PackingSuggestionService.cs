@@ -11,7 +11,7 @@ namespace Packo.Services
             _aiService = aiService;
         }
 
-        public async Task<List<string>> GenerateItemsAsync(string destination, DateTime start, DateTime end, int adultsCount, List<int> childrenAge, List<string> selectedTransportTypes, string languageCode)
+        public async Task<List<string>> GenerateItemsAsync(string destination, DateTime start, DateTime end, int adultsCount, List<int> childrenAge, List<string> selectedTransportTypes, Packo.Models.Enums.TripType tripType, string languageCode)
         {
             var days = (end - start).Days;
             var outputLanguage = languageCode.Equals("pl", StringComparison.OrdinalIgnoreCase) ? "Polish" : "English";
@@ -26,6 +26,7 @@ namespace Packo.Services
                 Adults: {adultsCount}
                 Children: {string.Join(", ", childrenAge.Select((age, index) => $"Child {index + 1}: Age {age}"))}
                 Transport: {string.Join(", ", selectedTransportTypes)}
+                Trip type: {tripType}
 
                 Return ONLY a simple list of item names, one per line, with no numbering or bullets.
                 ";
