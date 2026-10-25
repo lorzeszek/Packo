@@ -40,4 +40,9 @@
   <data name="PreferencesSaved" xml:space="preserve"><value>Wybrany wygląd i język są zapisywane automatycznie.</value></data>
   <data name="SystemTheme" xml:space="preserve"><value>Systemowy</value></data><data name="LightTheme" xml:space="preserve"><value>Jasny</value></data><data name="DarkTheme" xml:space="preserve"><value>Ciemny</value></data>
   <data name="Ok" xml:space="preserve"><value>OK</value></data><data name="GeneratePackingList" xml:space="preserve"><value>Wygeneruj listę z AI</value></data><data name="PackingListTitle" xml:space="preserve"><value>Lista pakowania</value></data>
+  <data name="DeletePackingItem" xml:space="preserve"><value>Usuń przedmiot</value></data>
+  <data name="DeletePackingItemConfirm" xml:space="preserve"><value>Usunąć „{0}” z tej listy pakowania?</value></data>
+  <data name="ClearPackingList" xml:space="preserve"><value>Wyczyść listę</value></data>
+  <data name="ClearPackingListConfirm" xml:space="preserve"><value>Usunąć wszystkie przedmioty ({0}) z tej listy pakowania? Tej operacji nie można cofnąć.</value></data>
+  <data name="DeletePackingItemsError" xml:space="preserve"><value>Nie udało się usunąć części przedmiotów. Spróbuj ponownie.</value></data>
 </root>

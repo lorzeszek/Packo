@@ -30,9 +30,8 @@ namespace Packo.Repositories.Supabase
             {
                 PackingItemSupabase mappedPackingItem = Mappers.MapToPackingItemSupabase(item);
 
-                await _supabase.Client.From<PackingItemSupabase>().Insert(mappedPackingItem);
-
-                return mappedPackingItem.Id;
+                var result = await _supabase.Client.From<PackingItemSupabase>().Insert(mappedPackingItem);
+                return result.Models.Single().Id;
             }
             catch (Exception ex)
             {
@@ -60,9 +59,14 @@ namespace Packo.Repositories.Supabase
         {
             try
             {
-                PackingItemSupabase mappedPackingItem = Mappers.MapToPackingItemSupabase(item);
+                if (item.RemotePackingItemId is not > 0 || item.RemoteTripId is not > 0)
+                    throw new ArgumentException("A remote item and trip ID are required for deletion.", nameof(item));
 
-                await _supabase.Client.From<PackingItemSupabase>().Delete(mappedPackingItem);
+                await _supabase.Client.From<PackingItemSupabase>()
+                    .Where(x => x.Id == item.RemotePackingItemId.Value)
+                    .Where(x => x.TripId == item.RemoteTripId.Value)
+                    .Where(x => x.User_id == _sessionService.UserId)
+                    .Delete();
             }
             catch (Exception)
             {

@@ -16,6 +16,7 @@ namespace Packo.Repositories
         private readonly ITripRepository _tripRepository;
         private readonly SQLiteAsyncConnection _pendingDb;
         private readonly ISessionService _sessionService;
+        private readonly SemaphoreSlim _syncGate = new(1, 1);
 
         public event Action<PackingItemChange>? PackingItemChanged
         {
@@ -31,11 +32,30 @@ namespace Packo.Repositories
 
             _pendingDb = pendingDb;
             _tripRepository = tripRepository;
+            Connectivity.Current.ConnectivityChanged += OnConnectivityChanged;
+        }
+
+        private async void OnConnectivityChanged(object? sender, ConnectivityChangedEventArgs e)
+        {
+            if (e.NetworkAccess != NetworkAccess.Internet || !_sessionService.IsAuthenticated)
+                return;
+            try
+            {
+                await _tripRepository.SyncPendingChangesAsync();
+                await SyncPendingChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex);
+            }
         }
 
         public async Task<int> AddPackingItemAsync(PackingItemDTO item)
         {
-            var id = await AddPackingItemCoreAsync(item);
+            int id;
+            await _syncGate.WaitAsync();
+            try { id = await AddPackingItemCoreAsync(item); }
+            finally { _syncGate.Release(); }
             CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger.Default.Send(new Packo.Messages.TripDataChangedMessage());
             return id;
         }
@@ -50,7 +70,8 @@ namespace Packo.Repositories
             {
                 try
                 {
-                    await _remote.AddPackingItemAsync(item);
+                    item.RemotePackingItemId = await _remote.AddPackingItemAsync(item);
+                    await _local.UpdatePackingItemAsync(item);
                 }
                 catch
                 {
@@ -92,43 +113,57 @@ namespace Packo.Repositories
 
         public async Task DeletePackingItemAsync(PackingItemDTO item)
         {
-            await DeletePackingItemCoreAsync(item);
+            await _syncGate.WaitAsync();
+            try { await DeletePackingItemCoreAsync(item); }
+            finally { _syncGate.Release(); }
             WeakReferenceMessenger.Default.Send(new Packo.Messages.TripDataChangedMessage());
         }
 
         private async Task DeletePackingItemCoreAsync(PackingItemDTO item)
         {
-            await _local.DeletePackingItemAsync(item);
-
-            if (Connectivity.Current.NetworkAccess == NetworkAccess.Internet && _sessionService.IsAuthenticated)
+            // Only cancel queued changes for the explicitly selected item.
+            // A pending Add must not recreate an item removed while offline.
+            SQLitePendingPackingItemChange? deletion = null;
+            await _pendingDb.RunInTransactionAsync(db =>
+            {
+                var pending = db.Table<SQLitePendingPackingItemChange>()
+                    .Where(x => x.LocalUserId == item.LocalUserId && x.LocalTripId == item.LocalTripId).ToList();
+                foreach (var change in pending)
+                {
+                    var queued = JsonSerializer.Deserialize<PackingItemDTO>(change.PackingItemJson);
+                    if (queued != null && ((item.RemotePackingItemId > 0 && queued.RemotePackingItemId == item.RemotePackingItemId)
+                        || (item.LocalPackingItemId > 0 && queued.LocalPackingItemId == item.LocalPackingItemId)))
+                        db.Delete(change);
+                }
+                db.Table<Packo.Models.SQLite.SQLitePackingItem>().Where(x => x.LocalUserId == item.LocalUserId
+                    && x.LocalTripId == item.LocalTripId
+                    && ((item.LocalPackingItemId > 0 && x.LocalPackingItemId == item.LocalPackingItemId)
+                        || (item.RemotePackingItemId > 0 && x.RemotePackingItemId == item.RemotePackingItemId))).Delete();
+                if (item.RemotePackingItemId > 0)
+                {
+                    deletion = new SQLitePendingPackingItemChange
+                    {
+                        LocalUserId = item.LocalUserId,
+                        LocalTripId = item.LocalTripId,
+                        RemoteTripId = item.RemoteTripId ?? 0,
+                        LocalPackingItemId = item.LocalPackingItemId,
+                        Operation = "Delete",
+                        PackingItemJson = JsonSerializer.Serialize(item)
+                    };
+                    db.Insert(deletion);
+                }
+            });
+            if (deletion != null && Connectivity.Current.NetworkAccess == NetworkAccess.Internet && _sessionService.IsAuthenticated)
             {
                 try
                 {
                     await _remote.DeletePackingItemAsync(item);
+                    await _pendingDb.DeleteAsync(deletion);
                 }
                 catch
                 {
-                    var pending = new SQLitePendingPackingItemChange
-                    {
-                        LocalUserId = item.LocalUserId,
-                        LocalTripId = item.LocalTripId,
-                        Operation = "Delete",
-                        PackingItemJson = JsonSerializer.Serialize(item)
-                    };
-                    await _pendingDb.InsertAsync(pending);
+                    // Keep the deletion for retry after reconnecting or restarting.
                 }
-            }
-
-            else
-            {
-                var pending = new SQLitePendingPackingItemChange
-                {
-                    LocalUserId = item.LocalUserId,
-                    LocalTripId = item.LocalTripId,
-                    Operation = "Delete",
-                    PackingItemJson = JsonSerializer.Serialize(item)
-                };
-                await _pendingDb.InsertAsync(pending);
             }
         }
 
@@ -136,12 +171,54 @@ namespace Packo.Repositories
         {
             if (Connectivity.Current.NetworkAccess == NetworkAccess.Internet && _sessionService.IsAuthenticated)
             {
-                var packingItems = await _remote.GetPackingItemsForTripAsync(remoteTripId, remoteTripId);
-                if (packingItems != null)
+                await SyncPendingChangesAsync();
+                await _syncGate.WaitAsync();
+                try
                 {
-                    //await _local.UpdatePackingItemAsync(packingItems); // synchronizacja lokalna
+                    var packingItems = await _remote.GetPackingItemsForTripAsync(localTripId, remoteTripId);
+                    var pending = await _pendingDb.Table<SQLitePendingPackingItemChange>()
+                        .Where(x => x.LocalUserId == _sessionService.LocalUserId && x.LocalTripId == localTripId).ToListAsync();
+                    var deletedIds = pending.Where(x => x.Operation == "Delete")
+                        .Select(x => JsonSerializer.Deserialize<PackingItemDTO>(x.PackingItemJson)?.RemotePackingItemId).ToHashSet();
+                    var cached = await _local.GetPackingItemsForTripAsync(localTripId, remoteTripId);
+                    var result = new List<PackingItemDTO>();
+                    foreach (var item in packingItems.Where(x => !deletedIds.Contains(x.RemotePackingItemId)))
+                    {
+                        var localItem = cached.FirstOrDefault(x => x.RemotePackingItemId == item.RemotePackingItemId);
+                        if (localItem == null)
+                        {
+                            // Older app versions did not save the returned remote ID.
+                            // Relink only an unambiguous exact match, without removing cache rows.
+                            var legacyMatches = cached.Where(x => x.RemotePackingItemId is not > 0
+                                && x.Name == item.Name && x.Category == item.Category
+                                && (x.CreatedDate == item.CreatedDate
+                                    || x.CreatedDate.ToUniversalTime() == item.CreatedDate.ToUniversalTime())).ToList();
+                            if (legacyMatches.Count == 1 && !pending.Any(x => x.Operation == "Add" &&
+                                JsonSerializer.Deserialize<PackingItemDTO>(x.PackingItemJson)?.LocalPackingItemId == legacyMatches[0].LocalPackingItemId))
+                                localItem = legacyMatches[0];
+                        }
+                        item.LocalUserId = _sessionService.LocalUserId ?? string.Empty;
+                        item.LocalTripId = localTripId;
+                        item.LocalPackingItemId = localItem?.LocalPackingItemId ?? 0;
+                        if (localItem == null)
+                            item.LocalPackingItemId = await _local.AddPackingItemAsync(item);
+                        else if (!pending.Any(x => x.Operation == "Update" &&
+                            JsonSerializer.Deserialize<PackingItemDTO>(x.PackingItemJson)?.RemotePackingItemId == item.RemotePackingItemId))
+                            await _local.UpdatePackingItemAsync(item);
+                        else
+                        {
+                            result.Add(localItem);
+                            continue;
+                        }
+                        result.Add(item);
+                    }
+                    var pendingAddIds = pending.Where(x => x.Operation == "Add")
+                        .Select(x => JsonSerializer.Deserialize<PackingItemDTO>(x.PackingItemJson)?.LocalPackingItemId).ToHashSet();
+                    result.AddRange(cached.Where(x => pendingAddIds.Contains(x.LocalPackingItemId)
+                        && !result.Any(r => r.LocalPackingItemId == x.LocalPackingItemId)));
+                    return result;
                 }
-                return packingItems;
+                finally { _syncGate.Release(); }
             }
 
             var localTrip = await _local.GetPackingItemsForTripAsync(localTripId, remoteTripId);
@@ -157,7 +234,9 @@ namespace Packo.Repositories
 
         public async Task UpdatePackingItemAsync(PackingItemDTO item)
         {
-            await UpdatePackingItemCoreAsync(item);
+            await _syncGate.WaitAsync();
+            try { await UpdatePackingItemCoreAsync(item); }
+            finally { _syncGate.Release(); }
             WeakReferenceMessenger.Default.Send(new Packo.Messages.TripDataChangedMessage());
         }
 
@@ -249,6 +328,13 @@ namespace Packo.Repositories
 
         public async Task SyncPendingChangesAsync()
         {
+            await _syncGate.WaitAsync();
+            try { await SyncPendingChangesCoreAsync(); }
+            finally { _syncGate.Release(); }
+        }
+
+        private async Task SyncPendingChangesCoreAsync()
+        {
             if (Connectivity.Current.NetworkAccess != NetworkAccess.Internet || !_sessionService.IsAuthenticated)
                 return;
 
@@ -267,7 +353,7 @@ namespace Packo.Repositories
                 }
 
                 // Resolve RemoteTripId if it wasn't known when the change was queued.
-                if (pendingChange.RemoteTripId == 0)
+                if (pendingChange.Operation != "Delete" && packingItem.RemoteTripId is not > 0)
                 {
                     var trip = await _tripRepository.GetLocalTripAsync(pendingChange.LocalTripId, _sessionService.LocalUserId!);
                     //var trip = await _tripRepository.GetTripAsync(new TripDTO
@@ -301,7 +387,8 @@ namespace Packo.Repositories
                     switch (pendingChange.Operation)
                     {
                         case "Add":
-                            await _remote.AddPackingItemAsync(packingItem);
+                            packingItem.RemotePackingItemId = await _remote.AddPackingItemAsync(packingItem);
+                            await _local.UpdatePackingItemAsync(packingItem);
                             break;
                         case "Update":
                             await _remote.UpdatePackingItemAsync(packingItem);

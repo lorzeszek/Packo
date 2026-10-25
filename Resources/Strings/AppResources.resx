@@ -111,4 +111,9 @@
   <data name="TripEnded" xml:space="preserve"><value>Trip ended</value></data><data name="LastDay" xml:space="preserve"><value>Last day</value></data>
   <data name="DayRemaining" xml:space="preserve"><value>{0} day remaining</value></data><data name="DaysRemaining" xml:space="preserve"><value>{0} days remaining</value></data>
   <data name="CurrentTrip" xml:space="preserve"><value>Current Trip</value></data><data name="NextTrip" xml:space="preserve"><value>Next Trip</value></data>
+  <data name="DeletePackingItem" xml:space="preserve"><value>Delete item</value></data>
+  <data name="DeletePackingItemConfirm" xml:space="preserve"><value>Delete “{0}” from this packing list?</value></data>
+  <data name="ClearPackingList" xml:space="preserve"><value>Clear list</value></data>
+  <data name="ClearPackingListConfirm" xml:space="preserve"><value>Delete all items ({0}) from this packing list? This cannot be undone.</value></data>
+  <data name="DeletePackingItemsError" xml:space="preserve"><value>Some items could not be deleted. Please try again.</value></data>
 </root>

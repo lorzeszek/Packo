@@ -22,12 +22,19 @@ namespace Packo.ViewModels
         private bool _channelsInitialized;
         private bool _isLoading;
         private readonly IPackingSuggestionService _packingSuggestionService;
+        private bool _isDeleting;
+        public bool CanEditItems => !_isDeleting && !IsGeneratingPackingList;
+        public bool HasItems => Items.Count > 0;
 
         private bool _isGeneratingPackingList;
         public bool IsGeneratingPackingList
         {
             get => _isGeneratingPackingList;
-            private set => SetProperty(ref _isGeneratingPackingList, value);
+            private set
+            {
+                SetProperty(ref _isGeneratingPackingList, value);
+                OnPropertyChanged(nameof(CanEditItems));
+            }
         }
 
         private string _newItemName = string.Empty;
@@ -47,15 +54,88 @@ namespace Packo.ViewModels
         public ICommand AddItemCommand => new Command(async () => await AddItemAsync());
         public ICommand GeneratePackingListCommand => new Command(async () => await GeneratePackingListAsync());
         public ICommand ToggleIsPackedCommand => new Command<PackingItem>(async packingItem => await ToggleIsPackedAsync(packingItem));
+        public ICommand DeleteItemCommand => new Command<PackingItem>(async item => await DeleteItemsAsync(item));
+        public ICommand ClearListCommand => new Command(async () => await DeleteItemsAsync(null));
 
         public PackingListViewModel(ILocalUserService localUserService, ISupabaseService supabase, ISessionService sessionService, IPackingItemRepository packingItemRepository, ITripRepository tripRepository, IGoogleAuthService googleAuthService, IPackingSuggestionService packingSuggestionService) : base(localUserService, supabase, sessionService, packingItemRepository, tripRepository, googleAuthService)
         {
             _packingSuggestionService = packingSuggestionService;
+            Items.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasItems));
+        }
+
+        private async Task DeleteItemsAsync(PackingItem? item)
+        {
+            if (!CanEditItems || _isLoading || !HasItems)
+                return;
+
+            _isDeleting = true;
+            OnPropertyChanged(nameof(CanEditItems));
+            var remainingItems = new List<PackingItem>();
+            var clearedView = false;
+            try
+            {
+                var targets = item is null ? Items.ToList() : new List<PackingItem> { item };
+                var resources = LocalizationResourceManager.Instance;
+                var confirmed = await Shell.Current.DisplayAlertAsync(
+                    resources[item is null ? "ClearPackingList" : "DeletePackingItem"],
+                    string.Format(System.Globalization.CultureInfo.CurrentUICulture,
+                        resources[item is null ? "ClearPackingListConfirm" : "DeletePackingItemConfirm"],
+                        item is null ? (object)targets.Count : item.Name),
+                    resources["Delete"], resources["Cancel"]);
+                if (!confirmed)
+                    return;
+
+                if (item is null)
+                {
+                    remainingItems.AddRange(targets);
+                    // One reset notification removes the whole list without per-row animations.
+                    Items.Clear();
+                    clearedView = true;
+                }
+
+                foreach (var target in targets)
+                {
+                    var dto = Mappers.MapToPackingItemDTO(target);
+                    dto.LocalTripId = _localTripId;
+                    dto.RemoteTripId = _remoteTripId;
+                    dto.LocalUserId = Session.LocalUserId ?? string.Empty;
+                    dto.RemoteUserId = Session.UserId ?? string.Empty;
+                    await _packingItemRepository.DeletePackingItemAsync(dto);
+                    remainingItems.Remove(target);
+                    if (clearedView)
+                        continue;
+
+                    // Update immediately, including offline and when realtime is unavailable.
+                    var current = Items.FirstOrDefault(x => target.RemoteId > 0
+                        ? x.RemoteId == target.RemoteId : x.LocalId == target.LocalId);
+                    if (current != null)
+                        Items.Remove(current);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex);
+                if (clearedView)
+                {
+                    // Restore only failed/unprocessed items; keep any new realtime arrivals.
+                    var toRestore = remainingItems.Where(target => !Items.Any(x => target.RemoteId > 0
+                        ? x.RemoteId == target.RemoteId : x.LocalId == target.LocalId)).ToList();
+                    Items.AddRange(toRestore, System.Collections.Specialized.NotifyCollectionChangedAction.Reset);
+                }
+                await Shell.Current.DisplayAlertAsync(LocalizationResourceManager.Instance["Error"],
+                    LocalizationResourceManager.Instance["DeletePackingItemsError"],
+                    LocalizationResourceManager.Instance["Ok"]);
+            }
+            finally
+            {
+                _isDeleting = false;
+                OnPropertyChanged(nameof(CanEditItems));
+            }
         }
 
         private async Task AddItemAsync()
         {
-            if (string.IsNullOrWhiteSpace(NewItemName))
+            if (!CanEditItems || string.IsNullOrWhiteSpace(NewItemName))
                 return;
 
             var newItem = new PackingItemDTO { Name = NewItemName, Category = 3, RemoteTripId = _remoteTripId, LocalTripId = _localTripId, RemoteUserId = Session.UserId, LocalUserId = Session.LocalUserId, CreatedDate = DateTime.Now };
@@ -72,7 +152,7 @@ namespace Packo.ViewModels
 
         private async Task GeneratePackingListAsync()
         {
-            if (_isLoading || IsGeneratingPackingList)
+            if (_isLoading || !CanEditItems)
                 return;
 
             var confirmation = await Application.Current.MainPage.ShowPopupAsync<bool>(
@@ -137,7 +217,7 @@ namespace Packo.ViewModels
 
         private async Task ToggleIsPackedAsync(PackingItem packingItem)
         {
-            if (packingItem != null)
+            if (CanEditItems && packingItem != null)
             {
                 try
                 {
@@ -173,6 +253,17 @@ namespace Packo.ViewModels
 
         private void OnPackingItemChanged(PackingItemChange change)
         {
+            if (change.Type == PackingItemChangeType.Delete)
+            {
+                // DELETE payloads may only contain the primary key.
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    var deleted = Items.FirstOrDefault(x => x.RemoteId == change.Item.RemotePackingItemId);
+                    if (deleted != null)
+                        Items.Remove(deleted);
+                });
+                return;
+            }
             if (change.Item.RemoteTripId != _remoteTripId)
                 return;
 
@@ -181,7 +272,8 @@ namespace Packo.ViewModels
                 switch (change.Type)
                 {
                     case PackingItemChangeType.Insert:
-                        Items.Add(Mappers.MapToPackingItem(change.Item));
+                        if (!Items.Any(x => x.RemoteId == change.Item.RemotePackingItemId))
+                            Items.Add(MapRealtimeItem(change.Item));
                         break;
 
                     case PackingItemChangeType.Update:
@@ -192,7 +284,9 @@ namespace Packo.ViewModels
 
                             if (index >= 0)
                             {
-                                Items[index] = Mappers.MapToPackingItem(change.Item);
+                                var updated = MapRealtimeItem(change.Item);
+                                updated.LocalId = item.LocalId;
+                                Items[index] = updated;
                             }
                         }
 
@@ -205,6 +299,14 @@ namespace Packo.ViewModels
                         break;
                 }
             });
+        }
+
+        private PackingItem MapRealtimeItem(PackingItemDTO dto)
+        {
+            var item = Mappers.MapToPackingItem(dto);
+            item.LocalTripId = _localTripId;
+            item.LocalUserId = Session.LocalUserId ?? string.Empty;
+            return item;
         }
 
         private async Task LoadData()
