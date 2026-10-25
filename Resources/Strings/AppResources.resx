@@ -116,4 +116,8 @@
   <data name="ClearPackingList" xml:space="preserve"><value>Clear list</value></data>
   <data name="ClearPackingListConfirm" xml:space="preserve"><value>Delete all items ({0}) from this packing list? This cannot be undone.</value></data>
   <data name="DeletePackingItemsError" xml:space="preserve"><value>Some items could not be deleted. Please try again.</value></data>
+  <data name="EditTrip" xml:space="preserve"><value>Edit trip</value></data>
+  <data name="EditTripIntro" xml:space="preserve"><value>Update your trip details. Your packing list will stay as it is.</value></data>
+  <data name="SaveChanges" xml:space="preserve"><value>Save changes</value></data>
+  <data name="SaveTripError" xml:space="preserve"><value>Could not save the trip. Please try again.</value></data>
 </root>

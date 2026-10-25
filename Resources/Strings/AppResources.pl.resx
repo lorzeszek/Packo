@@ -45,4 +45,8 @@
   <data name="ClearPackingList" xml:space="preserve"><value>Wyczyść listę</value></data>
   <data name="ClearPackingListConfirm" xml:space="preserve"><value>Usunąć wszystkie przedmioty ({0}) z tej listy pakowania? Tej operacji nie można cofnąć.</value></data>
   <data name="DeletePackingItemsError" xml:space="preserve"><value>Nie udało się usunąć części przedmiotów. Spróbuj ponownie.</value></data>
+  <data name="EditTrip" xml:space="preserve"><value>Edytuj podróż</value></data>
+  <data name="EditTripIntro" xml:space="preserve"><value>Zmień szczegóły podróży. Twoja lista pakowania pozostanie bez zmian.</value></data>
+  <data name="SaveChanges" xml:space="preserve"><value>Zapisz zmiany</value></data>
+  <data name="SaveTripError" xml:space="preserve"><value>Nie udało się zapisać podróży. Spróbuj ponownie.</value></data>
 </root>

@@ -125,6 +125,10 @@ namespace Packo.ViewModels
         public void UpdateFromTrip(TripDTO trip)
         {
             TripModel.Destination = trip.Destination;
+            TripModel.AdultsCount = trip.AdultsCount;
+            TripModel.ChildrenAges = trip.ChildrenAges.ToList();
+            TripModel.SelectedTransportTypes = trip.SelectedTransportTypes.ToList();
+            TripModel.TripType = trip.TripType;
             TripModel.IsActive = trip.IsActive;
             TripModel.IsInTrash = trip.IsInTrash;
             TripModel.StartDate = trip.StartDate;

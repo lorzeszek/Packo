@@ -7,7 +7,7 @@
                 x:Name="TripSetupPageRoot"
                 x:Class="Packo.Views.TripSetupPage"
                 x:DataType="TripSetupViewModel"
-                Title="{loc:Translate PlanTrip}"
+                Title="{Binding PageTitle}"
                 BackgroundColor="{AppThemeBinding Light={StaticResource PackoPageBackgroundLight}, Dark={StaticResource PackoPageBackgroundDark}}">
 
     <ContentPage.Resources>
@@ -21,9 +21,9 @@
                 <VerticalStackLayout Spacing="7">
                     <Label Text="{loc:Translate TripSetupEyebrow}" FontSize="11" CharacterSpacing="2.2"
                            FontAttributes="Bold" TextColor="{StaticResource PackoAccentLight}" />
-                    <Label Text="{loc:Translate TripSetupHeading}" FontSize="29" LineHeight="1.05"
+                    <Label Text="{Binding Heading}" FontSize="29" LineHeight="1.05"
                            FontAttributes="Bold" TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
-                    <Label Text="{loc:Translate TripSetupIntro}"
+                    <Label Text="{Binding Intro}"
                            FontSize="14" LineBreakMode="WordWrap"
                            TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
                 </VerticalStackLayout>
@@ -57,7 +57,7 @@
                                             </Label.GestureRecognizers>
                                         </Label>
                                         <DatePicker x:Name="StartDatePicker" Grid.Column="1" Date="{Binding StartDate}"
-                                                    MinimumDate="{x:Static sys:DateTime.Today}" Format="dd MMM yyyy"
+                                                    MinimumDate="{Binding MinimumStartDate}" Format="dd MMM yyyy"
                                                     FontSize="13" HorizontalOptions="Fill" />
                                     </Grid>
                                 </Border>
@@ -194,7 +194,7 @@
 
         <Border Grid.Row="1" Padding="20,12,20,18" StrokeThickness="0"
                 BackgroundColor="{AppThemeBinding Light={StaticResource PackoPageBackgroundLight}, Dark={StaticResource PackoPageBackgroundDark}}">
-            <Button Text="{loc:Translate CreatePackingList}" Command="{Binding CreateTripCommand}"
+            <Button Text="{Binding SubmitText}" Command="{Binding CreateTripCommand}"
                     BackgroundColor="{StaticResource PackoAccentLight}" TextColor="{StaticResource PackoWhite}"
                     FontSize="16" FontAttributes="Bold" CornerRadius="18"
                     HeightRequest="56" Padding="20,12" HorizontalOptions="Fill" />

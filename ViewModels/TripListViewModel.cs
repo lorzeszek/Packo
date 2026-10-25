@@ -29,6 +29,17 @@ namespace Packo.ViewModels
         public ICommand AddTripCommand => new Command(async () => await AddTrip("wycieczka 1 test"));
         public ICommand DeleteTripCommand => new Command<TripViewModel>(async (trip) => await DeleteTripAsync(trip));
         public ICommand TrashTripCommand => new Command<TripViewModel>(TrashTripAsync);
+
+        [RelayCommand]
+        private async Task EditTripAsync(TripViewModel trip)
+        {
+            if (trip == null || Session.GlobalIsBusy)
+                return;
+            await Shell.Current.GoToAsync(nameof(TripSetupPage), new ShellNavigationQueryParameters
+            {
+                ["editTrip"] = trip.TripModel
+            });
+        }
         public IAsyncRelayCommand LogoutCommand => new AsyncRelayCommand(async () => await Logout());
 
         //public IAsyncRelayCommand LoginWithGoogleCommand { get; }

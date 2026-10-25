@@ -42,8 +42,50 @@ namespace Packo.ViewModels
     //    }
     //}
 
-    public partial class TripSetupViewModel : BaseViewModel
+    public partial class TripSetupViewModel : BaseViewModel, IQueryAttributable
     {
+        private TripDTO? _editingTrip;
+        public bool IsEditing => _editingTrip != null;
+        public DateTime MinimumStartDate => IsEditing ? new DateTime(1900, 1, 1) : DateTime.Today;
+        public string PageTitle => LocalizationResourceManager.Instance[IsEditing ? "EditTrip" : "PlanTrip"];
+        public string Heading => LocalizationResourceManager.Instance[IsEditing ? "EditTrip" : "TripSetupHeading"];
+        public string Intro => LocalizationResourceManager.Instance[IsEditing ? "EditTripIntro" : "TripSetupIntro"];
+        public string SubmitText => LocalizationResourceManager.Instance[IsEditing ? "SaveChanges" : "CreatePackingList"];
+
+        public void ApplyQueryAttributes(IDictionary<string, object> query)
+        {
+            if (!query.TryGetValue("editTrip", out var value) || value is not TripDTO trip)
+                return;
+
+            // Keep form changes separate from the trip displayed in the list until saved.
+            _editingTrip = System.Text.Json.JsonSerializer.Deserialize<TripDTO>(
+                System.Text.Json.JsonSerializer.Serialize(trip))!;
+            OnPropertyChanged(nameof(IsEditing));
+            OnPropertyChanged(nameof(MinimumStartDate));
+            OnPropertyChanged(nameof(PageTitle));
+            OnPropertyChanged(nameof(Heading));
+            OnPropertyChanged(nameof(Intro));
+            OnPropertyChanged(nameof(SubmitText));
+            Destination = trip.Destination;
+            StartDate = trip.StartDate ?? DateTime.Today;
+            EndDate = trip.EndDate ?? StartDate;
+            AdultsCount = trip.AdultsCount;
+            foreach (var child in Children)
+                child.PropertyChanged -= OnChildAgeChanged;
+            Children.Clear();
+            foreach (var age in trip.ChildrenAges)
+            {
+                var child = new ChildAgeItem(age);
+                child.PropertyChanged += OnChildAgeChanged;
+                Children.Add(child);
+            }
+            NotifyChildrenChanged();
+            foreach (var option in TransportOptions)
+                option.IsSelected = trip.SelectedTransportTypes.Any(option.MatchesStoredName);
+            SyncSelectedTransportTypes();
+            SelectedTripTypeOption = TripTypeOptions.FirstOrDefault(option => option.Value == trip.TripType)
+                ?? TripTypeOptions.First();
+        }
         private readonly IPackingSuggestionService _packingSuggestionService;
         private readonly ITripClassificationService _tripClassificationService;
 
@@ -80,7 +122,14 @@ namespace Packo.ViewModels
 
             foreach (var transportOption in TransportOptions)
                 transportOption.PropertyChanged += OnTransportOptionChanged;
-            LocalizationResourceManager.Instance.PropertyChanged += (_, _) => SyncSelectedTransportTypes();
+            LocalizationResourceManager.Instance.PropertyChanged += (_, _) =>
+            {
+                SyncSelectedTransportTypes();
+                OnPropertyChanged(nameof(PageTitle));
+                OnPropertyChanged(nameof(Heading));
+                OnPropertyChanged(nameof(Intro));
+                OnPropertyChanged(nameof(SubmitText));
+            };
         }
 
         // ====== INPUT ======
@@ -129,7 +178,7 @@ namespace Packo.ViewModels
                 return;
             }
 
-            if (normalized < DateTime.Today)
+            if (!IsEditing && normalized < DateTime.Today)
             {
                 StartDate = DateTime.Today;
                 return;
@@ -223,6 +272,11 @@ namespace Packo.ViewModels
         [RelayCommand(CanExecute = nameof(CanCreateTrip))]
         private async Task CreateTripAsync()
         {
+            if (IsEditing)
+            {
+                await SaveTripAsync();
+                return;
+            }
             MainThread.BeginInvokeOnMainThread(() =>
             {
                 Session.GlobalIsBusy = true;
@@ -330,6 +384,35 @@ namespace Packo.ViewModels
             // Pop TripSetupPage off the Home tab's stack before switching tabs
             await Shell.Current.Navigation.PopAsync(false);
             await Shell.Current.GoToAsync("//TripList");
+        }
+
+        private async Task SaveTripAsync()
+        {
+            var trip = _editingTrip!;
+            trip.Destination = Destination.Trim();
+            trip.StartDate = StartDate;
+            trip.EndDate = EndDate;
+            trip.AdultsCount = AdultsCount;
+            trip.ChildrenAges = ChildrenAge.ToList();
+            trip.SelectedTransportTypes = SelectedTransportTypes.ToList();
+            trip.TripType = SelectedTripTypeOption.Value;
+            trip.ModifiedDate = DateTime.Now;
+            Session.GlobalIsBusy = true;
+            try
+            {
+                await _tripRepository.UpdateTripAsync(trip);
+            }
+            catch (Exception)
+            {
+                await Shell.Current.DisplayAlertAsync(LocalizationResourceManager.Instance["Error"],
+                    LocalizationResourceManager.Instance["SaveTripError"], "OK");
+                return;
+            }
+            finally
+            {
+                Session.GlobalIsBusy = false;
+            }
+            await Shell.Current.GoToAsync("..");
         }
 
         private bool CanCreateTrip()
