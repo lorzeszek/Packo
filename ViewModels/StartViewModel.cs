@@ -7,6 +7,7 @@ using Packo.Views;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Packo.Messages;
+using System.Globalization;
 
 namespace Packo.ViewModels
 {
@@ -18,9 +19,10 @@ namespace Packo.ViewModels
 
         public ICommand StartPackingCommand => new AsyncRelayCommand(StartPackingAsync);
         public ICommand OpenPackingListCommand => new AsyncRelayCommand(OpenPackingListAsync);
+        public IAsyncRelayCommand EditTripCommand { get; }
 
-        private TripViewModel _trip;
-        public TripViewModel Trip
+        private TripViewModel? _trip;
+        public TripViewModel? Trip
         {
             get => _trip;
             set
@@ -33,6 +35,9 @@ namespace Packo.ViewModels
                     OnPropertyChanged(nameof(TripDatesRange));
                     OnPropertyChanged(nameof(TripCountdown));
                     OnPropertyChanged(nameof(PackingSummary));
+                    OnPropertyChanged(nameof(TripDetailsSummary));
+                    NotifyPackingProgressChanged();
+                    EditTripCommand.NotifyCanExecuteChanged();
                 }
             }
         }
@@ -42,6 +47,69 @@ namespace Packo.ViewModels
         public string TripDestination => Trip?.Destination ?? string.Empty;
         public string TripDatesRange => Trip?.TripDatesRange ?? string.Empty;
         public string TripCountdown => Trip?.TripCountdown ?? string.Empty;
+
+        public string TripDetailsSummary
+        {
+            get
+            {
+                var trip = Trip?.TripModel;
+                if (trip == null)
+                    return string.Empty;
+
+                var strings = LocalizationResourceManager.Instance;
+                var details = new List<string>
+                {
+                    string.Format(CultureInfo.CurrentCulture,
+                        strings[trip.AdultsCount == 1 ? "TripAdultCountOne" : "TripAdultCountMany"], trip.AdultsCount)
+                };
+                var children = trip.ChildrenAges.Count;
+                if (children > 0)
+                    details.Add(string.Format(CultureInfo.CurrentCulture,
+                        strings[children == 1 ? "TripChildCountOne" : "TripChildCountMany"], children));
+
+                if (trip.StartDate is DateTime start && trip.EndDate is DateTime end && end.Date >= start.Date)
+                {
+                    var days = (end.Date - start.Date).Days + 1;
+                    details.Add(string.Format(CultureInfo.CurrentCulture,
+                        strings[days == 1 ? "TripDurationOneDay" : "TripDurationDays"], days));
+                }
+
+                return string.Join(" · ", details);
+            }
+        }
+
+        // Progress summaries from both repositories and change messages use "packed / total".
+        private (int Packed, int Total) PackingCounts
+        {
+            get
+            {
+                var counts = PackingSummary.Split('/');
+                if (counts.Length == 2
+                    && int.TryParse(counts[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out var packed)
+                    && int.TryParse(counts[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var total)
+                    && total > 0)
+                    return (Math.Clamp(packed, 0, total), total);
+
+                return (0, 0);
+            }
+        }
+
+        public double PackingProgress => PackingCounts.Total > 0
+            ? (double)PackingCounts.Packed / PackingCounts.Total : 0;
+
+        public string PackingProgressText => PackingCounts.Total > 0
+            ? string.Format(CultureInfo.CurrentCulture, LocalizationResourceManager.Instance["StartPackingCount"],
+                PackingCounts.Packed, PackingCounts.Total)
+            : LocalizationResourceManager.Instance["StartPackingEmpty"];
+
+        public string PackingProgressPercent => PackingProgress.ToString("P0", CultureInfo.CurrentCulture);
+
+        private void NotifyPackingProgressChanged()
+        {
+            OnPropertyChanged(nameof(PackingProgress));
+            OnPropertyChanged(nameof(PackingProgressText));
+            OnPropertyChanged(nameof(PackingProgressPercent));
+        }
 
         private bool _hasActiveTrips;
         public bool HasActiveTrips
@@ -80,6 +148,7 @@ namespace Packo.ViewModels
         public StartViewModel(ILocalUserService localUserService, ISupabaseService supabase, ISessionService sessionService, IPackingItemRepository packingItemRepository, ITripRepository tripRepository, IGoogleAuthService googleAuthService, ITripListPreloadService tripListPreloadService) : base(localUserService, supabase, sessionService, packingItemRepository, tripRepository, googleAuthService)
         {
             _tripListPreloadService = tripListPreloadService;
+            EditTripCommand = new AsyncRelayCommand(EditTripAsync, () => Trip != null);
             //_googleAuthService = googleAuthService;
             LocalizationResourceManager.Instance.PropertyChanged += OnLanguageChanged;
             WeakReferenceMessenger.Default.Register<TripDataChangedMessage>(this, (recipient, message) =>
@@ -95,6 +164,7 @@ namespace Packo.ViewModels
                     {
                         Trip!.PackingSummary = message.PackingSummary;
                         OnPropertyChanged(nameof(PackingSummary));
+                        NotifyPackingProgressChanged();
                     }
                 });
             });
@@ -105,6 +175,8 @@ namespace Packo.ViewModels
         private void OnLanguageChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             Title = LocalizationResourceManager.Instance[_isCurrentTrip ? "CurrentTrip" : HasActiveTrips ? "NextTrip" : "ReadyAdventure"];
+            OnPropertyChanged(nameof(TripDetailsSummary));
+            NotifyPackingProgressChanged();
         }
 
         //public async Task InitializeAsync()
@@ -136,6 +208,17 @@ namespace Packo.ViewModels
             {
                 ["remoteTripId"] = Trip.TripModel.RemoteTripId,
                 ["localTripId"] = Trip.TripModel.LocalTripId
+            });
+        }
+
+        private async Task EditTripAsync()
+        {
+            if (Trip == null || Session.GlobalIsBusy)
+                return;
+
+            await Shell.Current.GoToAsync(nameof(TripSetupPage), new ShellNavigationQueryParameters
+            {
+                ["editTrip"] = Trip.TripModel
             });
         }
 
@@ -183,13 +266,15 @@ namespace Packo.ViewModels
         public async Task OnAppearingAsync()
         {
             var tripsWithStats = await _tripListPreloadService.GetTripsAsync();
-            var nearestTrip = tripsWithStats?.OrderBy(t => t.Trip.StartDate).FirstOrDefault(x => x.Trip.EndDate >= DateTime.Now);
+            var nearestTrip = tripsWithStats?
+                .Where(x => x.Trip.IsActive && !x.Trip.IsInTrash && x.Trip.EndDate >= DateTime.Today)
+                .OrderBy(t => t.Trip.StartDate).FirstOrDefault();
 
-            HasActiveTrips = tripsWithStats != null && tripsWithStats.Any(x => x.Trip.IsActive);
+            HasActiveTrips = nearestTrip != null;
 
             if (HasActiveTrips && nearestTrip != null)
             {
-                _isCurrentTrip = nearestTrip.Trip.StartDate < DateTime.Now;
+                _isCurrentTrip = nearestTrip.Trip.StartDate?.Date <= DateTime.Today;
                 Title = LocalizationResourceManager.Instance[_isCurrentTrip ? "CurrentTrip" : "NextTrip"];
                 //Title = nearestTrip.Trip.StartDate < DateTime.Now ? "Current Trip: " + (nearestTrip?.Trip.Destination) : "Next Trip: " + (nearestTrip?.Trip.Destination);
 
@@ -200,6 +285,7 @@ namespace Packo.ViewModels
             }
             else
             {
+                Trip = null;
                 _isCurrentTrip = false;
                 Title = LocalizationResourceManager.Instance["ReadyAdventure"];
             }

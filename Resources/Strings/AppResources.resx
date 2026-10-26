@@ -133,4 +133,13 @@
   <data name="PackingQuantityInvalid" xml:space="preserve"><value>Enter a whole number greater than zero.</value></data>
   <data name="EditPackingQuantity" xml:space="preserve"><value>Edit quantity to pack</value></data>
   <data name="UpdatePackingItemError" xml:space="preserve"><value>Could not save the item. Please try again.</value></data>
+  <data name="TripAdultCountOne" xml:space="preserve"><value>{0} adult</value></data>
+  <data name="TripAdultCountMany" xml:space="preserve"><value>{0} adults</value></data>
+  <data name="TripChildCountOne" xml:space="preserve"><value>{0} child</value></data>
+  <data name="TripChildCountMany" xml:space="preserve"><value>{0} children</value></data>
+  <data name="TripDurationOneDay" xml:space="preserve"><value>{0} day</value></data>
+  <data name="TripDurationDays" xml:space="preserve"><value>{0} days</value></data>
+  <data name="StartPackingCount" xml:space="preserve"><value>{0} of {1} packed</value></data>
+  <data name="StartPackingEmpty" xml:space="preserve"><value>Your packing list is still empty.</value></data>
+  <data name="OpenPackingList" xml:space="preserve"><value>Open packing list →</value></data>
 </root>

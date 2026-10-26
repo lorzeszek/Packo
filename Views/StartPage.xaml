@@ -73,31 +73,43 @@
                                    HorizontalOptions="End" VerticalOptions="End" Margin="0,0,28,20" />
                         </Grid>
 
-                        <VerticalStackLayout Padding="22,20" Spacing="8">
+                        <VerticalStackLayout Padding="22,20" Spacing="12">
                             <Label Text="{loc:Translate StartTripGlance}" FontSize="18" FontAttributes="Bold"
                                    TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
-                            <Label Text="{loc:Translate StartTripTip}"
+                            <Label Text="{Binding TripDetailsSummary}"
                                    FontSize="14" LineBreakMode="WordWrap"
                                    TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+                            <Button Text="{loc:Translate EditTrip}" Command="{Binding EditTripCommand}"
+                                    HorizontalOptions="Start" HeightRequest="44" Padding="14,0"
+                                    FontSize="13" FontAttributes="Bold" CornerRadius="13"
+                                    BackgroundColor="{AppThemeBinding Light={StaticResource PackoAccentSoftLight}, Dark={StaticResource PackoAccentSoftDark}}"
+                                    TextColor="{AppThemeBinding Light={StaticResource PackoShellAccentLight}, Dark={StaticResource PackoAccentDark}}" />
                         </VerticalStackLayout>
                     </VerticalStackLayout>
                 </Border>
 
-                <Border Padding="18,15" StrokeThickness="0" StrokeShape="RoundRectangle 18"
+                <Border Padding="20" StrokeThickness="0" StrokeShape="RoundRectangle 22"
                         BackgroundColor="{AppThemeBinding Light={StaticResource PackoAccentSoftLight}, Dark={StaticResource PackoAccentSoftDark}}">
-                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="13">
-                        <Label Text="✓" FontSize="20" FontAttributes="Bold" TextColor="{StaticResource PackoAccentLight}"
-                               VerticalTextAlignment="Center" />
-                        <VerticalStackLayout Grid.Column="1" Spacing="3">
-                            <Label Text="{loc:Translate PackingProgress}" FontSize="13" FontAttributes="Bold"
+                    <VerticalStackLayout Spacing="12">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                            <Label Text="{loc:Translate PackingProgress}" FontSize="15" FontAttributes="Bold"
+                                   VerticalOptions="Center"
                                    TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
-                            <Label Text="{Binding PackingSummary, Mode=OneWay}"
-                                   TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextAltDark}}" />
-                        </VerticalStackLayout>
-                    </Grid>
-                    <Border.GestureRecognizers>
-                        <TapGestureRecognizer Command="{Binding OpenPackingListCommand}" />
-                    </Border.GestureRecognizers>
+                            <Label Grid.Column="1" Text="{Binding PackingProgressPercent}" FontSize="15" FontAttributes="Bold"
+                                   VerticalOptions="Center"
+                                   TextColor="{AppThemeBinding Light={StaticResource PackoShellAccentLight}, Dark={StaticResource PackoAccentDark}}" />
+                        </Grid>
+                        <ProgressBar Progress="{Binding PackingProgress}" HeightRequest="6"
+                                     ProgressColor="{StaticResource PackoAccentLight}"
+                                     BackgroundColor="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoControlBorderDark}}"
+                                     SemanticProperties.Description="{Binding PackingProgressText}" />
+                        <Label Text="{Binding PackingProgressText}" FontSize="14" LineBreakMode="WordWrap"
+                               TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextAltDark}}" />
+                        <Button Text="{loc:Translate OpenPackingList}" Command="{Binding OpenPackingListCommand}"
+                                HeightRequest="48" Padding="16,0" CornerRadius="14"
+                                FontSize="14" FontAttributes="Bold"
+                                BackgroundColor="{StaticResource PackoAccentLight}" TextColor="{StaticResource PackoWhite}" />
+                    </VerticalStackLayout>
                 </Border>
             </VerticalStackLayout>
 
