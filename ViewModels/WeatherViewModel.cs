@@ -1,6 +1,7 @@
 using Packo.Extensions;
 using Packo.Interfaces;
 using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Input;
 using Packo.Messages;
 using Packo.Models.DTO;
 using Packo.Repositories.Interfaces;
@@ -15,51 +16,97 @@ namespace Packo.ViewModels
 
         private readonly IWeatherPreloadService _weatherPreloadService;
         private bool _isLoading;
+        private bool _hasLoaded;
+        private string _loadErrorMessage = string.Empty;
+
+        public bool IsLoading
+        {
+            get => _isLoading;
+            private set
+            {
+                if (SetProperty(ref _isLoading, value))
+                    OnPropertyChanged(nameof(ShowEmptyState));
+            }
+        }
+
+        public string LoadErrorMessage
+        {
+            get => _loadErrorMessage;
+            private set
+            {
+                if (SetProperty(ref _loadErrorMessage, value))
+                {
+                    OnPropertyChanged(nameof(HasLoadError));
+                    OnPropertyChanged(nameof(ShowEmptyState));
+                }
+            }
+        }
+
+        public bool HasLoadError => !string.IsNullOrEmpty(LoadErrorMessage);
+        public bool HasForecasts => Destinations.Count > 0;
+        public bool ShowEmptyState => _hasLoaded && !IsLoading && !HasLoadError && !HasForecasts;
+        public IAsyncRelayCommand RetryLoadCommand { get; }
 
         public WeatherViewModel(ILocalUserService localUserService, ISupabaseService supabase, ISessionService sessionService, IPackingItemRepository packingItemRepository, ITripRepository tripRepository, IGoogleAuthService googleAuthService, IWeatherPreloadService weatherPreloadService) : base(localUserService, supabase, sessionService, packingItemRepository, tripRepository, googleAuthService)
         {
             _weatherPreloadService = weatherPreloadService;
+            RetryLoadCommand = new AsyncRelayCommand(() => LoadWeatherAsync(forceRefresh: true));
+            Destinations.CollectionChanged += (_, _) =>
+            {
+                OnPropertyChanged(nameof(HasForecasts));
+                OnPropertyChanged(nameof(ShowEmptyState));
+            };
 
             WeakReferenceMessenger.Default.Register<LogoutCompletedMessage>(this, (_, _) =>
             {
-                _weatherPreloadService.Invalidate();
-                MainThread.BeginInvokeOnMainThread(Destinations.Clear);
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    _hasLoaded = false;
+                    LoadErrorMessage = string.Empty;
+                    Destinations.Clear();
+                    OnPropertyChanged(nameof(ShowEmptyState));
+                });
             });
         }
 
-        public async Task OnAppearingAsync()
+        public Task OnAppearingAsync() => LoadWeatherAsync();
+
+        private async Task LoadWeatherAsync(bool forceRefresh = false)
         {
-            if (_isLoading)
+            if (IsLoading)
                 return;
 
-            if (!Session.IsAuthenticated)
-            {
-                _weatherPreloadService.Invalidate();
-                Destinations.Clear();
-                return;
-            }
+            // Local trips also have forecasts; weather itself does not require login.
+            var userId = Session.UserId;
+            var localUserId = Session.LocalUserId;
 
-            _isLoading = true;
+            IsLoading = true;
+            LoadErrorMessage = string.Empty;
             try
             {
-                var weather = await _weatherPreloadService.GetWeatherAsync();
+                var weather = await _weatherPreloadService.GetWeatherAsync(forceRefresh);
                 await MainThread.InvokeOnMainThreadAsync(() =>
                 {
-                    if (Session.IsAuthenticated)
-                        Destinations.ReplaceRange(weather);
-                    else
-                        Destinations.Clear();
+                    if (userId != Session.UserId || localUserId != Session.LocalUserId)
+                        return;
+
+                    Destinations.ReplaceRange(weather.Forecasts);
+                    if (weather.HasFailures)
+                        LoadErrorMessage = string.Format(LocalizationResourceManager.Instance["WeatherDestinationsUnavailable"],
+                            string.Join(", ", weather.UnavailableDestinations));
+                    _hasLoaded = true;
                 });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Weather loading failed: {ex}");
+                if (userId == Session.UserId && localUserId == Session.LocalUserId)
+                    LoadErrorMessage = LocalizationResourceManager.Instance["WeatherLoadError"];
             }
             finally
             {
-                _isLoading = false;
+                IsLoading = false;
             }
-        }
-
-        protected override async Task OnNavigatedToAsync(IDictionary<string, object> query)
-        {
-            //await OnAppearingAsync();
         }
     }
 }

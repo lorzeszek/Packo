@@ -13,7 +13,7 @@ namespace Packo.Services
             _httpClient = httpClient;
         }
 
-        public async Task<CurrentWeather?> GetWeatherAsync(
+        public async Task<OpenMeteoResponse?> GetForecastAsync(
             double latitude,
             double longitude)
         {
@@ -24,26 +24,7 @@ namespace Packo.Services
                 $"https://api.open-meteo.com/v1/forecast" +
                 $"?latitude={latitudeText}" +
                 $"&longitude={longitudeText}" +
-                $"&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m";
-
-            var json = await _httpClient.GetStringAsync(url);
-
-            var result = JsonSerializer.Deserialize<OpenMeteoResponse>(json);
-
-            return result?.Current;
-        }
-
-        public async Task<DailyForecast?> GetDailyWeatherAsync(
-            double latitude,
-            double longitude)
-        {
-            var latitudeText = latitude.ToString(CultureInfo.InvariantCulture);
-            var longitudeText = longitude.ToString(CultureInfo.InvariantCulture);
-
-            string url =
-                $"https://api.open-meteo.com/v1/forecast" +
-                $"?latitude={latitudeText}" +
-                $"&longitude={longitudeText}" +
+                $"&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m" +
                 $"&forecast_days=15" +
                 $"&daily=weather_code,temperature_2m_max,temperature_2m_min" +
                 $"&timezone=auto";
@@ -52,7 +33,7 @@ namespace Packo.Services
 
             var result = JsonSerializer.Deserialize<OpenMeteoResponse>(json);
 
-            return result?.Daily;
+            return result;
         }
 
         public async Task<GeocodingResult?> GetLocationAsync(string destination)

@@ -55,4 +55,7 @@
   <data name="StartupLoadingTrips" xml:space="preserve"><value>Ładujemy Twoje podróże…</value></data>
   <data name="StartupLoadError" xml:space="preserve"><value>Nie udało się wczytać podróży. Sprawdź połączenie i spróbuj ponownie.</value></data>
   <data name="Retry" xml:space="preserve"><value>Spróbuj ponownie</value></data>
+  <data name="WeatherLoading" xml:space="preserve"><value>Ładujemy prognozy dla Twoich podróży…</value></data>
+  <data name="WeatherLoadError" xml:space="preserve"><value>Nie udało się wczytać prognoz. Sprawdź połączenie i spróbuj ponownie.</value></data>
+  <data name="WeatherDestinationsUnavailable" xml:space="preserve"><value>Prognoza niedostępna dla: {0}. Sprawdź nazwę miejsca lub spróbuj ponownie.</value></data>
 </root>

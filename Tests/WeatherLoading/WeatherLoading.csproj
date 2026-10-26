@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.1" />
+    <Compile Include="../../Services/WeatherService.cs" Link="WeatherService.cs" />
+    <Compile Include="../../Services/WeatherPreloadService.cs" Link="WeatherPreloadService.cs" />
+    <Compile Include="../../Services/Interfaces/IWeatherPreloadService.cs" Link="IWeatherPreloadService.cs" />
+    <Compile Include="../../ViewModels/WeatherViewModel.cs" Link="WeatherViewModel.cs" />
+    <Compile Include="../../Extensions/ObservableRangeCollection.cs" Link="ObservableRangeCollection.cs" />
+    <Compile Include="../../Models/DTO/DestinationWeatherDTO.cs" Link="DestinationWeatherDTO.cs" />
+    <Compile Include="../../Models/DTO/DailyForecastDTO.cs" Link="DailyForecastDTO.cs" />
+    <Compile Include="../../Models/DTO/WeatherLoadResult.cs" Link="WeatherLoadResult.cs" />
+    <Compile Include="../../Services/ResponseObjects/CurrentWeather.cs" Link="CurrentWeather.cs" />
+    <Compile Include="../../Services/ResponseObjects/DailyForecast.cs" Link="DailyForecast.cs" />
+    <Compile Include="../../Services/ResponseObjects/OpenMeteoResponse.cs" Link="OpenMeteoResponse.cs" />
+    <Compile Include="../../Services/ResponseObjects/GeocodingResponse.cs" Link="GeocodingResponse.cs" />
+    <Compile Include="../../Services/ResponseObjects/GeocodingResult.cs" Link="GeocodingResult.cs" />
+    <Compile Include="../../Messages/LoginCompletedMessage.cs" Link="LoginCompletedMessage.cs" />
+    <Compile Include="../../Messages/LogoutCompletedMessage.cs" Link="LogoutCompletedMessage.cs" />
+    <Compile Include="../../Messages/TripDataChangedMessage.cs" Link="TripDataChangedMessage.cs" />
+  </ItemGroup>
+</Project>

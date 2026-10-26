@@ -4,6 +4,7 @@
                 xmlns:loc="clr-namespace:Packo.Extensions"
                 xmlns:viewmodels="clr-namespace:Packo.ViewModels"
                 xmlns:local="clr-namespace:Packo.Models.Pages"
+                xmlns:dto="clr-namespace:Packo.Models.DTO"
                 x:DataType="viewmodels:WeatherViewModel"
                 x:Class="Packo.Views.WeatherPage"
                 Title="{loc:Translate TabWeather}"
@@ -14,7 +15,7 @@
         </ResourceDictionary>
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="Auto,*">
+    <Grid RowDefinitions="Auto,Auto,*">
         <VerticalStackLayout Grid.Row="0" Padding="22,20,22,14" Spacing="6">
             <Label Text="{loc:Translate WeatherEyebrow}" FontSize="11" CharacterSpacing="2.1"
                    FontAttributes="Bold" TextColor="{StaticResource PackoAccentLight}" />
@@ -25,27 +26,25 @@
                    TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
         </VerticalStackLayout>
 
-        <CollectionView Grid.Row="1" ItemsSource="{Binding Destinations}"
-                        SelectionMode="None" VerticalScrollBarVisibility="Never">
-            <CollectionView.EmptyView>
-                <VerticalStackLayout Padding="32" Spacing="14" HorizontalOptions="Center" VerticalOptions="Center">
-                    <Border WidthRequest="76" HeightRequest="76" StrokeThickness="0"
-                            StrokeShape="RoundRectangle 26" BackgroundColor="{StaticResource PackoAccentSoftLight}"
-                            HorizontalOptions="Center">
-                        <Label Text="☼" FontSize="42" HorizontalTextAlignment="Center"
-                               VerticalTextAlignment="Center" TextColor="{StaticResource PackoAccentLight}" />
-                    </Border>
-                    <Label Text="{loc:Translate NoForecasts}" FontSize="20" FontAttributes="Bold"
-                           HorizontalTextAlignment="Center"
-                           TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
-                    <Label Text="{loc:Translate AddTripForecast}"
-                           FontSize="14" HorizontalTextAlignment="Center" LineBreakMode="WordWrap"
-                           TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
-                </VerticalStackLayout>
-            </CollectionView.EmptyView>
+        <VerticalStackLayout Grid.Row="1" IsVisible="{Binding IsLoading}" Padding="24" Spacing="12">
+            <ActivityIndicator IsRunning="{Binding IsLoading}" Color="{StaticResource PackoAccentLight}"
+                               HeightRequest="36" WidthRequest="36" />
+            <Label Text="{loc:Translate WeatherLoading}" HorizontalTextAlignment="Center"
+                   TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+        </VerticalStackLayout>
 
+        <VerticalStackLayout Grid.Row="1" IsVisible="{Binding HasLoadError}" Padding="24" Spacing="14">
+            <Label Text="{Binding LoadErrorMessage}" HorizontalTextAlignment="Center"
+                   TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+            <Button Text="{loc:Translate Retry}" Command="{Binding RetryLoadCommand}"
+                    HorizontalOptions="Center" CornerRadius="18" Padding="24,12"
+                    BackgroundColor="{StaticResource PackoAccentLight}" TextColor="{StaticResource PackoWhite}" />
+        </VerticalStackLayout>
+
+        <CollectionView Grid.Row="2" ItemsSource="{Binding Destinations}" IsVisible="{Binding HasForecasts}"
+                        SelectionMode="None" VerticalScrollBarVisibility="Never">
             <CollectionView.ItemTemplate>
-                <DataTemplate>
+                <DataTemplate x:DataType="dto:DestinationWeatherDTO">
                     <Border Margin="20,8" Padding="18" StrokeThickness="1"
                             Stroke="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoBorderDark}}"
                             StrokeShape="RoundRectangle 24"
@@ -95,7 +94,7 @@
                                             HeightRequest="92" SelectionMode="None"
                                             HorizontalScrollBarVisibility="Never">
                                 <CollectionView.ItemTemplate>
-                                    <DataTemplate>
+                                    <DataTemplate x:DataType="dto:DailyForecastDTO">
                                         <Border Margin="0,0,8,0" Padding="10,9" StrokeThickness="0"
                                                 StrokeShape="RoundRectangle 15"
                                                 BackgroundColor="{AppThemeBinding Light={StaticResource PackoRaisedSurfaceLight}, Dark={StaticResource PackoRaisedSurfaceDark}}">
@@ -119,5 +118,20 @@
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
+
+        <VerticalStackLayout Grid.Row="2" IsVisible="{Binding ShowEmptyState}" Padding="32" Spacing="14"
+                             HorizontalOptions="Center" VerticalOptions="Center">
+            <Border WidthRequest="76" HeightRequest="76" StrokeThickness="0"
+                    StrokeShape="RoundRectangle 26" BackgroundColor="{StaticResource PackoAccentSoftLight}"
+                    HorizontalOptions="Center">
+                <Label Text="☼" FontSize="42" HorizontalTextAlignment="Center"
+                       VerticalTextAlignment="Center" TextColor="{StaticResource PackoAccentLight}" />
+            </Border>
+            <Label Text="{loc:Translate NoForecasts}" FontSize="20" FontAttributes="Bold"
+                   HorizontalTextAlignment="Center"
+                   TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+            <Label Text="{loc:Translate AddTripForecast}" FontSize="14" HorizontalTextAlignment="Center"
+                   TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+        </VerticalStackLayout>
     </Grid>
 </local:BasePage>
