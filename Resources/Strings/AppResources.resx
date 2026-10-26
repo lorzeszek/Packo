@@ -120,4 +120,5 @@
   <data name="EditTripIntro" xml:space="preserve"><value>Update your trip details. Your packing list will stay as it is.</value></data>
   <data name="SaveChanges" xml:space="preserve"><value>Save changes</value></data>
   <data name="SaveTripError" xml:space="preserve"><value>Could not save the trip. Please try again.</value></data>
+  <data name="AddPackingItemsError" xml:space="preserve"><value>The items could not be added. Please try again.</value></data>
 </root>

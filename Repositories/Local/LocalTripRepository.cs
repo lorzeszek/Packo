@@ -79,7 +79,7 @@ namespace Packo.Repositories.Local
         public async Task<IReadOnlyList<TripWithStats>> GetActiveTripsWithStatsAsync()
         {
             var sqliteTrips = await _db.Table<SQLiteTrip>().Where(x => x.LocalUserId == _sessionService.LocalUserId).ToListAsync();
-            var sqlitePackingItems = await _db.Table<SQLitePackingItem>().Where(x => x.LocalUserId == _sessionService.LocalUserId).ToListAsync();
+            var sqlitePackingItems = await _db.Table<SQLitePackingItem>().Where(x => x.LocalUserId == _sessionService.LocalUserId && !x.IsStaleCache).ToListAsync();
 
             var trips = sqliteTrips.Select(x => new TripDTO
             {
@@ -105,8 +105,10 @@ namespace Packo.Repositories.Local
             {
                 var stat = new TripItemsStatsSupabase
                 {
-                    IsNotPackedCount = sqlitePackingItems.Where(x => x.LocalTripId == tripDTO.LocalTripId && !x.IsPacked).Count(),
-                    IsPackedCount = sqlitePackingItems.Where(x => x.LocalTripId == tripDTO.LocalTripId && x.IsPacked).Count()
+                    IsNotPackedCount = sqlitePackingItems.Count(x => x.LocalTripId == tripDTO.LocalTripId && !x.IsPacked
+                        && (x.RemoteTripId is not > 0 || x.RemoteTripId == tripDTO.RemoteTripId)),
+                    IsPackedCount = sqlitePackingItems.Count(x => x.LocalTripId == tripDTO.LocalTripId && x.IsPacked
+                        && (x.RemoteTripId is not > 0 || x.RemoteTripId == tripDTO.RemoteTripId))
                 };
                 var summary = (stat.IsPackedCount + stat.IsNotPackedCount) == 0
                     ? "0 / 0"

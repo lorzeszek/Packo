@@ -17,5 +17,7 @@ namespace Packo.Models.SQLite
         public DateTime CreatedDate { get; set; }
         public DateTime? ModifiedDate { get; set; }
         public bool IsPacked { get; set; }
+        // Preserve obsolete cache rows for recovery without counting them as current items.
+        public bool IsStaleCache { get; set; }
     }
 }

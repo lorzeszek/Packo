@@ -177,7 +177,7 @@ namespace Packo
             await EnsureTripColumnAsync("TripType", "TEXT NOT NULL DEFAULT 'Leisure'");
 
             //await _db.ExecuteAsync("DROP TABLE IF EXISTS SQLitePackingItem");
-            await _db.CreateTableAsync<SQLitePackingItem>();
+            await Packo.Repositories.Local.LocalPackingItemRepository.EnsureSchemaAsync(_db);
 
             //await _db.ExecuteAsync("DROP TABLE IF EXISTS SQLiteTripDocument");
             await _db.CreateTableAsync<SQLiteTripDocument>();

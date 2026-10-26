@@ -23,6 +23,7 @@ namespace Packo.ViewModels
         private bool _isLoading;
         private readonly IPackingSuggestionService _packingSuggestionService;
         private bool _isDeleting;
+        private List<PackingItemDTO>? _itemsBeingAdded;
         public bool CanEditItems => !_isDeleting && !IsGeneratingPackingList;
         public bool HasItems => Items.Count > 0;
 
@@ -91,6 +92,18 @@ namespace Packo.ViewModels
                     // One reset notification removes the whole list without per-row animations.
                     Items.Clear();
                     clearedView = true;
+                    var dtos = targets.Select(target =>
+                    {
+                        var dto = Mappers.MapToPackingItemDTO(target);
+                        dto.LocalTripId = _localTripId;
+                        dto.RemoteTripId = _remoteTripId;
+                        dto.LocalUserId = Session.LocalUserId ?? string.Empty;
+                        dto.RemoteUserId = Session.UserId ?? string.Empty;
+                        return dto;
+                    }).ToList();
+                    await _packingItemRepository.DeletePackingItemsAsync(dtos);
+                    remainingItems.Clear();
+                    return;
                 }
 
                 foreach (var target in targets)
@@ -144,10 +157,7 @@ namespace Packo.ViewModels
 
             NewItemName = string.Empty;
 
-            if (!Session.IsAuthenticated)
-            {
-                await LoadData();
-            }
+            Items.Add(Mappers.MapToPackingItem(newItem));
         }
 
         private async Task GeneratePackingListAsync()
@@ -206,11 +216,25 @@ namespace Packo.ViewModels
                     CreatedDate = DateTime.Now
                 }).ToList();
 
+                _itemsBeingAdded = newItems;
                 await _packingItemRepository.AddPackingItemsAsync(newItems);
-                await LoadData();
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    Items.AddRange(newItems.Select(Mappers.MapToPackingItem).ToList(),
+                        System.Collections.Specialized.NotifyCollectionChangedAction.Reset);
+                    _itemsBeingAdded = null;
+                });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex);
+                await Shell.Current.DisplayAlertAsync(LocalizationResourceManager.Instance["Error"],
+                    LocalizationResourceManager.Instance["AddPackingItemsError"],
+                    LocalizationResourceManager.Instance["Ok"]);
             }
             finally
             {
+                _itemsBeingAdded = null;
                 IsGeneratingPackingList = false;
             }
         }
@@ -269,10 +293,35 @@ namespace Packo.ViewModels
 
             MainThread.BeginInvokeOnMainThread(() =>
             {
+                // Upload/realtime may finish between the local commit and the UI batch update.
+                var pendingAddition = change.Item.LocalPackingItemId > 0
+                    ? _itemsBeingAdded?.FirstOrDefault(x => x.LocalPackingItemId == change.Item.LocalPackingItemId)
+                    : null;
+                if (pendingAddition != null && (change.Type == PackingItemChangeType.Insert
+                    || change.Type == PackingItemChangeType.IdentityAssigned))
+                {
+                    pendingAddition.RemotePackingItemId = change.Item.RemotePackingItemId;
+                    pendingAddition.RemoteTripId = change.Item.RemoteTripId;
+                    pendingAddition.RemoteUserId = change.Item.RemoteUserId;
+                    return;
+                }
                 switch (change.Type)
                 {
+                    case PackingItemChangeType.IdentityAssigned:
+                        var localItem = Items.FirstOrDefault(x => x.LocalId == change.Item.LocalPackingItemId);
+                        if (localItem != null)
+                        {
+                            localItem.RemoteId = change.Item.RemotePackingItemId;
+                            localItem.RemoteTripId = change.Item.RemoteTripId;
+                            localItem.RemoteUserId = change.Item.RemoteUserId;
+                        }
+                        break;
                     case PackingItemChangeType.Insert:
-                        if (!Items.Any(x => x.RemoteId == change.Item.RemotePackingItemId))
+                        var existing = Items.FirstOrDefault(x => x.RemoteId == change.Item.RemotePackingItemId
+                            || (change.Item.LocalPackingItemId > 0 && x.LocalId == change.Item.LocalPackingItemId));
+                        if (existing != null)
+                            existing.RemoteId = change.Item.RemotePackingItemId;
+                        else
                             Items.Add(MapRealtimeItem(change.Item));
                         break;
 

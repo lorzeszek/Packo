@@ -75,6 +75,12 @@ namespace Packo.Repositories.Supabase
             }
         }
 
+        public async Task DeletePackingItemsAsync(List<PackingItemDTO> items)
+        {
+            foreach (var item in items)
+                await DeletePackingItemAsync(item);
+        }
+
         public async Task<IReadOnlyList<PackingItemDTO>> GetPackingItemsForTripAsync(int localTripId, int remoteTripId)
         {
             try

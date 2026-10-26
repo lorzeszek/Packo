@@ -25,14 +25,7 @@ namespace Packo.Repositories.Interfaces
     {
         Task<LocalTrip?> GetLocalTripAsync(int id, string user);
         Task SyncPendingChangesAsync();
+        Task<IReadOnlyList<Packo.Repositories.Models.TripWithStats>> GetActiveTripsWithStatsAsync();
     }
     public record LocalTrip(int RemoteTripId);
-}
-namespace Packo.Repositories.Enums
-{
-    public record PackingItemChange(Packo.Models.DTO.PackingItemDTO Item);
-}
-namespace Packo.Messages
-{
-    public record TripDataChangedMessage;
 }

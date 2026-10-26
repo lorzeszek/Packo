@@ -6,7 +6,8 @@ namespace Packo.Repositories.Enums
     {
         Insert,
         Update,
-        Delete
+        Delete,
+        IdentityAssigned
     }
 
     public record PackingItemChange(

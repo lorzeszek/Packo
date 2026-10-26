@@ -17,6 +17,16 @@ namespace Packo.Repositories.Local
             _db = db;
         }
 
+        public static async Task EnsureSchemaAsync(SQLiteAsyncConnection db)
+        {
+            await db.CreateTableAsync<SQLitePackingItem>();
+            var columns = await db.GetTableInfoAsync("SQLitePackingItem");
+            if (!columns.Any(column => column.Name == nameof(SQLitePackingItem.IsStaleCache)))
+                await db.ExecuteAsync("ALTER TABLE SQLitePackingItem ADD COLUMN IsStaleCache INTEGER NOT NULL DEFAULT 0");
+            // sqlite-net may auto-add the column as nullable when upgrading an existing table.
+            await db.ExecuteAsync("UPDATE SQLitePackingItem SET IsStaleCache = 0 WHERE IsStaleCache IS NULL");
+        }
+
         public async Task<int> AddPackingItemAsync(PackingItemDTO item)
         {
             var localPackingItem = new SQLitePackingItem()
@@ -79,6 +89,13 @@ namespace Packo.Repositories.Local
             await _db.DeleteAsync(localPackingItem);
         }
 
+        public Task DeletePackingItemsAsync(List<PackingItemDTO> items) => _db.RunInTransactionAsync(db =>
+        {
+            foreach (var item in items)
+                db.Table<SQLitePackingItem>().Where(x => x.LocalPackingItemId == item.LocalPackingItemId
+                    && x.LocalUserId == item.LocalUserId && x.LocalTripId == item.LocalTripId).Delete();
+        });
+
         public async Task UpdatePackingItemAsync(PackingItemDTO item)
         {
             var localPackingItem = new SQLitePackingItem()
@@ -101,7 +118,8 @@ namespace Packo.Repositories.Local
 
         public async Task<IReadOnlyList<PackingItemDTO>> GetPackingItemsForTripAsync(int localTripId, int remoteTripId)
         {
-            var sqlitePackingItem = await _db.Table<SQLitePackingItem>().Where(x => x.LocalTripId == localTripId).ToListAsync();
+            var sqlitePackingItem = await _db.Table<SQLitePackingItem>().Where(x => x.LocalTripId == localTripId && !x.IsStaleCache
+                && (x.RemoteTripId == null || x.RemoteTripId == 0 || x.RemoteTripId == remoteTripId)).ToListAsync();
 
             return sqlitePackingItem.Select(x => new PackingItemDTO
             {
@@ -113,6 +131,7 @@ namespace Packo.Repositories.Local
                 CreatedDate = x.CreatedDate,
                 ModifiedDate = x.ModifiedDate,
                 LocalUserId = x.LocalUserId,
+                RemoteUserId = x.RemoteUserId,
                 IsPacked = x.IsPacked,
                 Category = x.Category,
             }).ToList();

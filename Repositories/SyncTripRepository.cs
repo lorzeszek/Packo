@@ -227,7 +227,11 @@ namespace Packo.Repositories
                 return localTrips.ToList();
             }
 
-            return await _remote.GetActiveTripsWithStatsAsync();
+            var localUserId = _sessionService.LocalUserId ?? string.Empty;
+            var beforeRequest = await PackingStatsSnapshot.ReadAsync(_pendingDb, localUserId);
+            var remoteTrips = await _remote.GetActiveTripsWithStatsAsync();
+            var latest = await PackingStatsSnapshot.ReadAsync(_pendingDb, localUserId);
+            return latest.ApplyTo(remoteTrips, beforeRequest);
         }
 
         public async Task<IReadOnlyList<string>> GetActiveDestinationsAsync()

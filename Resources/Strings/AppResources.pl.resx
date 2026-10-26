@@ -49,4 +49,5 @@
   <data name="EditTripIntro" xml:space="preserve"><value>Zmień szczegóły podróży. Twoja lista pakowania pozostanie bez zmian.</value></data>
   <data name="SaveChanges" xml:space="preserve"><value>Zapisz zmiany</value></data>
   <data name="SaveTripError" xml:space="preserve"><value>Nie udało się zapisać podróży. Spróbuj ponownie.</value></data>
+  <data name="AddPackingItemsError" xml:space="preserve"><value>Nie udało się dodać przedmiotów. Spróbuj ponownie.</value></data>
 </root>

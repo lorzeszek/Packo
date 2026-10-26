@@ -68,6 +68,15 @@ namespace Packo.ViewModels
                 _isDirty = true;
                 _tripListPreloadService.Invalidate();
                 _weatherPreloadService.Invalidate();
+                if (m.PackingSummary != null && m.LocalUserId == Session.LocalUserId)
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        var trip = Trips.FirstOrDefault(x => m.RemoteTripId > 0
+                            ? x.TripModel.RemoteTripId == m.RemoteTripId
+                            : x.TripModel.LocalTripId == m.LocalTripId && x.TripModel.LocalUserId == m.LocalUserId);
+                        if (trip != null)
+                            trip.PackingSummary = m.PackingSummary;
+                    });
             });
 
             WeakReferenceMessenger.Default.Register<LogoutCompletedMessage>(this, async (r, m) =>

@@ -5,6 +5,8 @@ using Packo.Services.Interfaces;
 using Packo.Services;
 using Packo.Views;
 using System.Windows.Input;
+using CommunityToolkit.Mvvm.Messaging;
+using Packo.Messages;
 
 namespace Packo.ViewModels
 {
@@ -80,6 +82,22 @@ namespace Packo.ViewModels
             _tripListPreloadService = tripListPreloadService;
             //_googleAuthService = googleAuthService;
             LocalizationResourceManager.Instance.PropertyChanged += OnLanguageChanged;
+            WeakReferenceMessenger.Default.Register<TripDataChangedMessage>(this, (recipient, message) =>
+            {
+                if (message.PackingSummary == null)
+                    return;
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    var trip = Trip?.TripModel;
+                    if (trip != null && message.LocalUserId == Session.LocalUserId
+                        && (message.RemoteTripId > 0 ? trip.RemoteTripId == message.RemoteTripId
+                            : trip.LocalTripId == message.LocalTripId && trip.LocalUserId == message.LocalUserId))
+                    {
+                        Trip!.PackingSummary = message.PackingSummary;
+                        OnPropertyChanged(nameof(PackingSummary));
+                    }
+                });
+            });
         }
 
         private bool _isCurrentTrip;

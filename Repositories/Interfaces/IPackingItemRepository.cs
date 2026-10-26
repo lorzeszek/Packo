@@ -10,6 +10,7 @@ namespace Packo.Repositories.Interfaces
         Task AddPackingItemsAsync(List<PackingItemDTO> items);
         Task UpdatePackingItemAsync(PackingItemDTO item);
         Task DeletePackingItemAsync(PackingItemDTO item);
+        Task DeletePackingItemsAsync(List<PackingItemDTO> items);
         Task UnsubscribeFromPackingItemChangesAsync();
         Task SyncPendingChangesAsync();
         Task StartRealtimeAsync();

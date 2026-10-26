@@ -7,6 +7,9 @@ using Packo.Repositories.Local;
 using Packo.Repositories.Models;
 using Packo.Services.Interfaces;
 using SQLite;
+using CommunityToolkit.Mvvm.Messaging;
+using Packo.Messages;
+using Packo.Services;
 
 SQLitePCL.Batteries_V2.Init();
 var path = Path.Combine(Path.GetTempPath(), $"packo-deletion-{Guid.NewGuid():N}.db");
@@ -84,11 +87,255 @@ try
     Check(relinked.LocalPackingItemId == legacyId, "Unambiguous legacy cache row is relinked without duplicates");
     await repo.DeletePackingItemAsync(relinked);
     Check((await local.GetPackingItemsForTripAsync(1, 10)).Count == 0, "Relinked legacy item deletes from SQLite");
+
+    Connectivity.Current.NetworkAccess = NetworkAccess.None;
+    var batch = new List<PackingItemDTO> { Item("Batch A", 3), Item("Batch B", 3), Item("Batch C", 3) };
+    await repo.AddPackingItemsAsync(batch);
+    Check(batch.All(x => x.LocalPackingItemId > 0) && batch.Select(x => x.LocalPackingItemId).Distinct().Count() == 3,
+        "Batch assigns all local IDs before returning");
+    Check((await local.GetPackingItemsForTripAsync(3, 10)).Count == 3 &&
+        await db.Table<SQLitePendingPackingItemChange>().Where(x => x.LocalTripId == 3).CountAsync() == 3,
+        "Whole batch and upload queue are persisted offline");
+    batch[0].IsPacked = true;
+    await repo.UpdatePackingItemAsync(batch[0]);
+    await repo.DeletePackingItemAsync(batch[1]);
+    await repo.SyncPendingChangesAsync(); // Drain any scheduled offline work before reconnecting.
+    var restartBatch = new SyncPackingItemRepository(local, remote, new Session(), db, new Trips());
+    Connectivity.Current.NetworkAccess = NetworkAccess.Internet;
+    await restartBatch.SyncPendingChangesAsync();
+    Check(remote.Items.Count(x => x.LocalTripId == 3) == 2 && remote.Items.Single(x => x.Name == "Batch A").IsPacked,
+        "Batch restart uploads latest edit and does not recreate deleted item");
+
+    remote.FailAdd = true;
+    var failedBatch = new List<PackingItemDTO> { Item("Retry A", 4), Item("Retry B", 4) };
+    await repo.AddPackingItemsAsync(failedBatch);
+    await repo.SyncPendingChangesAsync();
+    Check(await db.Table<SQLitePendingPackingItemChange>().Where(x => x.LocalTripId == 4).CountAsync() == 2 &&
+        (await repo.GetPackingItemsForTripAsync(4, 10)).Count == 2,
+        "Upload failure keeps the complete batch visible and durable");
+    remote.FailAdd = false;
+    await repo.SyncPendingChangesAsync();
+    Check(remote.Items.Count(x => x.LocalTripId == 4) == 2 &&
+        await db.Table<SQLitePendingPackingItemChange>().Where(x => x.LocalTripId == 4).CountAsync() == 0,
+        "Failed batch retries without duplicate uploads");
+
+    var echoCompletion = new TaskCompletionSource<PackingItemDTO>(TaskCreationOptions.RunContinuationsAsynchronously);
+    var identityEvents = 0;
+    void OnEcho(PackingItemChange change)
+    {
+        if (change.Type == PackingItemChangeType.IdentityAssigned && change.Item.Name == "Slow upload")
+        {
+            // The first event is upload completion; the second is the delayed realtime echo.
+            if (Interlocked.Increment(ref identityEvents) == 2)
+                echoCompletion.TrySetResult(change.Item);
+        }
+    }
+    repo.PackingItemChanged += OnEcho;
+    remote.AddStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    remote.ReleaseAdd = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    var slowBatch = new List<PackingItemDTO> { Item("Slow upload", 5) };
+    await repo.AddPackingItemsAsync(slowBatch).WaitAsync(TimeSpan.FromSeconds(5));
+    await remote.AddStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+    Check((await repo.GetPackingItemsForTripAsync(5, 10).WaitAsync(TimeSpan.FromSeconds(5))).Count == 1,
+        "Creating and opening list returns while Supabase upload is blocked");
+    var staleUiItem = Item("Slow upload", 5);
+    staleUiItem.LocalPackingItemId = slowBatch[0].LocalPackingItemId;
+    // Queue deletion while upload is in flight, before the UI has received the remote ID.
+    var deleteDuringUpload = repo.DeletePackingItemAsync(staleUiItem);
+    remote.ReleaseAdd.TrySetResult();
+    await deleteDuringUpload.WaitAsync(TimeSpan.FromSeconds(5));
+    await repo.SyncPendingChangesAsync();
+    var echo = await echoCompletion.Task.WaitAsync(TimeSpan.FromSeconds(5));
+    Check(echo.LocalPackingItemId == staleUiItem.LocalPackingItemId,
+        "Realtime echo carries the original local ID for UI deduplication");
+    Check(remote.Items.All(x => x.Name != "Slow upload") &&
+        (await local.GetPackingItemsForTripAsync(5, 10)).Count == 0,
+        "Delete during upload resolves generated remote ID and removes both copies");
+    repo.PackingItemChanged -= OnEcho;
+    remote.ReleaseAdd = null;
+
+    // Force failure on the second insert to verify that both tables roll back together.
+    Connectivity.Current.NetworkAccess = NetworkAccess.None;
+    await db.ExecuteAsync("CREATE TRIGGER FailBatch BEFORE INSERT ON SQLitePackingItem WHEN NEW.Name = 'Reject batch' BEGIN SELECT RAISE(ABORT, 'test failure'); END");
+    var rollbackBatch = new List<PackingItemDTO> { Item("Rollback A", 6), Item("Reject batch", 6) };
+    var failed = false;
+    try { await repo.AddPackingItemsAsync(rollbackBatch); }
+    catch (SQLiteException) { failed = true; }
+    Check(failed && (await local.GetPackingItemsForTripAsync(6, 10)).Count == 0 &&
+        await db.Table<SQLitePendingPackingItemChange>().Where(x => x.LocalTripId == 6).CountAsync() == 0 &&
+        rollbackBatch.All(x => x.LocalPackingItemId == 0),
+        "Local batch failure rolls back all rows, queued uploads and exposed IDs");
+
+    var fullList = Enumerable.Range(1, 27).Select(i => Item($"Progress {i}", 7)).ToList();
+    var progressRecipient = new object();
+    TripDataChangedMessage? lastProgress = null;
+    WeakReferenceMessenger.Default.Register<TripDataChangedMessage>(progressRecipient, (_, message) =>
+    {
+        if (message.LocalTripId == 7) lastProgress = message;
+    });
+    await repo.AddPackingItemsAsync(fullList);
+    Check(lastProgress?.PackingSummary == "0 / 27", "Batch publishes the complete counter once local commit finishes");
+    var beforeStatsRequest = await PackingStatsSnapshot.ReadAsync(db, "local");
+    var progressTrip = new TripDTO { LocalTripId = 7, LocalUserId = "local", RemoteTripId = 10 };
+    foreach (var partial in new[] { "0 / 0", "0 / 12", "0 / 27" })
+    {
+        var snapshot = await PackingStatsSnapshot.ReadAsync(db, "local");
+        var displayed = snapshot.ApplyTo([new TripWithStats(progressTrip, partial)], beforeStatsRequest);
+        Check(displayed.Single().PackingSummary == "0 / 27", $"Partial cloud count {partial} displays complete local 0 / 27");
+    }
+    // Simulate the final upload committing while the remote stats request still holds 0 / 12.
+    await db.Table<SQLitePendingPackingItemChange>().Where(x => x.LocalTripId == 7).DeleteAsync();
+    var afterFinalUpload = await PackingStatsSnapshot.ReadAsync(db, "local");
+    Check(afterFinalUpload.ApplyTo([new TripWithStats(progressTrip, "0 / 12")], beforeStatsRequest).Single().PackingSummary == "0 / 27",
+        "Finishing upload during a remote request cannot regress the counter");
+    Check(afterFinalUpload.ApplyTo([new TripWithStats(progressTrip, "5 / 30")], afterFinalUpload).Single().PackingSummary == "5 / 30",
+        "When local uploads finish, unchanged cached data does not hide changes from another device");
+    var unrelatedTrip = new TripDTO { LocalTripId = 7, LocalUserId = "another-device", RemoteTripId = 999 };
+    Check(afterFinalUpload.ApplyTo([new TripWithStats(unrelatedTrip, "2 / 8")], beforeStatsRequest).Single().PackingSummary == "2 / 8",
+        "A matching local numeric ID cannot override an unrelated cloud trip");
+
+    fullList[0].IsPacked = true;
+    await repo.UpdatePackingItemAsync(fullList[0]);
+    Check(lastProgress?.PackingSummary == "1 / 27", "Packing an item publishes the local numerator immediately");
+    await repo.DeletePackingItemAsync(fullList[1]);
+    Check(lastProgress?.PackingSummary == "1 / 26", "Deleting an item publishes the local denominator immediately");
+    WeakReferenceMessenger.Default.UnregisterAll(progressRecipient);
+
+    var oldResponse = new TaskCompletionSource<IReadOnlyList<TripWithStats>>(TaskCreationOptions.RunContinuationsAsynchronously);
+    var statsRepository = new Trips();
+    statsRepository.StatsSource = () => oldResponse.Task;
+    var preload = new TripListPreloadService(statsRepository);
+    var oldLoad = preload.GetTripsAsync();
+    statsRepository.StatsSource = () => Task.FromResult<IReadOnlyList<TripWithStats>>([new(progressTrip, "0 / 27")]);
+    WeakReferenceMessenger.Default.Send(new TripDataChangedMessage());
+    oldResponse.SetResult([new(progressTrip, "0 / 0")]);
+    Check((await oldLoad.WaitAsync(TimeSpan.FromSeconds(5))).Single().PackingSummary == "0 / 27",
+        "An invalidated in-flight preload cannot restore stale 0 / 0 on Home or Trips");
+    await VerifyStaleCacheAndAtomicClearAsync();
 }
 finally
 {
     await db.CloseAsync();
     File.Delete(path);
+}
+
+static async Task VerifyStaleCacheAndAtomicClearAsync()
+{
+    var regressionPath = Path.Combine(Path.GetTempPath(), $"packo-counter-{Guid.NewGuid():N}.db");
+    var regressionDb = new SQLiteAsyncConnection(regressionPath);
+    var recipient = new object();
+    var summaries = new List<string>();
+    var cloud = new Remote();
+    void Check(bool passed, string message)
+    {
+        if (!passed) throw new Exception(message);
+        Console.WriteLine($"PASS: {message}");
+    }
+    PackingItemDTO Item(string name) => new()
+    {
+        Name = name, LocalTripId = 8, RemoteTripId = 80, LocalUserId = "local", RemoteUserId = "user", CreatedDate = DateTime.UtcNow
+    };
+    try
+    {
+        // Upgrade a pre-fix database, including an existing item, through the same startup migration.
+        await regressionDb.ExecuteAsync("CREATE TABLE SQLitePackingItem (LocalPackingItemId INTEGER PRIMARY KEY AUTOINCREMENT, RemotePackingItemId INTEGER, LocalTripId INTEGER, RemoteTripId INTEGER, Name TEXT, Category INTEGER, LocalUserId TEXT, RemoteUserId TEXT, CreatedDate BIGINT, ModifiedDate BIGINT, IsPacked INTEGER)");
+        await regressionDb.ExecuteAsync("INSERT INTO SQLitePackingItem (Name, LocalUserId, LocalTripId, RemoteTripId, RemotePackingItemId, IsPacked) VALUES ('Obsolete item 0', 'local', 8, 80, 1000, 0)");
+        await LocalPackingItemRepository.EnsureSchemaAsync(regressionDb);
+        await regressionDb.CreateTableAsync<SQLitePendingPackingItemChange>();
+        var local = new LocalPackingItemRepository(regressionDb);
+        var repository = new SyncPackingItemRepository(local, cloud, new Session(), regressionDb, new Trips());
+        Check((await local.GetPackingItemsForTripAsync(8, 80)).Count == 1,
+            "Upgrading an existing SQLite database preserves its items and initializes the new cache flag");
+        // Old rows are present only in SQLite, as after deletion in a previous app version.
+        for (var i = 1; i < 26; i++)
+        {
+            var old = Item($"Obsolete item {i}");
+            old.RemotePackingItemId = 1000 + i;
+            await local.AddPackingItemAsync(old);
+        }
+        Connectivity.Current.NetworkAccess = NetworkAccess.Internet;
+        await repository.GetPackingItemsForTripAsync(8, 80);
+        Check(await regressionDb.Table<SQLitePackingItem>().CountAsync() == 26 &&
+            (await local.GetPackingItemsForTripAsync(8, 80)).Count == 0,
+            "Obsolete cache entries are preserved for recovery but excluded from the current list");
+        await LocalPackingItemRepository.EnsureSchemaAsync(regressionDb);
+        Check((await local.GetPackingItemsForTripAsync(8, 80)).Count == 0,
+            "Restarting schema initialization does not reactivate obsolete cache entries");
+
+        WeakReferenceMessenger.Default.Register<TripDataChangedMessage>(recipient, (_, message) =>
+        {
+            if (message.LocalTripId == 8 && message.PackingSummary != null)
+                summaries.Add(message.PackingSummary);
+        });
+        Connectivity.Current.NetworkAccess = NetworkAccess.None;
+        var newList = Enumerable.Range(1, 22).Select(i => Item($"AI item {i}")).ToList();
+        await repository.AddPackingItemsAsync(newList);
+        var snapshot = await PackingStatsSnapshot.ReadAsync(regressionDb, "local");
+        var trip = new TripDTO { LocalTripId = 8, RemoteTripId = 80, LocalUserId = "local" };
+        Check(await regressionDb.Table<SQLitePackingItem>().CountAsync() == 48 && snapshot.SummaryFor(8) == "0 / 22",
+            "26 obsolete cache rows plus 22 AI items display 0 / 22, never 0 / 48");
+        Check(snapshot.ApplyTo([new(trip, "0 / 7")], snapshot).Single().PackingSummary == "0 / 22",
+            "Home/Trips use 22 current items throughout partial upload");
+        Connectivity.Current.NetworkAccess = NetworkAccess.Internet;
+        await repository.SyncPendingChangesAsync();
+        var displayed = await repository.GetPackingItemsForTripAsync(8, 80);
+        Check(displayed.Count == 22 && (await PackingStatsSnapshot.ReadAsync(regressionDb, "local")).SummaryFor(8) == "0 / 22",
+            "A completed upload and cache reload keep the same 22-item count");
+
+        // A trip originating on another device can share its numeric local ID.
+        for (var i = 0; i < 26; i++)
+        {
+            var otherTripItem = Item($"Other trip {i}");
+            otherTripItem.RemoteTripId = 99;
+            otherTripItem.RemotePackingItemId = 2000 + i;
+            await local.AddPackingItemAsync(otherTripItem);
+        }
+        var scoped = await PackingStatsSnapshot.ReadAsync(regressionDb, "local");
+        Check(scoped.SummaryFor(8, 80) == "0 / 22" && scoped.SummaryFor(8, 99) == "0 / 26",
+            "Two cloud trips sharing a numeric local ID keep separate 22/26-item counters");
+        Check((await repository.GetPackingItemsForTripAsync(8, 80)).Count == 22 &&
+            (await local.GetPackingItemsForTripAsync(8, 99)).Count == 26,
+            "Refreshing one trip preserves the other trip's cached items");
+
+        cloud.DeleteStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        cloud.ReleaseDelete = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        await repository.DeletePackingItemsAsync(displayed.ToList()).WaitAsync(TimeSpan.FromSeconds(5));
+        await cloud.DeleteStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var cleared = await PackingStatsSnapshot.ReadAsync(regressionDb, "local");
+        Check(cleared.SummaryFor(8, 80) == "0 / 0" && (await local.GetPackingItemsForTripAsync(8, 80)).Count == 0,
+            "Clear list commits all 22 local removals before blocked cloud deletion finishes");
+        Check(summaries.SequenceEqual(new[] { "0 / 22", "0 / 0" }),
+            "Progress jumps directly 0 / 22 to 0 / 0 without intermediate decrements");
+        Check(cleared.ApplyTo([new(trip, "0 / 22")], cleared).Single().PackingSummary == "0 / 0",
+            "Pending cloud deletions cannot restore an old counter on Home/Trips");
+        var otherCloudTrip = new TripDTO { LocalTripId = 8, RemoteTripId = 99, LocalUserId = "another-device" };
+        Check(cleared.ApplyTo([new(otherCloudTrip, "3 / 30")], cleared).Single().PackingSummary == "3 / 30",
+            "Pending deletion for one trip cannot override the counter of another trip sharing its local ID");
+        Check(await regressionDb.Table<SQLitePendingPackingItemChange>().Where(x => x.Operation == "Delete").CountAsync() == 22,
+            "Clear list durably queues every remote deletion in its single transaction");
+        cloud.ReleaseDelete.SetResult();
+        await repository.SyncPendingChangesAsync();
+        Check(cloud.Items.Count == 0 && (await PackingStatsSnapshot.ReadAsync(regressionDb, "local")).SummaryFor(8, 80) == "0 / 0",
+            "Cloud eventually reaches zero while the displayed count remains zero");
+
+        Connectivity.Current.NetworkAccess = NetworkAccess.None;
+        var rollback = new List<PackingItemDTO> { Item("Keep first"), Item("Reject delete") };
+        await repository.AddPackingItemsAsync(rollback);
+        await regressionDb.ExecuteAsync("CREATE TRIGGER FailClear BEFORE DELETE ON SQLitePackingItem WHEN OLD.Name = 'Reject delete' BEGIN SELECT RAISE(ABORT, 'test failure'); END");
+        var didFail = false;
+        try { await repository.DeletePackingItemsAsync(rollback); }
+        catch (SQLiteException) { didFail = true; }
+        Check(didFail && (await local.GetPackingItemsForTripAsync(8, 80)).Count == 2 &&
+            await regressionDb.Table<SQLitePendingPackingItemChange>().CountAsync() == 2,
+            "Failed atomic clear restores both items and their pending additions");
+    }
+    finally
+    {
+        cloud.ReleaseDelete?.TrySetResult();
+        WeakReferenceMessenger.Default.UnregisterAll(recipient);
+        await regressionDb.CloseAsync();
+        File.Delete(regressionPath);
+    }
 }
 
 sealed class Session : ISessionService
@@ -99,6 +346,8 @@ sealed class Session : ISessionService
 }
 sealed class Trips : ITripRepository
 {
+    public Func<Task<IReadOnlyList<TripWithStats>>> StatsSource { get; set; } = () => Task.FromResult<IReadOnlyList<TripWithStats>>([]);
+    public Task<IReadOnlyList<TripWithStats>> GetActiveTripsWithStatsAsync() => StatsSource();
     public Task<LocalTrip?> GetLocalTripAsync(int id, string user) => Task.FromResult<LocalTrip?>(new(10));
     public Task SyncPendingChangesAsync() => Task.CompletedTask;
 }
@@ -107,22 +356,44 @@ sealed class Remote : IPackingItemRepository
     private int _nextId;
     public List<PackingItemDTO> Items { get; } = [];
     public bool FailDelete { get; set; }
+    public bool FailAdd { get; set; }
+    public TaskCompletionSource? AddStarted { get; set; }
+    public TaskCompletionSource? ReleaseAdd { get; set; }
+    public TaskCompletionSource? DeleteStarted { get; set; }
+    public TaskCompletionSource? ReleaseDelete { get; set; }
     public event Action<PackingItemChange>? PackingItemChanged;
-    public Task<int> AddPackingItemAsync(PackingItemDTO item)
+    public async Task<int> AddPackingItemAsync(PackingItemDTO item)
     {
+        if (FailAdd) throw new IOException("Simulated upload failure");
+        AddStarted?.TrySetResult();
+        if (ReleaseAdd != null)
+            await ReleaseAdd.Task;
         item.RemotePackingItemId = ++_nextId;
         Items.Add(item);
-        return Task.FromResult(_nextId);
+        // Supabase realtime does not provide the SQLite identity.
+        PackingItemChanged?.Invoke(new(PackingItemChangeType.Insert, new PackingItemDTO
+        {
+            RemotePackingItemId = item.RemotePackingItemId, RemoteTripId = item.RemoteTripId,
+            Name = item.Name, CreatedDate = item.CreatedDate
+        }));
+        return _nextId;
     }
-    public Task DeletePackingItemAsync(PackingItemDTO item)
+    public async Task DeletePackingItemAsync(PackingItemDTO item)
     {
         if (FailDelete) throw new IOException("Simulated network failure");
+        DeleteStarted?.TrySetResult();
+        if (ReleaseDelete != null)
+            await ReleaseDelete.Task;
         Items.RemoveAll(x => x.RemotePackingItemId == item.RemotePackingItemId);
-        return Task.CompletedTask;
     }
     public Task<IReadOnlyList<PackingItemDTO>> GetPackingItemsForTripAsync(int local, int remote) =>
         Task.FromResult<IReadOnlyList<PackingItemDTO>>(Items.Where(x => x.LocalTripId == local).ToList());
     public Task AddPackingItemsAsync(List<PackingItemDTO> items) => throw new NotSupportedException();
+    public async Task DeletePackingItemsAsync(List<PackingItemDTO> items)
+    {
+        foreach (var item in items)
+            await DeletePackingItemAsync(item);
+    }
     public Task UpdatePackingItemAsync(PackingItemDTO item) => Task.CompletedTask;
     public Task UnsubscribeFromPackingItemChangesAsync() => Task.CompletedTask;
     public Task SyncPendingChangesAsync() => Task.CompletedTask;
