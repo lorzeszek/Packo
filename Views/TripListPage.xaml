@@ -28,7 +28,25 @@
                    TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
         </VerticalStackLayout>
 
+        <VerticalStackLayout Grid.Row="1" IsVisible="{Binding IsLoading}" Spacing="12"
+                             HorizontalOptions="Center" VerticalOptions="Center">
+            <ActivityIndicator IsRunning="{Binding IsLoading}" WidthRequest="36" HeightRequest="36"
+                               Color="{StaticResource PackoAccentLight}" />
+            <Label Text="{loc:Translate StartupLoadingTrips}" HorizontalTextAlignment="Center"
+                   TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+        </VerticalStackLayout>
+
+        <VerticalStackLayout Grid.Row="1" IsVisible="{Binding HasLoadError}" Spacing="16" Padding="32"
+                             HorizontalOptions="Center" VerticalOptions="Center">
+            <Label Text="{loc:Translate StartupLoadError}" HorizontalTextAlignment="Center"
+                   TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+            <Button Text="{loc:Translate Retry}" Command="{Binding RetryLoadCommand}"
+                    BackgroundColor="{StaticResource PackoAccentLight}" TextColor="{StaticResource PackoWhite}"
+                    CornerRadius="18" Padding="24,12" HorizontalOptions="Center" />
+        </VerticalStackLayout>
+
         <CollectionView Grid.Row="1" ItemsSource="{Binding Trips}" SelectionMode="None"
+                        IsVisible="{Binding ShowTrips}"
                         ItemsLayout="VerticalList" VerticalScrollBarVisibility="Never">
             <CollectionView.EmptyView>
                 <VerticalStackLayout Padding="32" Spacing="14" VerticalOptions="Center"

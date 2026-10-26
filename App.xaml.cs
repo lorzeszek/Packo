@@ -156,15 +156,61 @@ namespace Packo
 
         protected override Window CreateWindow(IActivationState? activationState)
         {
-            var bootstrapPage = new ContentPage(); // pusta strona
+            var bootstrapPage = new StartupPage();
             var window = new Window(bootstrapPage);
-
-            _ = InitializeAndNavigateAsync();
-
+            var started = false;
+            bootstrapPage.Loaded += async (_, _) =>
+            {
+                if (started)
+                    return;
+                started = true;
+                await InitializeAndNavigateAsync(window, bootstrapPage);
+            };
+            bootstrapPage.RetryRequested += async (_, _) => await InitializeAndNavigateAsync(window, bootstrapPage);
             return window;
         }
 
-        private async Task InitializeAndNavigateAsync()
+        private bool _startupInitialized;
+        private bool _startupRunning;
+
+        private async Task InitializeAndNavigateAsync(Window window, StartupPage startupPage)
+        {
+            if (_startupRunning)
+                return;
+
+            _startupRunning = true;
+            try
+            {
+                startupPage.ShowLoading("StartupPreparing");
+                if (!_startupInitialized)
+                {
+                    await InitializeStorageAndSessionAsync(startupPage);
+                    _startupInitialized = true;
+                }
+
+                startupPage.ShowLoading("StartupLoadingTrips");
+                // Home and Trips consume this same cached result. Await the real
+                // request here: optional PrefetchAsync deliberately swallows errors.
+                await _tripListPreloadService.GetTripsAsync().WaitAsync(TimeSpan.FromSeconds(20));
+
+                await MainThread.InvokeOnMainThreadAsync(() => window.Page = new AppShell());
+
+                // Only the data needed for the first screen delays app startup.
+                _ = _weatherPreloadService.PrefetchAsync();
+                _ = _documentPreloadService.PrefetchAsync();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"App startup failed: {ex}");
+                startupPage.ShowError();
+            }
+            finally
+            {
+                _startupRunning = false;
+            }
+        }
+
+        private async Task InitializeStorageAndSessionAsync(StartupPage startupPage)
         {
             //SecureStorage.Remove("access_token");
             //SecureStorage.Remove("refresh_token");
@@ -200,32 +246,8 @@ namespace Packo
                 _sessionService.SetLocalUser(localUser.LocalUserId);
             }
 
+            startupPage.ShowLoading("StartupRestoringSession");
             await _sessionService.InitializeAsync();
-
-            // Begin the two remote Trips requests while the Home tab is shown. The
-            // TripListViewModel will await this same task instead of starting over.
-            if (_sessionService.IsAuthenticated)
-                _ = _tripListPreloadService.PrefetchAsync();
-
-            _ = _weatherPreloadService.PrefetchAsync();
-            _ = _documentPreloadService.PrefetchAsync();
-
-
-            await MainThread.InvokeOnMainThreadAsync(async () =>
-            {
-                MainPage = new AppShell();
-
-                await Shell.Current.GoToAsync("//Home");
-
-                //if (_sessionService.HasLocalUser)
-                //{
-                //    await Shell.Current.GoToAsync("//TripList");
-                //}
-                //else
-                //{
-                //    await Shell.Current.GoToAsync("//Home");
-                //}
-            });
         }
 
         private async Task EnsureTripColumnAsync(string columnName, string columnDefinition)

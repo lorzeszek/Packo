@@ -212,11 +212,49 @@ try
     Check((await oldLoad.WaitAsync(TimeSpan.FromSeconds(5))).Single().PackingSummary == "0 / 27",
         "An invalidated in-flight preload cannot restore stale 0 / 0 on Home or Trips");
     await VerifyStaleCacheAndAtomicClearAsync();
+    await VerifyStartupTripPreloadAsync();
 }
 finally
 {
     await db.CloseAsync();
     File.Delete(path);
+}
+
+static async Task VerifyStartupTripPreloadAsync()
+{
+    var response = new TaskCompletionSource<IReadOnlyList<TripWithStats>>(TaskCreationOptions.RunContinuationsAsynchronously);
+    var requests = 0;
+    var repository = new Trips
+    {
+        StatsSource = () => { requests++; return response.Task; }
+    };
+    var preload = new TripListPreloadService(repository);
+    var startup = preload.GetTripsAsync();
+    var home = preload.GetTripsAsync();
+    var trips = preload.GetTripsAsync();
+    if (startup.IsCompleted || home.IsCompleted || trips.IsCompleted || requests != 1)
+        throw new Exception("Startup must await trip data and share its request with Home and Trips.");
+
+    response.SetResult([new(new TripDTO { RemoteTripId = 42 }, "3 / 10")]);
+    await Task.WhenAll(startup, home, trips).WaitAsync(TimeSpan.FromSeconds(5));
+    var firstScreen = preload.GetTripsAsync();
+    if (!firstScreen.IsCompletedSuccessfully || requests != 1 || (await firstScreen).Single().PackingSummary != "3 / 10")
+        throw new Exception("The first screen must have cached trip data immediately without another network request.");
+    Console.WriteLine("PASS: Startup waits for trips; Home and Trips immediately reuse the same result and single request");
+
+    preload.Invalidate();
+    repository.StatsSource = () => Task.FromException<IReadOnlyList<TripWithStats>>(new IOException("Network failure"));
+    try
+    {
+        await preload.GetTripsAsync();
+        throw new Exception("Startup must receive loading errors so it can show retry.");
+    }
+    catch (IOException) { }
+
+    repository.StatsSource = () => Task.FromResult<IReadOnlyList<TripWithStats>>([]);
+    if ((await preload.GetTripsAsync()).Count != 0)
+        throw new Exception("Retry must recover after a failed startup request.");
+    Console.WriteLine("PASS: Startup receives loading errors and retry recovers; an empty trip list completes normally");
 }
 
 static async Task VerifyStaleCacheAndAtomicClearAsync()

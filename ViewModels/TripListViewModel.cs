@@ -22,6 +22,31 @@ namespace Packo.ViewModels
 
         public ObservableRangeCollection<TripViewModel> Trips { get; } = new();
 
+        private bool _isLoading;
+        public bool IsLoading
+        {
+            get => _isLoading;
+            private set
+            {
+                if (SetProperty(ref _isLoading, value))
+                    OnPropertyChanged(nameof(ShowTrips));
+            }
+        }
+
+        private bool _hasLoadError;
+        public bool HasLoadError
+        {
+            get => _hasLoadError;
+            private set
+            {
+                if (SetProperty(ref _hasLoadError, value))
+                    OnPropertyChanged(nameof(ShowTrips));
+            }
+        }
+
+        public bool ShowTrips => _isLoaded && !IsLoading && !HasLoadError;
+        public IAsyncRelayCommand RetryLoadCommand { get; }
+
         //public ICommand TripTappedCommand => new Command<TripViewModel>(OnTripTapped);
         public IAsyncRelayCommand<TripViewModel> TripTappedCommand { get; }
 
@@ -48,6 +73,7 @@ namespace Packo.ViewModels
         {
             _tripListPreloadService = tripListPreloadService;
             _weatherPreloadService = weatherPreloadService;
+            RetryLoadCommand = new AsyncRelayCommand(() => LoadData(forceRefresh: true));
 
             Title = LocalizationResourceManager.Instance["TabTrips"];
             LocalizationResourceManager.Instance.PropertyChanged += (_, _) => Title = LocalizationResourceManager.Instance["TabTrips"];
@@ -97,6 +123,7 @@ namespace Packo.ViewModels
         {
             Trips.Clear();
             _isLoaded = false;
+            OnPropertyChanged(nameof(ShowTrips));
             _tripListPreloadService.Invalidate();
             _weatherPreloadService.Invalidate();
             await _tripRepository.DeleteLocalTrips();
@@ -299,9 +326,13 @@ namespace Packo.ViewModels
 
         private async Task LoadData(bool forceRefresh = false)
         {
+            if (IsLoading)
+                return;
+
             try
             {
-                SetBusy(true, null);
+                IsLoading = true;
+                HasLoadError = false;
 
                 var tripsWithStats = await _tripListPreloadService.GetTripsAsync(forceRefresh);
 
@@ -329,11 +360,12 @@ namespace Packo.ViewModels
             }
             catch (Exception ex)
             {
-                // obsługa błędu
+                System.Diagnostics.Debug.WriteLine($"Trips loading failed: {ex}");
+                HasLoadError = true;
             }
             finally
             {
-                SetBusy(false, null);
+                IsLoading = false;
             }
         }
 
@@ -354,7 +386,7 @@ namespace Packo.ViewModels
         private bool _isLoaded;
         private bool _isDirty;
 
-        public bool IsLoadingModalActive => _isAppearing || Session.GlobalIsBusy;
+        public bool IsLoadingModalActive => Session.GlobalIsBusy;
 
         public async Task OnAppearingAsync()
         {
@@ -365,26 +397,41 @@ namespace Packo.ViewModels
 
             try
             {
-                if (Session.IsAuthenticated)
-                {
-                    if (!await _tripRepository.IsChannelCreatedAsync())
-                    {
-                        await _tripRepository.StartRealtimeAsync();
-                    }
-
-                    _tripRepository.TripChanged -= OnTripChanged;
-                    _tripRepository.TripChanged -= OnTripChangedWhileAway;
-                    _tripRepository.TripChanged += OnTripChanged;
-                }
-
+                // Render cached/loaded trips before waiting for a realtime connection.
                 if (!_isLoaded || _isDirty)
                 {
                     await LoadData(forceRefresh: _isDirty);
+                }
+
+                if (Session.IsAuthenticated)
+                {
+                    _tripRepository.TripChanged -= OnTripChanged;
+                    _tripRepository.TripChanged -= OnTripChangedWhileAway;
+                    _tripRepository.TripChanged += OnTripChanged;
+
+                    if (_realtimeTask is null || _realtimeTask.IsCompleted)
+                        _realtimeTask = EnsureRealtimeAsync();
                 }
             }
             finally
             {
                 _isAppearing = false;
+            }
+        }
+
+        private Task? _realtimeTask;
+
+        private async Task EnsureRealtimeAsync()
+        {
+            try
+            {
+                if (!await _tripRepository.IsChannelCreatedAsync())
+                    await _tripRepository.StartRealtimeAsync();
+            }
+            catch (Exception ex)
+            {
+                // Realtime is optional; it must not delay rendering or navigation.
+                System.Diagnostics.Debug.WriteLine($"Trips realtime connection failed: {ex}");
             }
         }
 
