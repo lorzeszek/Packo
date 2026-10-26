@@ -39,12 +39,17 @@
                 <CollectionView ItemsSource="{Binding Items}" HeightRequest="300" SelectionMode="None">
                     <CollectionView.ItemTemplate>
                         <DataTemplate>
-                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8" Padding="5,2">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8" Padding="5,2">
                                 <CheckBox IsChecked="{Binding IsSelected}" Color="{StaticResource PackoAccentLight}"
                                           VerticalOptions="Center" />
                                 <Label Grid.Column="1" Text="{Binding Name}" FontSize="14"
                                        VerticalTextAlignment="Center" LineBreakMode="WordWrap"
                                        TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+                                <Button Grid.Column="2" Text="{Binding Quantity, StringFormat='×{0}'}"
+                                        Clicked="OnQuantityClicked" MinimumHeightRequest="44" MinimumWidthRequest="44"
+                                        Padding="8,0" FontSize="14" BackgroundColor="Transparent"
+                                        TextColor="{StaticResource PackoAccentLight}"
+                                        SemanticProperties.Description="{loc:Translate EditPackingQuantity}" />
                             </Grid>
                         </DataTemplate>
                     </CollectionView.ItemTemplate>

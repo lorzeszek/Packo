@@ -177,7 +177,8 @@ namespace Packo.Repositories
                     Category = item.Category,
                     CreatedDate = item.CreatedDate,
                     ModifiedDate = item.ModifiedDate,
-                    IsPacked = item.IsPacked
+                    IsPacked = item.IsPacked,
+                    Quantity = Math.Max(1, item.Quantity)
                 }).ToList();
                 // The rows and their upload queue commit together, even if the app closes next.
                 await _pendingDb.RunInTransactionAsync(db =>
@@ -197,7 +198,8 @@ namespace Packo.Repositories
                             Category = item.Category,
                             CreatedDate = item.CreatedDate,
                             ModifiedDate = item.ModifiedDate,
-                            IsPacked = item.IsPacked
+                            IsPacked = item.IsPacked,
+                            Quantity = Math.Max(1, item.Quantity)
                         };
                         db.Insert(new SQLitePendingPackingItemChange
                         {

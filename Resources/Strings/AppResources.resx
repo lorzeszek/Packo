@@ -129,4 +129,8 @@
   <data name="WeatherLoading" xml:space="preserve"><value>Loading forecasts for your trips…</value></data>
   <data name="WeatherLoadError" xml:space="preserve"><value>We couldn't load the forecasts. Check your connection and try again.</value></data>
   <data name="WeatherDestinationsUnavailable" xml:space="preserve"><value>Forecast unavailable for: {0}. Check the destination name or try again.</value></data>
+  <data name="PackingQuantity" xml:space="preserve"><value>Quantity to pack</value></data>
+  <data name="PackingQuantityInvalid" xml:space="preserve"><value>Enter a whole number greater than zero.</value></data>
+  <data name="EditPackingQuantity" xml:space="preserve"><value>Edit quantity to pack</value></data>
+  <data name="UpdatePackingItemError" xml:space="preserve"><value>Could not save the item. Please try again.</value></data>
 </root>

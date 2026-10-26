@@ -12,6 +12,7 @@ using Packo.Messages;
 using Packo.Services;
 
 SQLitePCL.Batteries_V2.Init();
+await PackingFeatureChecks.RunAsync();
 var path = Path.Combine(Path.GetTempPath(), $"packo-deletion-{Guid.NewGuid():N}.db");
 var db = new SQLiteAsyncConnection(path);
 try
@@ -90,13 +91,17 @@ try
 
     Connectivity.Current.NetworkAccess = NetworkAccess.None;
     var batch = new List<PackingItemDTO> { Item("Batch A", 3), Item("Batch B", 3), Item("Batch C", 3) };
+    batch[0].Quantity = 6;
     await repo.AddPackingItemsAsync(batch);
     Check(batch.All(x => x.LocalPackingItemId > 0) && batch.Select(x => x.LocalPackingItemId).Distinct().Count() == 3,
         "Batch assigns all local IDs before returning");
     Check((await local.GetPackingItemsForTripAsync(3, 10)).Count == 3 &&
         await db.Table<SQLitePendingPackingItemChange>().Where(x => x.LocalTripId == 3).CountAsync() == 3,
         "Whole batch and upload queue are persisted offline");
+    Check((await local.GetPackingItemsForTripAsync(3, 10)).Single(x => x.Name == "Batch A").Quantity == 6,
+        "AI batch quantity is persisted in SQLite");
     batch[0].IsPacked = true;
+    batch[0].Quantity = 8;
     await repo.UpdatePackingItemAsync(batch[0]);
     await repo.DeletePackingItemAsync(batch[1]);
     await repo.SyncPendingChangesAsync(); // Drain any scheduled offline work before reconnecting.
@@ -105,6 +110,8 @@ try
     await restartBatch.SyncPendingChangesAsync();
     Check(remote.Items.Count(x => x.LocalTripId == 3) == 2 && remote.Items.Single(x => x.Name == "Batch A").IsPacked,
         "Batch restart uploads latest edit and does not recreate deleted item");
+    Check(remote.Items.Single(x => x.Name == "Batch A").Quantity == 8,
+        "Restarted offline queue uploads the edited quantity");
 
     remote.FailAdd = true;
     var failedBatch = new List<PackingItemDTO> { Item("Retry A", 4), Item("Retry B", 4) };
@@ -279,6 +286,8 @@ static async Task VerifyStaleCacheAndAtomicClearAsync()
         await regressionDb.ExecuteAsync("CREATE TABLE SQLitePackingItem (LocalPackingItemId INTEGER PRIMARY KEY AUTOINCREMENT, RemotePackingItemId INTEGER, LocalTripId INTEGER, RemoteTripId INTEGER, Name TEXT, Category INTEGER, LocalUserId TEXT, RemoteUserId TEXT, CreatedDate BIGINT, ModifiedDate BIGINT, IsPacked INTEGER)");
         await regressionDb.ExecuteAsync("INSERT INTO SQLitePackingItem (Name, LocalUserId, LocalTripId, RemoteTripId, RemotePackingItemId, IsPacked) VALUES ('Obsolete item 0', 'local', 8, 80, 1000, 0)");
         await LocalPackingItemRepository.EnsureSchemaAsync(regressionDb);
+        Check((await regressionDb.Table<SQLitePackingItem>().ToListAsync()).Single().Quantity == 1,
+            "Upgrading a legacy database initializes quantity to one");
         await regressionDb.CreateTableAsync<SQLitePendingPackingItemChange>();
         var local = new LocalPackingItemRepository(regressionDb);
         var repository = new SyncPackingItemRepository(local, cloud, new Session(), regressionDb, new Trips());

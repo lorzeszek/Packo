@@ -9,6 +9,12 @@
     <PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.1" />
     <Compile Include="../../Models/DTO/PackingItemDTO.cs" Link="PackingItemDTO.cs" />
+    <Compile Include="../../Models/DTO/PackingSuggestion.cs" Link="PackingSuggestion.cs" />
+    <Compile Include="../../Models/PackingItem.cs" Link="PackingItem.cs" />
+    <Compile Include="../../Helpers/PackingItemOrder.cs" Link="PackingItemOrder.cs" />
+    <Compile Include="../../Services/PackingSuggestionService.cs" Link="PackingSuggestionService.cs" />
+    <Compile Include="../../Services/Interfaces/IPackingSuggestionService.cs" Link="IPackingSuggestionService.cs" />
+    <Compile Include="../../Services/Interfaces/IAIService.cs" Link="IAIService.cs" />
     <Compile Include="../../Models/SQLite/SQLitePackingItem.cs" Link="SQLitePackingItem.cs" />
     <Compile Include="../../Repositories/Models/SQLitePendingPackingItemChange.cs" Link="SQLitePendingPackingItemChange.cs" />
     <Compile Include="../../Repositories/Interfaces/IPackingItemRepository.cs" Link="IPackingItemRepository.cs" />

@@ -352,13 +352,13 @@ namespace Packo.ViewModels
 
                     _ = Application.Current.MainPage.ShowPopupAsync(addSelectedItemsPopup);
 
-                    var selectedItemsNames = await addSelectedItemsPopup.ResultSource.Task;
+                    var selectedItems = await addSelectedItemsPopup.ResultSource.Task;
 
-                    if (selectedItemsNames?.Count > 0)
+                    if (selectedItems.Count > 0)
                     {
                         var createdTrip = await _tripRepository.GetTripAsync(trip);
 
-                        var newPackingItems = selectedItemsNames.Select(itemName => new PackingItemDTO { Name = itemName, Category = 3, RemoteTripId = createdTrip.RemoteTripId, LocalTripId = createdTrip.LocalTripId, RemoteUserId = Session.UserId, LocalUserId = Session.LocalUserId, CreatedDate = DateTime.Now }).ToList();
+                        var newPackingItems = selectedItems.Select(item => new PackingItemDTO { Name = item.Name, Quantity = item.Quantity, Category = 3, RemoteTripId = createdTrip.RemoteTripId, LocalTripId = createdTrip.LocalTripId, RemoteUserId = Session.UserId, LocalUserId = Session.LocalUserId, CreatedDate = DateTime.Now }).ToList();
 
                         await _packingItemRepository.AddPackingItemsAsync(newPackingItems);
                     }
@@ -369,7 +369,10 @@ namespace Packo.ViewModels
                 }
                 catch (Exception ex)
                 {
-                    // Handle error
+                    System.Diagnostics.Debug.WriteLine(ex);
+                    await Shell.Current.DisplayAlertAsync(LocalizationResourceManager.Instance["Error"],
+                        LocalizationResourceManager.Instance["AddPackingItemsError"],
+                        LocalizationResourceManager.Instance["Ok"]);
                 }
                 finally
                 {

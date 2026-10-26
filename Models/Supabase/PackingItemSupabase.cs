@@ -16,6 +16,9 @@ namespace Packo.Models.Supabase
         [Column("Name")]
         public string Name { get; set; } = string.Empty;
 
+        [Column("Quantity")]
+        public int Quantity { get; set; } = 1;
+
         [Column("CreatedDate")]
         public DateTime CreatedDate { get; set; }
 

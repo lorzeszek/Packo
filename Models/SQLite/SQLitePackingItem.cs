@@ -11,6 +11,7 @@ namespace Packo.Models.SQLite
         public int LocalTripId { get; set; }
         public int? RemoteTripId { get; set; }
         public string Name { get; set; } = string.Empty;
+        public int Quantity { get; set; } = 1;
         public int Category { get; set; }
         public string LocalUserId { get; set; }
         public string RemoteUserId { get; set; }

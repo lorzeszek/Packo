@@ -7,6 +7,13 @@ namespace Packo.Popups.Objects
     {
         private string _name = string.Empty;
         private bool _isSelected;
+        private int _quantity = 1;
+
+        public int Quantity
+        {
+            get => _quantity;
+            set { _quantity = value; OnPropertyChanged(); }
+        }
 
         public string Name
         {

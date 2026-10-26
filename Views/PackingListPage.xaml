@@ -32,7 +32,8 @@
         </VerticalStackLayout>
 
         <CollectionView x:Name="PackingListView" Grid.Row="1" ItemsSource="{Binding Items}"
-                        SelectionMode="None" VerticalScrollBarVisibility="Never" IsEnabled="{Binding CanEditItems}">
+                        SelectionMode="None" ItemsUpdatingScrollMode="KeepScrollOffset"
+                        VerticalScrollBarVisibility="Never" IsEnabled="{Binding CanEditItems}">
             <CollectionView.EmptyView>
                 <VerticalStackLayout Padding="30" Spacing="12" HorizontalOptions="Center" VerticalOptions="Center">
                     <Border WidthRequest="74" HeightRequest="74" StrokeThickness="0"
@@ -56,15 +57,20 @@
                             Stroke="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoBorderDark}}"
                             StrokeShape="RoundRectangle 17"
                             BackgroundColor="{AppThemeBinding Light={StaticResource PackoSurfaceLight}, Dark={StaticResource PackoSurfaceDark}}">
-                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
-                            <CheckBox IsChecked="{Binding IsPacked}" Color="{StaticResource PackoAccentLight}"
-                                      Command="{Binding BindingContext.ToggleIsPackedCommand, Source={x:Reference PackingListView}}"
-                                      CommandParameter="{Binding .}" VerticalOptions="Center" />
+                        <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="8">
+                            <CheckBox IsChecked="{Binding IsPacked, Mode=OneWay}" Color="{StaticResource PackoAccentLight}"
+                                      CheckedChanged="OnPackedChanged" VerticalOptions="Center" />
                             <Label Grid.Column="1" Text="{Binding Name}" FontSize="15"
                                    VerticalTextAlignment="Center" LineBreakMode="WordWrap"
                                    Opacity="{Binding IsPacked, Converter={StaticResource PackedOpacityConverter}}"
                                    TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
-                            <Button Grid.Column="2" Text="&#xE872;" FontFamily="MaterialIcons" FontSize="21"
+                            <Button Grid.Column="2" Text="{Binding Quantity, StringFormat='×{0}'}"
+                                    MinimumWidthRequest="44" HeightRequest="44" Padding="8,0"
+                                    BackgroundColor="Transparent" TextColor="{StaticResource PackoAccentLight}" FontSize="14"
+                                    SemanticProperties.Description="{loc:Translate EditPackingQuantity}"
+                                    Command="{Binding BindingContext.EditQuantityCommand, Source={x:Reference PackingListView}}"
+                                    CommandParameter="{Binding .}" />
+                            <Button Grid.Column="3" Text="&#xE872;" FontFamily="MaterialIcons" FontSize="21"
                                     WidthRequest="44" HeightRequest="44" Padding="0" CornerRadius="12"
                                     BackgroundColor="Transparent" TextColor="#C24141"
                                     SemanticProperties.Description="{loc:Translate DeletePackingItem}"

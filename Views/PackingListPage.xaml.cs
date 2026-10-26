@@ -14,6 +14,19 @@ public partial class PackingListPage : BasePage//ContentPage//, IQueryAttributab
         BindingContext = _viewModel;
     }
 
+    private void OnPackedChanged(object? sender, CheckedChangedEventArgs e)
+    {
+        if (sender is not CheckBox { BindingContext: Packo.Models.PackingItem item } checkBox
+            || item.IsPacked == e.Value) return; // Ignore binding/realtime updates and recycled rows.
+        if (!_viewModel.CanEditItems)
+        {
+            checkBox.IsChecked = item.IsPacked;
+            return;
+        }
+        item.IsPacked = e.Value;
+        _viewModel.ToggleIsPackedCommand.Execute(item);
+    }
+
     //public async void ApplyQueryAttributes(IDictionary<string, object> query)
     //{
     //    if (query.TryGetValue("tripId", out var tripIdObj) && tripIdObj is string tripId)

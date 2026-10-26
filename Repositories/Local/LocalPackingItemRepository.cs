@@ -25,6 +25,9 @@ namespace Packo.Repositories.Local
                 await db.ExecuteAsync("ALTER TABLE SQLitePackingItem ADD COLUMN IsStaleCache INTEGER NOT NULL DEFAULT 0");
             // sqlite-net may auto-add the column as nullable when upgrading an existing table.
             await db.ExecuteAsync("UPDATE SQLitePackingItem SET IsStaleCache = 0 WHERE IsStaleCache IS NULL");
+            if (!columns.Any(column => column.Name == nameof(SQLitePackingItem.Quantity)))
+                await db.ExecuteAsync("ALTER TABLE SQLitePackingItem ADD COLUMN Quantity INTEGER NOT NULL DEFAULT 1");
+            await db.ExecuteAsync("UPDATE SQLitePackingItem SET Quantity = 1 WHERE Quantity IS NULL OR Quantity < 1");
         }
 
         public async Task<int> AddPackingItemAsync(PackingItemDTO item)
@@ -45,6 +48,7 @@ namespace Packo.Repositories.Local
                 ModifiedDate = item.ModifiedDate,
                 //User_id = item.User_id,
                 IsPacked = item.IsPacked,
+                Quantity = Math.Max(1, item.Quantity),
                 Category = item.Category,
             };
 
@@ -64,6 +68,7 @@ namespace Packo.Repositories.Local
                 CreatedDate = x.CreatedDate,
                 ModifiedDate = x.ModifiedDate,
                 IsPacked = x.IsPacked,
+                Quantity = Math.Max(1, x.Quantity),
                 Category = x.Category,
             }).ToList();
 
@@ -83,6 +88,7 @@ namespace Packo.Repositories.Local
                 ModifiedDate = item.ModifiedDate,
                 //User_id = item.User_id,
                 IsPacked = item.IsPacked,
+                Quantity = Math.Max(1, item.Quantity),
                 Category = item.Category,
             };
 
@@ -110,6 +116,7 @@ namespace Packo.Repositories.Local
                 ModifiedDate = item.ModifiedDate,
                 RemoteUserId = item.RemoteUserId,
                 IsPacked = item.IsPacked,
+                Quantity = Math.Max(1, item.Quantity),
                 Category = item.Category,
             };
 
@@ -133,6 +140,7 @@ namespace Packo.Repositories.Local
                 LocalUserId = x.LocalUserId,
                 RemoteUserId = x.RemoteUserId,
                 IsPacked = x.IsPacked,
+                Quantity = Math.Max(1, x.Quantity),
                 Category = x.Category,
             }).ToList();
         }

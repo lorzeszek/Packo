@@ -66,6 +66,7 @@ namespace Packo.Helpers
                 ModifiedDate = item.ModifiedDate,
                 User_id = item.RemoteUserId,
                 IsPacked = item.IsPacked,
+                Quantity = Math.Max(1, item.Quantity),
                 Category = item.Category
             };
         }
@@ -81,6 +82,7 @@ namespace Packo.Helpers
                 ModifiedDate = item.ModifiedDate,
                 RemoteUserId = item.User_id,
                 IsPacked = item.IsPacked,
+                Quantity = Math.Max(1, item.Quantity),
                 Category = item.Category
             };
         }
@@ -99,6 +101,7 @@ namespace Packo.Helpers
                 RemoteUserId = item.RemoteUserId,
                 LocalUserId = item.LocalUserId,
                 IsPacked = item.IsPacked,
+                Quantity = Math.Max(1, item.Quantity),
                 Category = item.Category
             };
         }
@@ -117,6 +120,7 @@ namespace Packo.Helpers
                 RemoteUserId = item.RemoteUserId,
                 LocalUserId = item.LocalUserId,
                 IsPacked = item.IsPacked,
+                Quantity = Math.Max(1, item.Quantity),
                 Category = item.Category
             };
         }

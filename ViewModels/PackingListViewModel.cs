@@ -23,8 +23,9 @@ namespace Packo.ViewModels
         private bool _isLoading;
         private readonly IPackingSuggestionService _packingSuggestionService;
         private bool _isDeleting;
+        private bool _isEditingItem;
         private List<PackingItemDTO>? _itemsBeingAdded;
-        public bool CanEditItems => !_isDeleting && !IsGeneratingPackingList;
+        public bool CanEditItems => !_isDeleting && !_isEditingItem && !IsGeneratingPackingList;
         public bool HasItems => Items.Count > 0;
 
         private bool _isGeneratingPackingList;
@@ -55,6 +56,7 @@ namespace Packo.ViewModels
         public ICommand AddItemCommand => new Command(async () => await AddItemAsync());
         public ICommand GeneratePackingListCommand => new Command(async () => await GeneratePackingListAsync());
         public ICommand ToggleIsPackedCommand => new Command<PackingItem>(async packingItem => await ToggleIsPackedAsync(packingItem));
+        public ICommand EditQuantityCommand => new Command<PackingItem>(async item => await EditQuantityAsync(item));
         public ICommand DeleteItemCommand => new Command<PackingItem>(async item => await DeleteItemsAsync(item));
         public ICommand ClearListCommand => new Command(async () => await DeleteItemsAsync(null));
 
@@ -134,6 +136,7 @@ namespace Packo.ViewModels
                     var toRestore = remainingItems.Where(target => !Items.Any(x => target.RemoteId > 0
                         ? x.RemoteId == target.RemoteId : x.LocalId == target.LocalId)).ToList();
                     Items.AddRange(toRestore, System.Collections.Specialized.NotifyCollectionChangedAction.Reset);
+                    SortItems();
                 }
                 await Shell.Current.DisplayAlertAsync(LocalizationResourceManager.Instance["Error"],
                     LocalizationResourceManager.Instance["DeletePackingItemsError"],
@@ -158,6 +161,7 @@ namespace Packo.ViewModels
             NewItemName = string.Empty;
 
             Items.Add(Mappers.MapToPackingItem(newItem));
+            SortItems();
         }
 
         private async Task GeneratePackingListAsync()
@@ -200,14 +204,15 @@ namespace Packo.ViewModels
 
                 var selectItemsPopup = new PackingItemsPopup(suggestedItems);
                 _ = Application.Current.MainPage.ShowPopupAsync(selectItemsPopup);
-                var selectedItemNames = await selectItemsPopup.ResultSource.Task;
+                var selectedItems = await selectItemsPopup.ResultSource.Task;
 
-                if (selectedItemNames.Count == 0)
+                if (selectedItems.Count == 0)
                     return;
 
-                var newItems = selectedItemNames.Select(name => new PackingItemDTO
+                var newItems = selectedItems.Select(item => new PackingItemDTO
                 {
-                    Name = name,
+                    Name = item.Name,
+                    Quantity = item.Quantity,
                     Category = 3,
                     RemoteTripId = _remoteTripId,
                     LocalTripId = _localTripId,
@@ -220,8 +225,7 @@ namespace Packo.ViewModels
                 await _packingItemRepository.AddPackingItemsAsync(newItems);
                 await MainThread.InvokeOnMainThreadAsync(() =>
                 {
-                    Items.AddRange(newItems.Select(Mappers.MapToPackingItem).ToList(),
-                        System.Collections.Specialized.NotifyCollectionChangedAction.Reset);
+                    Items.ReplaceRange(PackingItemOrder.Sort(Items.Concat(newItems.Select(Mappers.MapToPackingItem))).ToList());
                     _itemsBeingAdded = null;
                 });
             }
@@ -241,19 +245,67 @@ namespace Packo.ViewModels
 
         private async Task ToggleIsPackedAsync(PackingItem packingItem)
         {
-            if (CanEditItems && packingItem != null)
+            if (CanEditItems && packingItem != null && Items.Contains(packingItem))
             {
+                _isEditingItem = true;
+                OnPropertyChanged(nameof(CanEditItems));
+                var original = !packingItem.IsPacked;
                 try
                 {
+                    // Let the native checkbox finish its event before moving its row.
+                    await Task.Yield();
+                    // Move the changed row without resetting the collection or scroll position.
+                    SortItems(packingItem);
                     await _packingItemRepository.UpdatePackingItemAsync(Mappers.MapToPackingItemDTO(packingItem));
                 }
-                catch (Supabase.Postgrest.Exceptions.PostgrestException ex)
+                catch (Exception ex)
                 {
-                    // Logowanie pełnego wyjątku
-                    Console.WriteLine($"Error: {ex.Message}, {ex.StackTrace}");
+                    System.Diagnostics.Debug.WriteLine(ex);
+                    packingItem.IsPacked = original;
+                    SortItems(packingItem);
+                    await ShowUpdateErrorAsync();
+                }
+                finally
+                {
+                    _isEditingItem = false;
+                    OnPropertyChanged(nameof(CanEditItems));
                 }
             }
         }
+
+        private async Task EditQuantityAsync(PackingItem item)
+        {
+            if (!CanEditItems || item is null || !Items.Contains(item)) return;
+            _isEditingItem = true;
+            OnPropertyChanged(nameof(CanEditItems));
+            var original = item.Quantity;
+            try
+            {
+                var quantity = await PackingQuantityPrompt.ShowAsync(item.Name, item.Quantity);
+                if (!quantity.HasValue || quantity.Value == item.Quantity || !Items.Contains(item)) return;
+                original = item.Quantity;
+                item.Quantity = quantity.Value;
+                await _packingItemRepository.UpdatePackingItemAsync(Mappers.MapToPackingItemDTO(item));
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex);
+                item.Quantity = original;
+                await ShowUpdateErrorAsync();
+            }
+            finally
+            {
+                _isEditingItem = false;
+                OnPropertyChanged(nameof(CanEditItems));
+            }
+        }
+
+        private static Task ShowUpdateErrorAsync() => Shell.Current.DisplayAlertAsync(
+            LocalizationResourceManager.Instance["Error"],
+            LocalizationResourceManager.Instance["UpdatePackingItemError"],
+            LocalizationResourceManager.Instance["Ok"]);
+
+        private void SortItems(PackingItem? changedItem = null) => PackingItemOrder.Apply(Items, changedItem);
 
         //private async Task<bool> CheckItemExist(string newItemName)
         //{
@@ -323,20 +375,19 @@ namespace Packo.ViewModels
                             existing.RemoteId = change.Item.RemotePackingItemId;
                         else
                             Items.Add(MapRealtimeItem(change.Item));
+                        SortItems();
                         break;
 
                     case PackingItemChangeType.Update:
                         var item = Items.FirstOrDefault(x => x.RemoteId == change.Item.RemotePackingItemId);
                         if (item != null)
                         {
-                            var index = Items.IndexOf(item);
-
-                            if (index >= 0)
-                            {
-                                var updated = MapRealtimeItem(change.Item);
-                                updated.LocalId = item.LocalId;
-                                Items[index] = updated;
-                            }
+                            item.Name = change.Item.Name;
+                            item.Quantity = Math.Max(1, change.Item.Quantity);
+                            item.IsPacked = change.Item.IsPacked;
+                            item.Category = change.Item.Category;
+                            item.ModifiedDate = change.Item.ModifiedDate;
+                            SortItems(item);
                         }
 
                         break;
@@ -372,7 +423,7 @@ namespace Packo.ViewModels
 
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
-                    Items.ReplaceRange(tripsWithStats.Select(Mappers.MapToPackingItem));
+                    Items.ReplaceRange(PackingItemOrder.Sort(tripsWithStats.Select(Mappers.MapToPackingItem)).ToList());
                 });
             }
             finally

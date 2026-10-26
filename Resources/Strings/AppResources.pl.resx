@@ -58,4 +58,8 @@
   <data name="WeatherLoading" xml:space="preserve"><value>Ładujemy prognozy dla Twoich podróży…</value></data>
   <data name="WeatherLoadError" xml:space="preserve"><value>Nie udało się wczytać prognoz. Sprawdź połączenie i spróbuj ponownie.</value></data>
   <data name="WeatherDestinationsUnavailable" xml:space="preserve"><value>Prognoza niedostępna dla: {0}. Sprawdź nazwę miejsca lub spróbuj ponownie.</value></data>
+  <data name="PackingQuantity" xml:space="preserve"><value>Ilość do spakowania</value></data>
+  <data name="PackingQuantityInvalid" xml:space="preserve"><value>Wpisz liczbę całkowitą większą od zera.</value></data>
+  <data name="EditPackingQuantity" xml:space="preserve"><value>Zmień ilość do spakowania</value></data>
+  <data name="UpdatePackingItemError" xml:space="preserve"><value>Nie udało się zapisać przedmiotu. Spróbuj ponownie.</value></data>
 </root>
