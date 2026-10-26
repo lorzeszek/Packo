@@ -51,7 +51,7 @@
                         BackgroundColor="{AppThemeBinding Light={StaticResource PackoSurfaceLight}, Dark={StaticResource PackoSurfaceDark}}"
                         Stroke="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoBorderDark}}">
                     <VerticalStackLayout Spacing="0">
-                        <Grid HeightRequest="176" BackgroundColor="#F7D9C8">
+                        <Grid HeightRequest="176" BackgroundColor="#F7D9C8" IsClippedToBounds="True">
                             <Ellipse WidthRequest="210" HeightRequest="210" Fill="#F3B896"
                                      HorizontalOptions="End" VerticalOptions="Center" TranslationX="54" />
                             <Ellipse WidthRequest="145" HeightRequest="145" Fill="#F9E9D8"
