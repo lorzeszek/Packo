@@ -89,6 +89,23 @@ try
     await repo.DeletePackingItemAsync(relinked);
     Check((await local.GetPackingItemsForTripAsync(1, 10)).Count == 0, "Relinked legacy item deletes from SQLite");
 
+    // Without categories, equal names/timestamps must still never merge ambiguous cache rows.
+    var ambiguousFirst = Item("Same legacy item", 9);
+    var ambiguousSecond = Item(ambiguousFirst.Name, 9);
+    ambiguousSecond.CreatedDate = ambiguousFirst.CreatedDate;
+    var firstLegacyId = await local.AddPackingItemAsync(ambiguousFirst);
+    var secondLegacyId = await local.AddPackingItemAsync(ambiguousSecond);
+    var ambiguousRemote = Item(ambiguousFirst.Name, 9);
+    ambiguousRemote.CreatedDate = ambiguousFirst.CreatedDate;
+    ambiguousRemote.RemotePackingItemId = 101;
+    remote.Items.Add(ambiguousRemote);
+    var ambiguousLoaded = (await repo.GetPackingItemsForTripAsync(9, 10)).Single();
+    Check(ambiguousLoaded.LocalPackingItemId != firstLegacyId && ambiguousLoaded.LocalPackingItemId != secondLegacyId
+        && (await db.FindAsync<SQLitePackingItem>(firstLegacyId)).RemotePackingItemId is not > 0
+        && (await db.FindAsync<SQLitePackingItem>(secondLegacyId)).RemotePackingItemId is not > 0,
+        "Removing categories preserves ambiguous legacy rows without assigning the wrong remote identity");
+    await repo.DeletePackingItemAsync(ambiguousLoaded);
+
     Connectivity.Current.NetworkAccess = NetworkAccess.None;
     var batch = new List<PackingItemDTO> { Item("Batch A", 3), Item("Batch B", 3), Item("Batch C", 3) };
     batch[0].Quantity = 6;
@@ -105,13 +122,20 @@ try
     await repo.UpdatePackingItemAsync(batch[0]);
     await repo.DeletePackingItemAsync(batch[1]);
     await repo.SyncPendingChangesAsync(); // Drain any scheduled offline work before reconnecting.
+    // A queue written by an older app still contains the retired fields.
+    var legacyQueuedItemId = batch[0].LocalPackingItemId;
+    var legacyQueued = await db.Table<SQLitePendingPackingItemChange>()
+        .FirstAsync(x => x.LocalPackingItemId == legacyQueuedItemId);
+    legacyQueued.PackingItemJson = legacyQueued.PackingItemJson[..^1]
+        + ",\"Category\":3,\"ModifiedDate\":\"2026-10-25T12:00:00Z\"}";
+    await db.UpdateAsync(legacyQueued);
     var restartBatch = new SyncPackingItemRepository(local, remote, new Session(), db, new Trips());
     Connectivity.Current.NetworkAccess = NetworkAccess.Internet;
     await restartBatch.SyncPendingChangesAsync();
     Check(remote.Items.Count(x => x.LocalTripId == 3) == 2 && remote.Items.Single(x => x.Name == "Batch A").IsPacked,
         "Batch restart uploads latest edit and does not recreate deleted item");
     Check(remote.Items.Single(x => x.Name == "Batch A").Quantity == 8,
-        "Restarted offline queue uploads the edited quantity");
+        "Restarted offline queue with retired fields uploads the edited quantity");
 
     remote.FailAdd = true;
     var failedBatch = new List<PackingItemDTO> { Item("Retry A", 4), Item("Retry B", 4) };

@@ -154,7 +154,7 @@ namespace Packo.ViewModels
             if (!CanEditItems || string.IsNullOrWhiteSpace(NewItemName))
                 return;
 
-            var newItem = new PackingItemDTO { Name = NewItemName, Category = 3, RemoteTripId = _remoteTripId, LocalTripId = _localTripId, RemoteUserId = Session.UserId, LocalUserId = Session.LocalUserId, CreatedDate = DateTime.Now };
+            var newItem = new PackingItemDTO { Name = NewItemName, RemoteTripId = _remoteTripId, LocalTripId = _localTripId, RemoteUserId = Session.UserId, LocalUserId = Session.LocalUserId, CreatedDate = DateTime.Now };
 
             await _packingItemRepository.AddPackingItemAsync(newItem);
 
@@ -213,7 +213,6 @@ namespace Packo.ViewModels
                 {
                     Name = item.Name,
                     Quantity = item.Quantity,
-                    Category = 3,
                     RemoteTripId = _remoteTripId,
                     LocalTripId = _localTripId,
                     RemoteUserId = Session.UserId ?? string.Empty,
@@ -385,8 +384,6 @@ namespace Packo.ViewModels
                             item.Name = change.Item.Name;
                             item.Quantity = Math.Max(1, change.Item.Quantity);
                             item.IsPacked = change.Item.IsPacked;
-                            item.Category = change.Item.Category;
-                            item.ModifiedDate = change.Item.ModifiedDate;
                             SortItems(item);
                         }
 

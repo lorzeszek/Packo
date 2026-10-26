@@ -22,9 +22,6 @@ namespace Packo.Models.Supabase
         [Column("CreatedDate")]
         public DateTime CreatedDate { get; set; }
 
-        [Column("ModifiedDate")]
-        public DateTime? ModifiedDate { get; set; }
-
         [Column("user_id")]
         public string User_id { get; set; } = string.Empty;
 
@@ -42,13 +39,6 @@ namespace Packo.Models.Supabase
                 }
             }
         }
-
-        [Column("Category")]
-        public int Category { get; set; }
-
-        //public Guid Id { get; set; } = Guid.NewGuid();
-        //public required string Name { get; set; }
-        //public Category Category { get; set; }
 
         public event PropertyChangedEventHandler? PropertyChanged;
 

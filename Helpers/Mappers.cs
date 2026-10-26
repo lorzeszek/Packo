@@ -20,7 +20,6 @@ namespace Packo.Helpers
                 IsActive = trip.EndDate > DateTime.Now,
                 Destination = trip.Destination,
                 CreatedDate = trip.CreatedDate,
-                ModifiedDate = null,
                 StartDate = trip.StartDate.HasValue ? DateTime.SpecifyKind(trip.StartDate.Value, DateTimeKind.Unspecified) : null,
                 EndDate = trip.EndDate.HasValue ? DateTime.SpecifyKind(trip.EndDate.Value, DateTimeKind.Unspecified) : null,
                 AdultsCount = trip.AdultsCount,
@@ -43,7 +42,6 @@ namespace Packo.Helpers
                 IsActive = trip.IsActive,
                 Destination = trip.Destination,
                 CreatedDate = trip.CreatedDate,
-                ModifiedDate = null,
                 StartDate = trip.StartDate.HasValue ? DateTime.SpecifyKind(trip.StartDate.Value, DateTimeKind.Utc) : null,
                 EndDate = trip.EndDate.HasValue ? DateTime.SpecifyKind(trip.EndDate.Value, DateTimeKind.Utc) : null,
                 AdultsCount = trip.AdultsCount,
@@ -63,11 +61,9 @@ namespace Packo.Helpers
                 TripId = item.RemoteTripId.Value,
                 Name = item.Name,
                 CreatedDate = item.CreatedDate,
-                ModifiedDate = item.ModifiedDate,
                 User_id = item.RemoteUserId,
                 IsPacked = item.IsPacked,
-                Quantity = Math.Max(1, item.Quantity),
-                Category = item.Category
+                Quantity = Math.Max(1, item.Quantity)
             };
         }
 
@@ -79,11 +75,9 @@ namespace Packo.Helpers
                 RemoteTripId = item.TripId,
                 Name = item.Name,
                 CreatedDate = item.CreatedDate,
-                ModifiedDate = item.ModifiedDate,
                 RemoteUserId = item.User_id,
                 IsPacked = item.IsPacked,
-                Quantity = Math.Max(1, item.Quantity),
-                Category = item.Category
+                Quantity = Math.Max(1, item.Quantity)
             };
         }
 
@@ -97,12 +91,10 @@ namespace Packo.Helpers
                 LocalTripId = item.LocalTripId,
                 Name = item.Name,
                 CreatedDate = item.CreatedDate,
-                ModifiedDate = item.ModifiedDate,
                 RemoteUserId = item.RemoteUserId,
                 LocalUserId = item.LocalUserId,
                 IsPacked = item.IsPacked,
-                Quantity = Math.Max(1, item.Quantity),
-                Category = item.Category
+                Quantity = Math.Max(1, item.Quantity)
             };
         }
 
@@ -116,12 +108,10 @@ namespace Packo.Helpers
                 LocalTripId = item.LocalTripId,
                 Name = item.Name,
                 CreatedDate = item.CreatedDate,
-                ModifiedDate = item.ModifiedDate,
                 RemoteUserId = item.RemoteUserId,
                 LocalUserId = item.LocalUserId,
                 IsPacked = item.IsPacked,
-                Quantity = Math.Max(1, item.Quantity),
-                Category = item.Category
+                Quantity = Math.Max(1, item.Quantity)
             };
         }
 

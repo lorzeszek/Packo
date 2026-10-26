@@ -174,9 +174,7 @@ namespace Packo.Repositories
                     LocalTripId = item.LocalTripId,
                     RemoteTripId = item.RemoteTripId,
                     Name = item.Name,
-                    Category = item.Category,
                     CreatedDate = item.CreatedDate,
-                    ModifiedDate = item.ModifiedDate,
                     IsPacked = item.IsPacked,
                     Quantity = Math.Max(1, item.Quantity)
                 }).ToList();
@@ -195,9 +193,7 @@ namespace Packo.Repositories
                             LocalTripId = item.LocalTripId,
                             RemoteTripId = item.RemoteTripId,
                             Name = item.Name,
-                            Category = item.Category,
                             CreatedDate = item.CreatedDate,
-                            ModifiedDate = item.ModifiedDate,
                             IsPacked = item.IsPacked,
                             Quantity = Math.Max(1, item.Quantity)
                         };
@@ -343,7 +339,7 @@ namespace Packo.Repositories
                             // Older app versions did not save the returned remote ID.
                             // Relink only an unambiguous exact match, without removing cache rows.
                             var legacyMatches = cached.Where(x => x.RemotePackingItemId is not > 0
-                                && x.Name == item.Name && x.Category == item.Category
+                                && x.Name == item.Name
                                 && (x.CreatedDate == item.CreatedDate
                                     || x.CreatedDate.ToUniversalTime() == item.CreatedDate.ToUniversalTime())).ToList();
                             if (legacyMatches.Count == 1 && !pending.Any(x => x.Operation == "Add" &&

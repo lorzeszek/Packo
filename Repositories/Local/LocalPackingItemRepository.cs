@@ -45,11 +45,9 @@ namespace Packo.Repositories.Local
                 //TripId = item.TripId,
                 Name = item.Name,
                 CreatedDate = item.CreatedDate,
-                ModifiedDate = item.ModifiedDate,
                 //User_id = item.User_id,
                 IsPacked = item.IsPacked,
                 Quantity = Math.Max(1, item.Quantity),
-                Category = item.Category,
             };
 
             await _db.InsertAsync(localPackingItem);
@@ -66,10 +64,8 @@ namespace Packo.Repositories.Local
                 LocalTripId = x.LocalTripId,
                 Name = x.Name,
                 CreatedDate = x.CreatedDate,
-                ModifiedDate = x.ModifiedDate,
                 IsPacked = x.IsPacked,
                 Quantity = Math.Max(1, x.Quantity),
-                Category = x.Category,
             }).ToList();
 
             await _db.InsertAllAsync(localPackingItems);
@@ -85,11 +81,9 @@ namespace Packo.Repositories.Local
                 //TripId = item.TripId,
                 Name = item.Name,
                 CreatedDate = item.CreatedDate,
-                ModifiedDate = item.ModifiedDate,
                 //User_id = item.User_id,
                 IsPacked = item.IsPacked,
                 Quantity = Math.Max(1, item.Quantity),
-                Category = item.Category,
             };
 
             await _db.DeleteAsync(localPackingItem);
@@ -113,11 +107,9 @@ namespace Packo.Repositories.Local
                 LocalTripId = item.LocalTripId,
                 Name = item.Name,
                 CreatedDate = item.CreatedDate,
-                ModifiedDate = item.ModifiedDate,
                 RemoteUserId = item.RemoteUserId,
                 IsPacked = item.IsPacked,
                 Quantity = Math.Max(1, item.Quantity),
-                Category = item.Category,
             };
 
             await _db.UpdateAsync(localPackingItem);
@@ -136,12 +128,10 @@ namespace Packo.Repositories.Local
                 LocalTripId = x.LocalTripId,
                 Name = x.Name,
                 CreatedDate = x.CreatedDate,
-                ModifiedDate = x.ModifiedDate,
                 LocalUserId = x.LocalUserId,
                 RemoteUserId = x.RemoteUserId,
                 IsPacked = x.IsPacked,
                 Quantity = Math.Max(1, x.Quantity),
-                Category = x.Category,
             }).ToList();
         }
 

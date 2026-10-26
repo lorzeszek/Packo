@@ -24,9 +24,6 @@ namespace Packo.Models.Supabase
         [Column("CreatedDate")]
         public DateTime CreatedDate { get; set; }
 
-        [Column("ModifiedDate")]
-        public DateTime? ModifiedDate { get; set; }
-
         [Column("StartDate")]
         public DateTime? StartDate { get; set; }
 
@@ -104,9 +101,6 @@ namespace Packo.Models.Supabase
 
     //    [Column("CreatedDate")]
     //    public DateTime CreatedDate { get; set; }
-
-    //    [Column("ModifiedDate")]
-    //    public DateTime? ModifiedDate { get; set; }
 
     //    [Column("StartDate")]
     //    public DateTime? StartDate { get; set; }

@@ -133,7 +133,6 @@ namespace Packo.ViewModels
             TripModel.IsInTrash = trip.IsInTrash;
             TripModel.StartDate = trip.StartDate;
             TripModel.EndDate = trip.EndDate;
-            TripModel.ModifiedDate = trip.ModifiedDate;
             TripModel.RemoteUserId = trip.RemoteUserId;
 
             OnPropertyChanged(nameof(Destination));
@@ -141,7 +140,6 @@ namespace Packo.ViewModels
             OnPropertyChanged(nameof(TripModel.IsInTrash));
             OnPropertyChanged(nameof(TripModel.StartDate));
             OnPropertyChanged(nameof(TripModel.EndDate));
-            OnPropertyChanged(nameof(TripModel.ModifiedDate));
             OnPropertyChanged(nameof(TripModel.RemoteUserId));
             OnPropertyChanged(nameof(TripDatesRange));
             OnPropertyChanged(nameof(TripDaysToGo));

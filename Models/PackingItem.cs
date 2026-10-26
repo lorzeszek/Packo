@@ -34,7 +34,6 @@ namespace Packo.Models
             }
         }
         public DateTime CreatedDate { get; set; }
-        public DateTime? ModifiedDate { get; set; }
         public string User_id { get; set; } = string.Empty;
         private bool _isPacked;
         public bool IsPacked
@@ -49,8 +48,6 @@ namespace Packo.Models
                 }
             }
         }
-
-        public int Category { get; set; }
 
         public event PropertyChangedEventHandler? PropertyChanged;
         protected virtual void OnPropertyChanged(string propertyName)

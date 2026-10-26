@@ -358,7 +358,7 @@ namespace Packo.ViewModels
                     {
                         var createdTrip = await _tripRepository.GetTripAsync(trip);
 
-                        var newPackingItems = selectedItems.Select(item => new PackingItemDTO { Name = item.Name, Quantity = item.Quantity, Category = 3, RemoteTripId = createdTrip.RemoteTripId, LocalTripId = createdTrip.LocalTripId, RemoteUserId = Session.UserId, LocalUserId = Session.LocalUserId, CreatedDate = DateTime.Now }).ToList();
+                        var newPackingItems = selectedItems.Select(item => new PackingItemDTO { Name = item.Name, Quantity = item.Quantity, RemoteTripId = createdTrip.RemoteTripId, LocalTripId = createdTrip.LocalTripId, RemoteUserId = Session.UserId, LocalUserId = Session.LocalUserId, CreatedDate = DateTime.Now }).ToList();
 
                         await _packingItemRepository.AddPackingItemsAsync(newPackingItems);
                     }
@@ -399,7 +399,6 @@ namespace Packo.ViewModels
             trip.ChildrenAges = ChildrenAge.ToList();
             trip.SelectedTransportTypes = SelectedTransportTypes.ToList();
             trip.TripType = SelectedTripTypeOption.Value;
-            trip.ModifiedDate = DateTime.Now;
             Session.GlobalIsBusy = true;
             try
             {
