@@ -6,7 +6,7 @@
     xmlns:views="clr-namespace:Packo.Views"
     xmlns:loc="clr-namespace:Packo.Extensions"
     FlyoutBehavior="Disabled"
-    Title="Packo"
+    Title="TravelSet"
     Shell.BackgroundColor="{AppThemeBinding Light={StaticResource PackoPageBackgroundLight}, Dark={StaticResource PackoPageBackgroundDark}}"
     Shell.ForegroundColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}"
     Shell.TitleColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}"

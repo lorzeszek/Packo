@@ -22,7 +22,7 @@ namespace Packo
             MainThread.BeginInvokeOnMainThread(() =>
             {
                 var strings = LocalizationResourceManager.Instance;
-                Title = "Packo";
+                Title = "TravelSet";
                 var tabs = Items.OfType<TabBar>().FirstOrDefault();
                 if (tabs is null || tabs.Items.Count < 5)
                     return;

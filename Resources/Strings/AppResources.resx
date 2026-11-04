@@ -63,15 +63,15 @@
   <data name="ChooseAllThatApply" xml:space="preserve"><value>Choose all that apply.</value></data>
   <data name="CreatePackingList" xml:space="preserve"><value>Create packing list   →</value></data>
   <data name="SettingsEyebrow" xml:space="preserve"><value>MAKE IT YOURS</value></data>
-  <data name="SettingsIntro" xml:space="preserve"><value>A few small touches to make Packo feel like home.</value></data>
+  <data name="SettingsIntro" xml:space="preserve"><value>A few small touches to make TravelSet feel like home.</value></data>
   <data name="Appearance" xml:space="preserve"><value>Appearance</value></data>
-  <data name="AppearanceIntro" xml:space="preserve"><value>Choose how Packo looks on this device.</value></data>
+  <data name="AppearanceIntro" xml:space="preserve"><value>Choose how TravelSet looks on this device.</value></data>
   <data name="ColorTheme" xml:space="preserve"><value>Color theme</value></data><data name="SelectTheme" xml:space="preserve"><value>Select a theme</value></data>
   <data name="ThemeHelp" xml:space="preserve"><value>System follows your device setting. Light and Dark stay fixed.</value></data>
   <data name="ThemeSaved" xml:space="preserve"><value>Your theme choice is saved automatically.</value></data>
   <data name="Language" xml:space="preserve"><value>Language</value></data>
   <data name="SelectLanguage" xml:space="preserve"><value>Select a language</value></data>
-  <data name="LanguageHelp" xml:space="preserve"><value>Choose the language used throughout Packo.</value></data>
+  <data name="LanguageHelp" xml:space="preserve"><value>Choose the language used throughout TravelSet.</value></data>
   <data name="LanguageSaved" xml:space="preserve"><value>Your language choice is saved automatically.</value></data>
   <data name="PreferencesSaved" xml:space="preserve"><value>Your appearance and language choices are saved automatically.</value></data>
   <data name="SystemTheme" xml:space="preserve"><value>System</value></data><data name="LightTheme" xml:space="preserve"><value>Light</value></data><data name="DarkTheme" xml:space="preserve"><value>Dark</value></data>
@@ -121,7 +121,7 @@
   <data name="SaveChanges" xml:space="preserve"><value>Save changes</value></data>
   <data name="SaveTripError" xml:space="preserve"><value>Could not save the trip. Please try again.</value></data>
   <data name="AddPackingItemsError" xml:space="preserve"><value>The items could not be added. Please try again.</value></data>
-  <data name="StartupPreparing" xml:space="preserve"><value>Getting Packo ready…</value></data>
+  <data name="StartupPreparing" xml:space="preserve"><value>Getting TravelSet ready…</value></data>
   <data name="StartupRestoringSession" xml:space="preserve"><value>Restoring your session…</value></data>
   <data name="StartupLoadingTrips" xml:space="preserve"><value>Loading your trips…</value></data>
   <data name="StartupLoadError" xml:space="preserve"><value>We couldn't load your trips. Check your connection and try again.</value></data>

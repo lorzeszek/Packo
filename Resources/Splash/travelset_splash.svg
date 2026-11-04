@@ -15,7 +15,7 @@
     <circle cx="271" cy="250" r="5" fill="#A85D3C"/>
   </g>
   <path d="M103 306h218" stroke="#EADFD5" stroke-linecap="round" stroke-width="2"/>
-  <text x="212" y="374" fill="#282723" font-family="Arial, Helvetica, sans-serif" font-size="58" font-weight="700" letter-spacing="-2" text-anchor="middle">packo</text>
+  <text x="212" y="374" fill="#282723" font-family="Arial, Helvetica, sans-serif" font-size="52" font-weight="700" letter-spacing="-2" text-anchor="middle">TravelSet</text>
   <text x="212" y="410" fill="#77756F" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="600" letter-spacing="3" text-anchor="middle">TRAVEL LIGHT · PACK RIGHT</text>
   </g>
 </svg>

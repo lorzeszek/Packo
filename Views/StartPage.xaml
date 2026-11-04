@@ -20,7 +20,7 @@
         <VerticalStackLayout Padding="24,22,24,32" Spacing="24">
             <Grid ColumnDefinitions="*,Auto" VerticalOptions="Center">
                 <VerticalStackLayout Spacing="2">
-                    <Label Text="PACKO" FontSize="12" CharacterSpacing="3"
+                    <Label Text="TRAVELSET" FontSize="12" CharacterSpacing="3"
                            FontAttributes="Bold" TextColor="{StaticResource PackoAccentLight}" />
                     <Label Text="{loc:Translate StartTagline}" FontSize="14"
                            TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />

@@ -23,7 +23,7 @@
                 <Label Text="✈" FontSize="17" HorizontalTextAlignment="Center"
                        VerticalTextAlignment="Center" TextColor="{AppThemeBinding Light={StaticResource PackoAccentLight}, Dark={StaticResource PackoAccentDark}}" />
             </Border>
-            <Label Text="Packo" FontSize="20" FontAttributes="Bold" VerticalTextAlignment="Center"
+            <Label Text="TravelSet" FontSize="20" FontAttributes="Bold" VerticalTextAlignment="Center"
                    TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
         </HorizontalStackLayout>
 
