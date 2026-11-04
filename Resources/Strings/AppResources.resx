@@ -132,6 +132,8 @@
   <data name="PackingQuantity" xml:space="preserve"><value>Quantity to pack</value></data>
   <data name="PackingQuantityInvalid" xml:space="preserve"><value>Enter a whole number greater than zero.</value></data>
   <data name="EditPackingQuantity" xml:space="preserve"><value>Edit quantity to pack</value></data>
+  <data name="DecreasePackingQuantity" xml:space="preserve"><value>Decrease quantity to pack</value></data>
+  <data name="IncreasePackingQuantity" xml:space="preserve"><value>Increase quantity to pack</value></data>
   <data name="UpdatePackingItemError" xml:space="preserve"><value>Could not save the item. Please try again.</value></data>
   <data name="TripAdultCountOne" xml:space="preserve"><value>{0} adult</value></data>
   <data name="TripAdultCountMany" xml:space="preserve"><value>{0} adults</value></data>

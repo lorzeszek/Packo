@@ -280,6 +280,7 @@ namespace Packo.ViewModels
             var original = item.Quantity;
             try
             {
+                // The popup edits a local draft; persist only its confirmed final value.
                 var quantity = await PackingQuantityPrompt.ShowAsync(item.Name, item.Quantity);
                 if (!quantity.HasValue || quantity.Value == item.Quantity || !Items.Contains(item)) return;
                 original = item.Quantity;

@@ -64,13 +64,14 @@
                                    VerticalTextAlignment="Center" LineBreakMode="WordWrap"
                                    Opacity="{Binding IsPacked, Converter={StaticResource PackedOpacityConverter}}"
                                    TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
-                            <Button Grid.Column="2" Text="{Binding Quantity, StringFormat='×{0}'}"
-                                    MinimumWidthRequest="44" HeightRequest="44" Padding="8,0"
-                                    BackgroundColor="Transparent" TextColor="{StaticResource PackoAccentLight}" FontSize="14"
+                            <Button Grid.Column="2" Text="{Binding Quantity}" FontSize="15" FontAttributes="Bold"
+                                    MinimumWidthRequest="44" MinimumHeightRequest="44" HeightRequest="44" Padding="10,0" CornerRadius="12"
+                                    BackgroundColor="{AppThemeBinding Light={StaticResource PackoAccentSoftLight}, Dark={StaticResource PackoAccentSoftDark}}"
+                                    TextColor="{AppThemeBinding Light={StaticResource PackoAccentStrongLight}, Dark={StaticResource PackoAccentStrongDark}}"
                                     SemanticProperties.Description="{loc:Translate EditPackingQuantity}"
                                     Command="{Binding BindingContext.EditQuantityCommand, Source={x:Reference PackingListView}}"
                                     CommandParameter="{Binding .}" />
-                            <Button Grid.Column="3" Text="&#xE872;" FontFamily="MaterialIcons" FontSize="21"
+                            <Button Grid.Column="3" VerticalOptions="Center" Text="&#xE872;" FontFamily="MaterialIcons" FontSize="21"
                                     WidthRequest="44" HeightRequest="44" Padding="0" CornerRadius="12"
                                     BackgroundColor="Transparent" TextColor="#C24141"
                                     SemanticProperties.Description="{loc:Translate DeletePackingItem}"

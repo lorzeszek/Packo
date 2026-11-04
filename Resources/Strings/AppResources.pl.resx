@@ -61,6 +61,8 @@
   <data name="PackingQuantity" xml:space="preserve"><value>Ilość do spakowania</value></data>
   <data name="PackingQuantityInvalid" xml:space="preserve"><value>Wpisz liczbę całkowitą większą od zera.</value></data>
   <data name="EditPackingQuantity" xml:space="preserve"><value>Zmień ilość do spakowania</value></data>
+  <data name="DecreasePackingQuantity" xml:space="preserve"><value>Zmniejsz ilość do spakowania</value></data>
+  <data name="IncreasePackingQuantity" xml:space="preserve"><value>Zwiększ ilość do spakowania</value></data>
   <data name="UpdatePackingItemError" xml:space="preserve"><value>Nie udało się zapisać przedmiotu. Spróbuj ponownie.</value></data>
   <data name="TripAdultCountOne" xml:space="preserve"><value>{0} dorosły</value></data>
   <data name="TripAdultCountMany" xml:space="preserve"><value>{0} dorosłych</value></data>

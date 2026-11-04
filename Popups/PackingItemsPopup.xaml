@@ -45,7 +45,7 @@
                                 <Label Grid.Column="1" Text="{Binding Name}" FontSize="14"
                                        VerticalTextAlignment="Center" LineBreakMode="WordWrap"
                                        TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
-                                <Button Grid.Column="2" Text="{Binding Quantity, StringFormat='×{0}'}"
+                                <Button Grid.Column="2" Text="{Binding Quantity}"
                                         Clicked="OnQuantityClicked" MinimumHeightRequest="44" MinimumWidthRequest="44"
                                         Padding="8,0" FontSize="14" BackgroundColor="Transparent"
                                         TextColor="{StaticResource PackoAccentLight}"
