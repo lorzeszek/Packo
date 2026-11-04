@@ -16,74 +16,70 @@
     </ContentPage.Resources>
 
     <ScrollView>
-        <VerticalStackLayout Padding="24,22,24,32" Spacing="24">
-            <Grid ColumnDefinitions="*,Auto" VerticalOptions="Center">
-                <VerticalStackLayout Spacing="2">
-                    <Label Text="TRAVELSET" FontSize="12" CharacterSpacing="3"
-                           FontAttributes="Bold" TextColor="{StaticResource PackoAccentLight}" />
-                    <Label Text="{loc:Translate StartTagline}" FontSize="14"
-                           TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
-                </VerticalStackLayout>
-                <Border Grid.Column="1" WidthRequest="46" HeightRequest="46"
-                        StrokeThickness="0" StrokeShape="RoundRectangle 23"
-                        BackgroundColor="{AppThemeBinding Light={StaticResource PackoWhite}, Dark={StaticResource PackoInsetSurfaceDark}}"
-                        VerticalOptions="Center">
-                    <Label Text="✈" FontSize="21" HorizontalTextAlignment="Center"
-                           VerticalTextAlignment="Center" TextColor="{StaticResource PackoAccentLight}" />
-                </Border>
+        <VerticalStackLayout Spacing="0">
+            <Grid IsVisible="{Binding HasTrip}" MinimumHeightRequest="340" IsClippedToBounds="True">
+                <Image Source="{Binding Trip.CoverImageSource}" Aspect="AspectFill"
+                       HeightRequest="340" InputTransparent="True" />
+                <BoxView InputTransparent="True">
+                    <BoxView.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="#99000000" Offset="0" />
+                            <GradientStop Color="#66000000" Offset="0.35" />
+                            <GradientStop Color="#A6000000" Offset="0.75" />
+                            <GradientStop Color="#B3000000" Offset="1" />
+                        </LinearGradientBrush>
+                    </BoxView.Background>
+                </BoxView>
+                <BoxView HeightRequest="100" VerticalOptions="End" InputTransparent="True">
+                    <BoxView.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Offset="0"
+                                          Color="{AppThemeBinding Light=#00F8F7F4, Dark=#00151515}" />
+                            <GradientStop Offset="1"
+                                          Color="{AppThemeBinding Light={StaticResource PackoPageBackgroundLight}, Dark={StaticResource PackoPageBackgroundDark}}" />
+                        </LinearGradientBrush>
+                    </BoxView.Background>
+                </BoxView>
+
+                <Grid Padding="24,24,24,96" RowDefinitions="Auto,*,Auto" RowSpacing="24">
+                    <Label Text="{Binding Title}" FontSize="15" FontAttributes="Bold"
+                           CharacterSpacing="1" TextColor="{StaticResource PackoWhite}" />
+                    <VerticalStackLayout Grid.Row="2" Spacing="10">
+                        <Border Padding="11,6" HorizontalOptions="Start" StrokeThickness="1"
+                                Stroke="#40FFFFFF" StrokeShape="RoundRectangle 12"
+                                BackgroundColor="#40000000">
+                            <Label Text="{Binding TripCountdown}" FontSize="12" FontAttributes="Bold"
+                                   TextColor="{StaticResource PackoWhite}" />
+                        </Border>
+                        <Label Text="{Binding TripDestination}" FontSize="34" FontAttributes="Bold"
+                               TextColor="{StaticResource PackoWhite}" LineBreakMode="TailTruncation" MaxLines="3" />
+                        <Label Text="{Binding TripDatesRange}" FontSize="14" TextColor="#F0FFFFFF" />
+                    </VerticalStackLayout>
+                </Grid>
             </Grid>
 
             <ActivityIndicator IsRunning="{Binding IsDataLoaded, Converter={StaticResource BoolToOppositeConverter}}"
                                IsVisible="{Binding IsDataLoaded, Converter={StaticResource BoolToOppositeConverter}}"
-                               Color="{StaticResource PackoAccentLight}" />
+                               Margin="24" Color="{StaticResource PackoAccentLight}" />
 
-            <VerticalStackLayout IsVisible="{Binding HasTrip}" Spacing="20">
-                <VerticalStackLayout Spacing="6">
-                    <Label Text="{Binding Title}" FontSize="30" FontAttributes="Bold"
-                           TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
-                    <Label Text="{loc:Translate StartIntro}"
-                           FontSize="15" LineBreakMode="WordWrap"
-                           TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
-                </VerticalStackLayout>
+            <VerticalStackLayout IsVisible="{Binding HasTrip}" Padding="24,0,24,32" Spacing="20">
+                <Label Text="{loc:Translate StartIntro}"
+                       FontSize="15" LineBreakMode="WordWrap"
+                       TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
 
-                <Border Padding="0" StrokeThickness="0" StrokeShape="RoundRectangle 28"
-                        BackgroundColor="{AppThemeBinding Light={StaticResource PackoSurfaceLight}, Dark={StaticResource PackoSurfaceDark}}"
-                        Stroke="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoBorderDark}}">
-                    <VerticalStackLayout Spacing="0">
-                        <Grid HeightRequest="176" BackgroundColor="#F7D9C8" IsClippedToBounds="True">
-                            <Ellipse WidthRequest="210" HeightRequest="210" Fill="#F3B896"
-                                     HorizontalOptions="End" VerticalOptions="Center" TranslationX="54" />
-                            <Ellipse WidthRequest="145" HeightRequest="145" Fill="#F9E9D8"
-                                     HorizontalOptions="End" VerticalOptions="End" TranslationX="-44" TranslationY="48" />
-                            <VerticalStackLayout Padding="22" Spacing="8" VerticalOptions="Center">
-                                <Border Padding="11,6" HorizontalOptions="Start" StrokeThickness="0"
-                                        StrokeShape="RoundRectangle 14" BackgroundColor="#FFFFFFCC">
-                                    <Label Text="{Binding TripCountdown}" FontSize="12" FontAttributes="Bold"
-                                           TextColor="#8B553E" />
-                                </Border>
-                                <Label Text="{Binding TripDestination}" FontSize="30" FontAttributes="Bold"
-                                       TextColor="{StaticResource PackoPrimaryTextLight}" LineBreakMode="TailTruncation" />
-                                <Label Text="{Binding TripDatesRange}" FontSize="14"
-                                       TextColor="#625A53" />
-                            </VerticalStackLayout>
-                            <Label Text="✦" FontSize="29" TextColor="{StaticResource PackoWhite}"
-                                   HorizontalOptions="End" VerticalOptions="Start" Margin="0,22,26,0" />
-                            <Label Text="✈" FontSize="34" Rotation="-18" TextColor="{StaticResource PackoWhite}"
-                                   HorizontalOptions="End" VerticalOptions="End" Margin="0,0,28,20" />
-                        </Grid>
-
-                        <VerticalStackLayout Padding="22,20" Spacing="12">
-                            <Label Text="{loc:Translate StartTripGlance}" FontSize="18" FontAttributes="Bold"
-                                   TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
-                            <Label Text="{Binding TripDetailsSummary}"
-                                   FontSize="14" LineBreakMode="WordWrap"
-                                   TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
-                            <Button Text="{loc:Translate EditTrip}" Command="{Binding EditTripCommand}"
-                                    HorizontalOptions="Start" HeightRequest="44" Padding="14,0"
-                                    FontSize="13" FontAttributes="Bold" CornerRadius="13"
-                                    BackgroundColor="{AppThemeBinding Light={StaticResource PackoAccentSoftLight}, Dark={StaticResource PackoAccentSoftDark}}"
-                                    TextColor="{AppThemeBinding Light={StaticResource PackoShellAccentLight}, Dark={StaticResource PackoAccentDark}}" />
-                        </VerticalStackLayout>
+                <Border Padding="22,20" StrokeThickness="0" StrokeShape="RoundRectangle 22"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource PackoSurfaceLight}, Dark={StaticResource PackoSurfaceDark}}">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="{loc:Translate StartTripGlance}" FontSize="18" FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+                        <Label Text="{Binding TripDetailsSummary}"
+                               FontSize="14" LineBreakMode="WordWrap"
+                               TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+                        <Button Text="{loc:Translate EditTrip}" Command="{Binding EditTripCommand}"
+                                HorizontalOptions="Start" HeightRequest="44" Padding="14,0"
+                                FontSize="13" FontAttributes="Bold" CornerRadius="13"
+                                BackgroundColor="{AppThemeBinding Light={StaticResource PackoAccentSoftLight}, Dark={StaticResource PackoAccentSoftDark}}"
+                                TextColor="{AppThemeBinding Light={StaticResource PackoShellAccentLight}, Dark={StaticResource PackoAccentDark}}" />
                     </VerticalStackLayout>
                 </Border>
 
@@ -112,7 +108,7 @@
                 </Border>
             </VerticalStackLayout>
 
-            <VerticalStackLayout IsVisible="{Binding HasLoadError}" Spacing="16" Padding="8">
+            <VerticalStackLayout IsVisible="{Binding HasLoadError}" Spacing="16" Padding="32">
                 <Label Text="{loc:Translate StartupLoadError}" HorizontalTextAlignment="Center"
                        TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
                 <Button Text="{loc:Translate Retry}" Command="{Binding RetryLoadCommand}"
@@ -120,7 +116,7 @@
                         CornerRadius="18" Padding="24,12" HorizontalOptions="Center" />
             </VerticalStackLayout>
 
-            <VerticalStackLayout IsVisible="{Binding ShowTripUnavailable}" Spacing="16" Padding="8">
+            <VerticalStackLayout IsVisible="{Binding ShowTripUnavailable}" Spacing="16" Padding="32">
                 <Label Text="{loc:Translate TripUnavailable}" HorizontalTextAlignment="Center"
                        TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
                 <Button Text="{loc:Translate BackToTrips}" Command="{Binding BackToTripsCommand}"
