@@ -4,6 +4,7 @@
                 xmlns:viewmodels="clr-namespace:Packo.ViewModels"
                 xmlns:loc="clr-namespace:Packo.Extensions"
                 xmlns:local="clr-namespace:Packo.Models.Pages"
+                xmlns:views="clr-namespace:Packo.Views"
                 x:DataType="viewmodels:DocsViewModel"
                 x:Class="Packo.Views.DocsPage"
                 x:Name="DocsPageRoot"
@@ -68,12 +69,11 @@
                                        TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
                             </VerticalStackLayout>
 
-                            <Button Grid.Column="2" Text="×" FontSize="23" Padding="0"
-                                    WidthRequest="42" HeightRequest="42" CornerRadius="14"
-                                    BackgroundColor="{AppThemeBinding Light={StaticResource PackoRaisedSurfaceLight}, Dark={StaticResource PackoSubtleSurfaceDark}}"
-                                    TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoTertiaryTextDark}}"
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteDocumentCommand}"
-                                    CommandParameter="{Binding .}" />
+                            <views:DeleteIconButton Grid.Column="2" VerticalOptions="Center"
+                                                    SurfaceColor="{AppThemeBinding Light={StaticResource PackoRaisedSurfaceLight}, Dark={StaticResource PackoSubtleSurfaceDark}}"
+                                                    ActionDescription="{loc:Translate DeleteDocument}"
+                                                    Command="{Binding BindingContext.DeleteDocumentCommand, Source={x:Reference DocsPageRoot}}"
+                                                    CommandParameter="{Binding .}" />
                         </Grid>
 
                         <Border.GestureRecognizers>

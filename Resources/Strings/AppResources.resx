@@ -145,4 +145,7 @@
   <data name="TripDetails" xml:space="preserve"><value>Trip Details</value></data>
   <data name="TripUnavailable" xml:space="preserve"><value>This trip is no longer available.</value></data>
   <data name="BackToTrips" xml:space="preserve"><value>Back to trips</value></data>
+  <data name="DeleteTrip" xml:space="preserve"><value>Delete trip</value></data>
+  <data name="DeleteTripConfirm" xml:space="preserve"><value>Are you sure you want to delete the trip “{0}”?</value></data>
+  <data name="DeleteTripError" xml:space="preserve"><value>We couldn't delete this trip. Please try again.</value></data>
 </root>

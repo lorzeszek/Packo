@@ -12,6 +12,7 @@ using Packo.Services.Interfaces;
 using Packo.Services;
 using Packo.Views;
 using System.Windows.Input;
+using System.Globalization;
 
 namespace Packo.ViewModels
 {
@@ -53,8 +54,8 @@ namespace Packo.ViewModels
 
         //
         public ICommand AddTripCommand => new Command(async () => await AddTrip("wycieczka 1 test"));
-        public ICommand DeleteTripCommand => new Command<TripViewModel>(async (trip) => await DeleteTripAsync(trip));
-        public ICommand TrashTripCommand => new Command<TripViewModel>(TrashTripAsync);
+        public IAsyncRelayCommand<TripViewModel> TrashTripCommand { get; }
+        public IAsyncRelayCommand<TripViewModel> DeleteTripCommand => TrashTripCommand;
 
         [RelayCommand]
         private async Task EditTripAsync(TripViewModel trip)
@@ -83,6 +84,7 @@ namespace Packo.ViewModels
 
             TripTappedCommand = new AsyncRelayCommand<TripViewModel>(OnTripTapped, trip => !Session.GlobalIsBusy);
             OpenPackingListCommand = new AsyncRelayCommand<TripViewModel>(OpenPackingListAsync, trip => !Session.GlobalIsBusy);
+            TrashTripCommand = new AsyncRelayCommand<TripViewModel>(DeleteTripAsync, trip => !Session.GlobalIsBusy);
 
 
             // Subscribe to login completed message
@@ -153,42 +155,29 @@ namespace Packo.ViewModels
             });
         }
 
-        private async void TrashTripAsync(TripViewModel trip)
+        private async Task DeleteTripAsync(TripViewModel? trip)
         {
-            //trip.TripModel.IsInTrash = true;
+            if (trip == null || Session.GlobalIsBusy)
+                return;
 
-            //await _tripRepository.UpdateTripAsync(trip.TripModel);
-            ////await _tripRepository.DeleteTripAsync(trip.TripModel);
-            ///
+            var strings = LocalizationResourceManager.Instance;
+            var confirmed = await Shell.Current.DisplayAlertAsync(
+                strings["DeleteTrip"],
+                string.Format(CultureInfo.CurrentUICulture, strings["DeleteTripConfirm"], trip.Destination),
+                strings["Delete"], strings["Cancel"]);
 
-            await _tripRepository.DeleteTripAsync(trip.TripModel);
+            if (!confirmed)
+                return;
 
-
-            ////await LoadData();
-
-
-            //var updated = trip.TripModel;
-
-            //if (updated != null)
-            //{
-            //    updated.IsInTrash = true;
-            //    await _tripRepository.UpdateTripAsync(updated);
-            //}
-
-
-            //await _tripRepository.UpdateTripAsync(trip.TripModel);
-        }
-
-        private async Task DeleteTripAsync(TripViewModel trip)
-        {
             try
             {
                 await _tripRepository.DeleteTripAsync(trip.TripModel);
+                Trips.Remove(trip);
             }
-            catch (Supabase.Postgrest.Exceptions.PostgrestException ex)
+            catch (Exception ex)
             {
-                // Logowanie pełnego wyjątku
-                Console.WriteLine($"Error: {ex.Message}, {ex.StackTrace}");
+                System.Diagnostics.Debug.WriteLine($"Trip deletion failed: {ex}");
+                await Shell.Current.DisplayAlertAsync(strings["Error"], strings["DeleteTripError"], strings["Ok"]);
             }
         }
 

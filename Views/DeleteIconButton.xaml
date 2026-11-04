@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/maui/global"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:views="clr-namespace:Packo.Views"
+             x:Class="Packo.Views.DeleteIconButton"
+             x:Name="DeleteButtonRoot"
+             x:DataType="views:DeleteIconButton"
+             WidthRequest="46" HeightRequest="46">
+    <Border StrokeThickness="0" StrokeShape="RoundRectangle 16"
+            BackgroundColor="{Binding SurfaceColor, Source={x:Reference DeleteButtonRoot}}">
+        <Grid>
+            <!-- The artwork sits below the center of its 470px animation canvas. -->
+            <LottieView Source="RecycleBin.lottie" AutoPlay="True"
+                        WidthRequest="40" HeightRequest="40" TranslationY="-3.5"
+                        HorizontalOptions="Center" VerticalOptions="Center"
+                        InputTransparent="True" AutomationProperties.IsInAccessibleTree="False" />
+            <Button BackgroundColor="Transparent" BorderWidth="0" CornerRadius="16" Padding="0"
+                    Command="{Binding Command, Source={x:Reference DeleteButtonRoot}}"
+                    CommandParameter="{Binding CommandParameter, Source={x:Reference DeleteButtonRoot}}"
+                    SemanticProperties.Description="{Binding ActionDescription, Source={x:Reference DeleteButtonRoot}}" />
+        </Grid>
+    </Border>
+</ContentView>

@@ -3,6 +3,7 @@
                 xmlns="http://schemas.microsoft.com/dotnet/maui/global"
                 xmlns:loc="clr-namespace:Packo.Extensions"
                 xmlns:local="clr-namespace:Packo.Models.Pages"
+                xmlns:views="clr-namespace:Packo.Views"
                 x:DataType="TripListViewModel"
                 x:Class="Packo.Views.TripListPage"
                 x:Name="TripListView"
@@ -116,20 +117,10 @@
                                     Command="{Binding BindingContext.EditTripCommand, Source={x:Reference TripListView}}"
                                     CommandParameter="{Binding .}" />
 
-                            <Border HorizontalOptions="End" VerticalOptions="Start" Margin="10"
-                                    WidthRequest="46" HeightRequest="46" Padding="6"
-                                    StrokeThickness="0" StrokeShape="RoundRectangle 16"
-                                    BackgroundColor="#FFFFFFE8">
-                                <LottieView Source="RecycleBin.lottie" AutoPlay="True"
-                                            WidthRequest="34" HeightRequest="34"
-                                            HorizontalOptions="Center" VerticalOptions="Center">
-                                    <LottieView.GestureRecognizers>
-                                        <TapGestureRecognizer
-                                            Command="{Binding BindingContext.TrashTripCommand, Source={x:Reference TripListView}}"
-                                            CommandParameter="{Binding .}" />
-                                    </LottieView.GestureRecognizers>
-                                </LottieView>
-                            </Border>
+                            <views:DeleteIconButton HorizontalOptions="End" VerticalOptions="Start" Margin="10"
+                                                    ActionDescription="{loc:Translate DeleteTrip}"
+                                                    Command="{Binding BindingContext.TrashTripCommand, Source={x:Reference TripListView}}"
+                                                    CommandParameter="{Binding .}" />
                         </Grid>
 
                         <Border.GestureRecognizers>

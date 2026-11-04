@@ -81,6 +81,7 @@ Check(withoutSelection.ShowTripUnavailable && withoutSelection.Trip == null,
     "Details without a selection never choose an unrelated trip");
 await vm.BackToTripsCommand.ExecuteAsync(null);
 Check(Shell.Current.Route == "//TripList", "The unavailable view returns to Trips");
+await TripDeletionChecks.RunAsync();
 
 static TripDTO Trip(int localId, int remoteId, string destination, DateTime start) => new()
 {

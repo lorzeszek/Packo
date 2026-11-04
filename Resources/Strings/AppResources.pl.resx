@@ -74,4 +74,7 @@
   <data name="TripDetails" xml:space="preserve"><value>Szczegóły podróży</value></data>
   <data name="TripUnavailable" xml:space="preserve"><value>Ta podróż nie jest już dostępna.</value></data>
   <data name="BackToTrips" xml:space="preserve"><value>Wróć do podróży</value></data>
+  <data name="DeleteTrip" xml:space="preserve"><value>Usuń podróż</value></data>
+  <data name="DeleteTripConfirm" xml:space="preserve"><value>Czy na pewno chcesz usunąć podróż „{0}”?</value></data>
+  <data name="DeleteTripError" xml:space="preserve"><value>Nie udało się usunąć podróży. Spróbuj ponownie.</value></data>
 </root>
