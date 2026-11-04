@@ -335,7 +335,7 @@ namespace Packo.ViewModels
             if (statusChanged)
                 _weatherPreloadService.Invalidate();
 
-            var ordered = Trips.OrderBy(x => x.IsCompleted).ThenBy(x => x.TripModel.StartDate).ToList();
+            var ordered = OrderTrips(Trips).ToList();
             for (var index = 0; index < ordered.Count; index++)
             {
                 var currentIndex = Trips.IndexOf(ordered[index]);
@@ -343,6 +343,12 @@ namespace Packo.ViewModels
                     Trips.Move(currentIndex, index);
             }
         }
+
+        private static IOrderedEnumerable<TripViewModel> OrderTrips(IEnumerable<TripViewModel> trips) =>
+            trips.OrderBy(x => x.IsCompleted)
+                .ThenBy(x => x.IsCompleted ? null : x.TripModel.StartDate)
+                .ThenByDescending(x => x.IsCompleted ? x.TripModel.StartDate : null)
+                .ThenBy(x => x.Destination, StringComparer.CurrentCultureIgnoreCase);
 
         private async Task LoadData(bool forceRefresh = false)
         {
@@ -366,9 +372,7 @@ namespace Packo.ViewModels
                     });
                 }
 
-                var orderedTrips = tripViewModels
-                    .OrderBy(x => x.IsCompleted)
-                    .ThenBy(x => x.TripModel.StartDate);
+                var orderedTrips = OrderTrips(tripViewModels);
 
                 Trips.Clear();
                 Trips.AddRange(orderedTrips);
