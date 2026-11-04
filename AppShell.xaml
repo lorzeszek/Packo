@@ -23,12 +23,6 @@
 
     <TabBar>
         <ShellContent
-            Title="{loc:Translate TabHome}"
-            Icon="tab_home.svg"
-            Route="Home"
-            ContentTemplate="{DataTemplate views:StartPage}" />
-
-        <ShellContent
             Title="{loc:Translate TabTrips}"
             Icon="tab_trips.svg"
             Route="TripList"

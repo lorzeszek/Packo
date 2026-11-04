@@ -1,12 +1,12 @@
-﻿using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Input;
 using Packo.Interfaces;
 using Packo.Repositories.Interfaces;
 using Packo.Services.Interfaces;
 using Packo.Services;
 using Packo.Views;
-using System.Windows.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Packo.Messages;
+using Packo.Models.DTO;
 using System.Globalization;
 
 namespace Packo.ViewModels
@@ -15,10 +15,11 @@ namespace Packo.ViewModels
     {
         private readonly ITripListPreloadService _tripListPreloadService;
 
-        public IRelayCommand LoginWithGoogleCommand => new AsyncRelayCommand(LoginWithGoogle);
+        private TripDTO? _selectedTrip;
 
-        public ICommand StartPackingCommand => new AsyncRelayCommand(StartPackingAsync);
-        public ICommand OpenPackingListCommand => new AsyncRelayCommand(OpenPackingListAsync);
+        public IAsyncRelayCommand BackToTripsCommand { get; }
+        public IAsyncRelayCommand RetryLoadCommand { get; }
+        public IAsyncRelayCommand OpenPackingListCommand { get; }
         public IAsyncRelayCommand EditTripCommand { get; }
 
         private TripViewModel? _trip;
@@ -111,17 +112,17 @@ namespace Packo.ViewModels
             OnPropertyChanged(nameof(PackingProgressPercent));
         }
 
-        private bool _hasActiveTrips;
-        public bool HasActiveTrips
+        private bool _hasTrip;
+        public bool HasTrip
         {
-            get => _hasActiveTrips;
+            get => _hasTrip;
             set
             {
-                if (_hasActiveTrips != value)
+                if (_hasTrip != value)
                 {
-                    _hasActiveTrips = value;
+                    _hasTrip = value;
                     OnPropertyChanged();
-                    OnPropertyChanged(nameof(ShowStartButton));
+                    OnPropertyChanged(nameof(ShowTripUnavailable));
                 }
             }
         }
@@ -136,20 +137,34 @@ namespace Packo.ViewModels
                 {
                     _isDataLoaded = value;
                     OnPropertyChanged();
-                    OnPropertyChanged(nameof(ShowStartButton));
+                    OnPropertyChanged(nameof(ShowTripUnavailable));
                 }
             }
         }
 
 
 
-        public bool ShowStartButton => IsDataLoaded && !HasActiveTrips;
+        private bool _hasLoadError;
+        public bool HasLoadError
+        {
+            get => _hasLoadError;
+            private set
+            {
+                if (SetProperty(ref _hasLoadError, value))
+                    OnPropertyChanged(nameof(ShowTripUnavailable));
+            }
+        }
+
+        public bool ShowTripUnavailable => IsDataLoaded && !HasTrip && !HasLoadError;
 
         public StartViewModel(ILocalUserService localUserService, ISupabaseService supabase, ISessionService sessionService, IPackingItemRepository packingItemRepository, ITripRepository tripRepository, IGoogleAuthService googleAuthService, ITripListPreloadService tripListPreloadService) : base(localUserService, supabase, sessionService, packingItemRepository, tripRepository, googleAuthService)
         {
             _tripListPreloadService = tripListPreloadService;
             EditTripCommand = new AsyncRelayCommand(EditTripAsync, () => Trip != null);
-            //_googleAuthService = googleAuthService;
+            OpenPackingListCommand = new AsyncRelayCommand(OpenPackingListAsync);
+            BackToTripsCommand = new AsyncRelayCommand(() => Shell.Current.GoToAsync("//TripList"));
+            RetryLoadCommand = new AsyncRelayCommand(() => LoadSelectedTripAsync(forceRefresh: true));
+            Title = LocalizationResourceManager.Instance["TripDetails"];
             LocalizationResourceManager.Instance.PropertyChanged += OnLanguageChanged;
             WeakReferenceMessenger.Default.Register<TripDataChangedMessage>(this, (recipient, message) =>
             {
@@ -170,38 +185,31 @@ namespace Packo.ViewModels
             });
         }
 
-        private bool _isCurrentTrip;
-
         private void OnLanguageChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            Title = LocalizationResourceManager.Instance[_isCurrentTrip ? "CurrentTrip" : HasActiveTrips ? "NextTrip" : "ReadyAdventure"];
+            Title = LocalizationResourceManager.Instance["TripDetails"];
+            OnPropertyChanged(nameof(TripDatesRange));
+            OnPropertyChanged(nameof(TripCountdown));
             OnPropertyChanged(nameof(TripDetailsSummary));
             NotifyPackingProgressChanged();
         }
 
-        //public async Task InitializeAsync()
-        //{
-        //    await Session.InitializeAsync();
-
-        //    if (Session.IsLoggedIn)
-        //    {
-        //        await Shell.Current.GoToAsync("//TripList");
-        //        return;
-        //    }
-
-        //    // jeśli NIE zalogowany → zostajemy na StartPage
-        //    // tu będzie AI onboarding
-        //}
-
-        private async Task StartPackingAsync()
+        protected override Task OnNavigatedToAsync(IDictionary<string, object> query)
         {
-            // przechodzisz do flow zbierania danych
-            await Shell.Current.GoToAsync(nameof(TripSetupPage));
+            if (query.TryGetValue("selectedTrip", out var value) && value is TripViewModel selectedTrip)
+            {
+                _selectedTrip = selectedTrip.TripModel;
+                Trip = selectedTrip;
+                HasTrip = true;
+                HasLoadError = false;
+            }
+
+            return Task.CompletedTask;
         }
 
         private async Task OpenPackingListAsync()
         {
-            if (Trip == null)
+            if (Trip == null || Session.GlobalIsBusy)
                 return;
 
             await Shell.Current.GoToAsync(nameof(PackingListPage), new Dictionary<string, object>
@@ -222,87 +230,37 @@ namespace Packo.ViewModels
             });
         }
 
-        private async Task LoginWithGoogle()
+        public Task OnAppearingAsync() => LoadSelectedTripAsync();
+
+        private async Task LoadSelectedTripAsync(bool forceRefresh = false)
         {
             try
             {
-                var token = await _googleAuthService.SignInWithGoogleAsync();
+                HasLoadError = false;
+                IsDataLoaded = false;
+                var tripsWithStats = await _tripListPreloadService.GetTripsAsync(forceRefresh);
+                var selectedTrip = _selectedTrip;
+                var match = selectedTrip == null ? null : tripsWithStats.FirstOrDefault(x =>
+                    !x.Trip.IsInTrash && (selectedTrip.RemoteTripId > 0
+                        ? x.Trip.RemoteTripId == selectedTrip.RemoteTripId
+                        : x.Trip.LocalTripId == selectedTrip.LocalTripId
+                            && x.Trip.LocalUserId == selectedTrip.LocalUserId));
 
-                if (token != null)
+                Trip = match == null ? null : new TripViewModel(match.Trip)
                 {
-                    // Tutaj możesz np. zalogować użytkownika w Supabase:
-                    var session = await _supabase.Client.Auth.SignInWithIdToken(Supabase.Gotrue.Constants.Provider.Google, token);
-
-                    if (session != null)
-                    {
-                        //_sessionService.SetUser(session.User);
-
-                        // Możesz teraz np. ustawić w ViewModel flagę:
-                        //IsLoggedIn = true;
-                        //var LoggedInUserName = user?.Email ?? user?.Id;
-
-                        //await Shell.Current.GoToAsync(nameof(TripListPage));
-
-                        await _tripRepository.StartRealtimeAsync();
-
-                        await _packingItemRepository.StartRealtimeAsync();
-                    }
-                }
-
-                //await _tripRepository.UnsubscribeFromTripChangesAsync();
-
-                //await _packingItemRepository.UnsubscribeFromPackingItemChangesAsync();
-
-
-
+                    PackingSummary = match.PackingSummary
+                };
+                HasTrip = Trip != null;
             }
             catch (Exception ex)
             {
-                // obsługa błędu
+                System.Diagnostics.Debug.WriteLine($"Trip details loading failed: {ex}");
+                HasLoadError = true;
+            }
+            finally
+            {
+                IsDataLoaded = true;
             }
         }
-
-
-        public async Task OnAppearingAsync()
-        {
-            var tripsWithStats = await _tripListPreloadService.GetTripsAsync();
-            var nearestTrip = tripsWithStats?
-                .Where(x => x.Trip.IsActive && !x.Trip.IsInTrash && x.Trip.EndDate >= DateTime.Today)
-                .OrderBy(t => t.Trip.StartDate).FirstOrDefault();
-
-            HasActiveTrips = nearestTrip != null;
-
-            if (HasActiveTrips && nearestTrip != null)
-            {
-                _isCurrentTrip = nearestTrip.Trip.StartDate?.Date <= DateTime.Today;
-                Title = LocalizationResourceManager.Instance[_isCurrentTrip ? "CurrentTrip" : "NextTrip"];
-                //Title = nearestTrip.Trip.StartDate < DateTime.Now ? "Current Trip: " + (nearestTrip?.Trip.Destination) : "Next Trip: " + (nearestTrip?.Trip.Destination);
-
-                Trip = new TripViewModel(nearestTrip.Trip)
-                {
-                    PackingSummary = nearestTrip.PackingSummary,
-                };
-            }
-            else
-            {
-                Trip = null;
-                _isCurrentTrip = false;
-                Title = LocalizationResourceManager.Instance["ReadyAdventure"];
-            }
-
-            IsDataLoaded = true;
-        }
-
-        //protected override async Task OnNavigatedToAsync(IDictionary<string, object> query)
-        //{
-        //    if (Session.IsAuthenticated)
-        //    {
-        //        var tripsWithStats = await _tripRepository.GetActiveTripsWithStatsAsync();
-
-        //        var nearestTrip = tripsWithStats.OrderBy(t => t.Trip.StartDate).FirstOrDefault();
-
-        //        Title = "Next Trip: " + (nearestTrip?.Trip.Destination ?? "None");
-        //    }
-        //}
     }
 }

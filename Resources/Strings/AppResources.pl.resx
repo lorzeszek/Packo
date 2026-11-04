@@ -71,4 +71,7 @@
   <data name="StartPackingCount" xml:space="preserve"><value>{0} z {1} spakowanych</value></data>
   <data name="StartPackingEmpty" xml:space="preserve"><value>Lista pakowania jest jeszcze pusta.</value></data>
   <data name="OpenPackingList" xml:space="preserve"><value>Otwórz listę pakowania →</value></data>
+  <data name="TripDetails" xml:space="preserve"><value>Szczegóły podróży</value></data>
+  <data name="TripUnavailable" xml:space="preserve"><value>Ta podróż nie jest już dostępna.</value></data>
+  <data name="BackToTrips" xml:space="preserve"><value>Wróć do podróży</value></data>
 </root>

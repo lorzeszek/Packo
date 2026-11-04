@@ -49,6 +49,7 @@ namespace Packo.ViewModels
 
         //public ICommand TripTappedCommand => new Command<TripViewModel>(OnTripTapped);
         public IAsyncRelayCommand<TripViewModel> TripTappedCommand { get; }
+        public IAsyncRelayCommand<TripViewModel> OpenPackingListCommand { get; }
 
         //
         public ICommand AddTripCommand => new Command(async () => await AddTrip("wycieczka 1 test"));
@@ -81,6 +82,7 @@ namespace Packo.ViewModels
             //LoginWithGoogleCommand = new AsyncRelayCommand(LoginWithGoogle, () => !IsBusy);
 
             TripTappedCommand = new AsyncRelayCommand<TripViewModel>(OnTripTapped, trip => !Session.GlobalIsBusy);
+            OpenPackingListCommand = new AsyncRelayCommand<TripViewModel>(OpenPackingListAsync, trip => !Session.GlobalIsBusy);
 
 
             // Subscribe to login completed message
@@ -131,11 +133,19 @@ namespace Packo.ViewModels
 
         private async Task OnTripTapped(TripViewModel trip)
         {
-            if (trip == null)
+            if (trip == null || Session.GlobalIsBusy)
                 return;
 
+            await Shell.Current.GoToAsync("TripDetails", new ShellNavigationQueryParameters
+            {
+                ["selectedTrip"] = trip
+            });
+        }
 
-
+        private async Task OpenPackingListAsync(TripViewModel trip)
+        {
+            if (trip == null || Session.GlobalIsBusy)
+                return;
             await Shell.Current.GoToAsync(nameof(PackingListPage), new Dictionary<string, object>
             {
                 ["remoteTripId"] = trip.TripModel.RemoteTripId,
@@ -213,7 +223,7 @@ namespace Packo.ViewModels
                 await _tripRepository.UnsubscribeFromTripChangesAsync();
                 await _packingItemRepository.UnsubscribeFromPackingItemChangesAsync();
                 await _supabase.Client.Auth.SignOut();
-                await Shell.Current.GoToAsync("//Home");
+                await Shell.Current.GoToAsync("//TripList");
             }
         }
 

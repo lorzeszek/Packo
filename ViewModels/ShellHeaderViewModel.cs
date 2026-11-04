@@ -108,7 +108,7 @@ namespace Packo.ViewModels
                     await _tripRepository.DeleteLocalTrips();
 
                     WeakReferenceMessenger.Default.Send(new LogoutCompletedMessage());
-                    await Shell.Current.GoToAsync("//Home");
+                    await Shell.Current.GoToAsync("//TripList");
                 }
             }
             catch (Exception ex)

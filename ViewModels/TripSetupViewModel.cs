@@ -384,7 +384,7 @@ namespace Packo.ViewModels
             //    return;
             //}
 
-            // Pop TripSetupPage off the Home tab's stack before switching tabs
+            // Return to the trip list after creating a trip.
             await Shell.Current.Navigation.PopAsync(false);
             await Shell.Current.GoToAsync("//TripList");
         }

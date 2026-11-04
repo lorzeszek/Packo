@@ -189,7 +189,7 @@ namespace Packo
                 }
 
                 startupPage.ShowLoading("StartupLoadingTrips");
-                // Home and Trips consume this same cached result. Await the real
+                // Trips and trip details consume this same cached result. Await the real
                 // request here: optional PrefetchAsync deliberately swallows errors.
                 await _tripListPreloadService.GetTripsAsync().WaitAsync(TimeSpan.FromSeconds(20));
 

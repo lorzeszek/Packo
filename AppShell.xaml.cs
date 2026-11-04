@@ -13,6 +13,7 @@ namespace Packo
 
             Routing.RegisterRoute(nameof(TripSetupPage), typeof(TripSetupPage));
             Routing.RegisterRoute(nameof(PackingListPage), typeof(PackingListPage));
+            Routing.RegisterRoute("TripDetails", typeof(StartPage));
 
             Navigating += OnShellNavigating;
         }
@@ -24,14 +25,13 @@ namespace Packo
                 var strings = LocalizationResourceManager.Instance;
                 Title = "TravelSet";
                 var tabs = Items.OfType<TabBar>().FirstOrDefault();
-                if (tabs is null || tabs.Items.Count < 5)
+                if (tabs is null || tabs.Items.Count < 4)
                     return;
 
-                tabs.Items[0].Title = strings["TabHome"];
-                tabs.Items[1].Title = strings["TabTrips"];
-                tabs.Items[2].Title = strings["TabWeather"];
-                tabs.Items[3].Title = strings["TabDocs"];
-                tabs.Items[4].Title = strings["TabSettings"];
+                tabs.Items[0].Title = strings["TabTrips"];
+                tabs.Items[1].Title = strings["TabWeather"];
+                tabs.Items[2].Title = strings["TabDocs"];
+                tabs.Items[3].Title = strings["TabSettings"];
             });
         }
 

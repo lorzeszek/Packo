@@ -142,4 +142,7 @@
   <data name="StartPackingCount" xml:space="preserve"><value>{0} of {1} packed</value></data>
   <data name="StartPackingEmpty" xml:space="preserve"><value>Your packing list is still empty.</value></data>
   <data name="OpenPackingList" xml:space="preserve"><value>Open packing list →</value></data>
+  <data name="TripDetails" xml:space="preserve"><value>Trip Details</value></data>
+  <data name="TripUnavailable" xml:space="preserve"><value>This trip is no longer available.</value></data>
+  <data name="BackToTrips" xml:space="preserve"><value>Back to trips</value></data>
 </root>
