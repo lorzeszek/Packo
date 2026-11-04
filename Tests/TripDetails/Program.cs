@@ -82,6 +82,8 @@ Check(withoutSelection.ShowTripUnavailable && withoutSelection.Trip == null,
 await vm.BackToTripsCommand.ExecuteAsync(null);
 Check(Shell.Current.Route == "//TripList", "The unavailable view returns to Trips");
 await TripDeletionChecks.RunAsync();
+await TripScheduleChecks.RunAsync();
+await CompletedTripChecks.RunAsync();
 
 static TripDTO Trip(int localId, int remoteId, string destination, DateTime start) => new()
 {
@@ -106,7 +108,7 @@ sealed class Details(ITripListPreloadService preload)
 sealed class Session : ISessionService
 {
     public string LocalUserId => "local";
-    public bool GlobalIsBusy => false;
+    public bool GlobalIsBusy { get; set; }
 }
 sealed class Preload : ITripListPreloadService
 {

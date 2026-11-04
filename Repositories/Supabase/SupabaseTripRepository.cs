@@ -158,11 +158,12 @@ namespace Packo.Repositories.Supabase
 
         public async Task<IReadOnlyList<TripWithStats>> GetActiveTripsWithStatsAsync()
         {
-            // 1. Pobranie aktywnych tripów
+            // The Trips list and details include completed trips as well as active ones.
+            // Only trashed trips are hidden; IsActive describes the schedule, not visibility.
             var tripsResponse = await _supabase.Client
                     .From<TripSupabase>()
                     .Select("*")
-                    .Where(x => x.IsActive == true && x.IsInTrash == false)
+                    .Where(x => x.IsInTrash == false)
                     .Get();
 
             var trips = tripsResponse.Models ?? new List<TripSupabase>();
@@ -199,11 +200,11 @@ namespace Packo.Repositories.Supabase
                 .Where(x => x.IsInTrash == false)
                 .Get();
 
-            var today = DateTime.Today;
+            var now = DateTime.Now;
             var activeTrips = (response.Models ?? new List<TripSupabase>())
-                .Where(trip => trip.EndDate.HasValue && trip.EndDate.Value.Date >= today)
+                .Where(trip => trip.EndDate.HasValue && trip.EndDate.Value > now)
                 .Where(trip => !string.IsNullOrWhiteSpace(trip.Destination))
-                .OrderByDescending(trip => trip.StartDate.HasValue && trip.StartDate.Value.Date <= today)
+                .OrderByDescending(trip => trip.StartDate.HasValue && trip.StartDate.Value <= now)
                 .ThenBy(trip => trip.StartDate ?? DateTime.MaxValue);
 
             return activeTrips

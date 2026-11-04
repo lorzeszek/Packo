@@ -148,4 +148,11 @@
   <data name="DeleteTrip" xml:space="preserve"><value>Delete trip</value></data>
   <data name="DeleteTripConfirm" xml:space="preserve"><value>Are you sure you want to delete the trip “{0}”?</value></data>
   <data name="DeleteTripError" xml:space="preserve"><value>We couldn't delete this trip. Please try again.</value></data>
+  <data name="StartTime" xml:space="preserve"><value>Start time</value></data>
+  <data name="EndTime" xml:space="preserve"><value>End time</value></data>
+  <data name="TripScheduleError" xml:space="preserve"><value>The end date and time must be after the start.</value></data>
+  <data name="TripStatusUpcoming" xml:space="preserve"><value>UPCOMING TRIP</value></data>
+  <data name="TripStatusCurrent" xml:space="preserve"><value>CURRENT TRIP</value></data>
+  <data name="StartsAt" xml:space="preserve"><value>Starts today at {0}</value></data>
+  <data name="EndsAt" xml:space="preserve"><value>Ends today at {0}</value></data>
 </root>

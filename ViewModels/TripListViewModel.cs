@@ -309,7 +309,6 @@ namespace Packo.ViewModels
                         var existing = Trips.FirstOrDefault(t => t.TripModel.RemoteTripId == trip.RemoteTripId);
                         if (existing != null)
                         {
-                            Trips.Remove(existing);
                             existing.UpdateFromTrip(trip);
                         }
                         //
@@ -320,7 +319,29 @@ namespace Packo.ViewModels
                             Trips.Remove(toRemove);
                         break;
                 }
+                RefreshTripSchedules(forceSort: true);
             });
+        }
+
+        public void RefreshTripSchedules(bool forceSort = false)
+        {
+            var statusChanged = false;
+            foreach (var trip in Trips)
+                statusChanged |= trip.RefreshSchedule();
+
+            if (!statusChanged && !forceSort)
+                return;
+
+            if (statusChanged)
+                _weatherPreloadService.Invalidate();
+
+            var ordered = Trips.OrderBy(x => x.IsCompleted).ThenBy(x => x.TripModel.StartDate).ToList();
+            for (var index = 0; index < ordered.Count; index++)
+            {
+                var currentIndex = Trips.IndexOf(ordered[index]);
+                if (currentIndex != index)
+                    Trips.Move(currentIndex, index);
+            }
         }
 
         private async Task LoadData(bool forceRefresh = false)
@@ -339,8 +360,6 @@ namespace Packo.ViewModels
 
                 foreach (var item in tripsWithStats)
                 {
-                    item.Trip.IsActive = item.Trip.EndDate > DateTime.Now;
-
                     tripViewModels.Add(new TripViewModel(item.Trip)
                     {
                         PackingSummary = item.PackingSummary,
@@ -348,7 +367,7 @@ namespace Packo.ViewModels
                 }
 
                 var orderedTrips = tripViewModels
-                    .OrderByDescending(x => x.TripModel.IsActive)
+                    .OrderBy(x => x.IsCompleted)
                     .ThenBy(x => x.TripModel.StartDate);
 
                 Trips.Clear();
@@ -401,6 +420,8 @@ namespace Packo.ViewModels
                 {
                     await LoadData(forceRefresh: _isDirty);
                 }
+
+                RefreshTripSchedules();
 
                 if (Session.IsAuthenticated)
                 {

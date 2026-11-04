@@ -42,8 +42,9 @@ namespace Packo.Helpers
                 IsActive = trip.IsActive,
                 Destination = trip.Destination,
                 CreatedDate = trip.CreatedDate,
-                StartDate = trip.StartDate.HasValue ? DateTime.SpecifyKind(trip.StartDate.Value, DateTimeKind.Utc) : null,
-                EndDate = trip.EndDate.HasValue ? DateTime.SpecifyKind(trip.EndDate.Value, DateTimeKind.Utc) : null,
+                // timestamp without time zone: preserve the entered clock time without a UTC suffix.
+                StartDate = trip.StartDate.HasValue ? DateTime.SpecifyKind(trip.StartDate.Value, DateTimeKind.Unspecified) : null,
+                EndDate = trip.EndDate.HasValue ? DateTime.SpecifyKind(trip.EndDate.Value, DateTimeKind.Unspecified) : null,
                 AdultsCount = trip.AdultsCount,
                 ChildrenAges = JArray.FromObject(trip.ChildrenAges),
                 SelectedTransportTypes = JArray.FromObject(trip.SelectedTransportTypes),

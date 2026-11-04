@@ -1,5 +1,6 @@
 using Packo.Models.Pages;
 using Packo.ViewModels;
+using Microsoft.Maui.Dispatching;
 
 namespace Packo.Views;
 
@@ -7,17 +8,22 @@ public partial class TripListPage : BasePage// ContentPage
 {
     private readonly TripListViewModel _viewModel;
     private bool _suppressNextAppearing;
+    private readonly IDispatcherTimer _scheduleTimer;
 
     public TripListPage(TripListViewModel viewModel)
     {
         InitializeComponent();
         _viewModel = viewModel;
         BindingContext = _viewModel;
+        _scheduleTimer = Dispatcher.CreateTimer();
+        _scheduleTimer.Interval = TimeSpan.FromSeconds(1);
+        _scheduleTimer.Tick += (_, _) => _viewModel.RefreshTripSchedules();
     }
 
     protected override async void OnDisappearing()
     {
         base.OnDisappearing();
+        _scheduleTimer.Stop();
 
         if (_viewModel.IsLoadingModalActive)
         {
@@ -31,6 +37,8 @@ public partial class TripListPage : BasePage// ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        _viewModel.RefreshTripSchedules();
+        _scheduleTimer.Start();
 
         if (_suppressNextAppearing)
         {

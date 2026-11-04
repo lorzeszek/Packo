@@ -76,7 +76,9 @@ namespace Packo.Repositories.Local
 
         public async Task<IReadOnlyList<TripWithStats>> GetActiveTripsWithStatsAsync()
         {
-            var sqliteTrips = await _db.Table<SQLiteTrip>().Where(x => x.LocalUserId == _sessionService.LocalUserId).ToListAsync();
+            var sqliteTrips = await _db.Table<SQLiteTrip>()
+                .Where(x => x.LocalUserId == _sessionService.LocalUserId && !x.IsInTrash)
+                .ToListAsync();
             var sqlitePackingItems = await _db.Table<SQLitePackingItem>().Where(x => x.LocalUserId == _sessionService.LocalUserId && !x.IsStaleCache).ToListAsync();
 
             var trips = sqliteTrips.Select(x => new TripDTO
@@ -121,11 +123,11 @@ namespace Packo.Repositories.Local
                 .Where(x => x.LocalUserId == _sessionService.LocalUserId && !x.IsInTrash)
                 .ToListAsync();
 
-            var today = DateTime.Today;
+            var now = DateTime.Now;
             return sqliteTrips
-                .Where(x => x.EndDate.HasValue && x.EndDate.Value.Date >= today)
+                .Where(x => x.EndDate.HasValue && x.EndDate.Value > now)
                 .Where(x => !string.IsNullOrWhiteSpace(x.Destination))
-                .OrderByDescending(x => x.StartDate.HasValue && x.StartDate.Value.Date <= today)
+                .OrderByDescending(x => x.StartDate.HasValue && x.StartDate.Value <= now)
                 .ThenBy(x => x.StartDate ?? DateTime.MaxValue)
                 .Select(x => x.Destination)
                 .Distinct(StringComparer.OrdinalIgnoreCase)

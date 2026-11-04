@@ -7,6 +7,32 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.1" />
+    <PackageReference Include="Supabase.Postgrest" Version="4.1.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
+    <Compile Include="../../Repositories/Supabase/SupabaseTripRepository.cs" Link="SupabaseTripRepository.cs" />
+    <Compile Include="../../Repositories/Local/LocalTripRepository.cs" Link="LocalTripRepository.cs" />
+    <Compile Include="../../Services/TripListPreloadService.cs" Link="TripListPreloadService.cs" />
+    <Compile Include="../../Models/SQLite/SQLiteTrip.cs" Link="SQLiteTrip.cs" />
+    <Compile Include="../../Models/SQLite/SQLitePackingItem.cs" Link="SQLitePackingItem.cs" />
+    <Compile Include="../../Models/SQLite/SQLiteTripDocument.cs" Link="SQLiteTripDocument.cs" />
+    <Compile Include="../../Models/DTO/TripDocumentDTO.cs" Link="TripDocumentDTO.cs" />
+    <Compile Include="../../Models/Supabase/TripItemsStatsSupabase.cs" Link="TripItemsStatsSupabase.cs" />
+    <Compile Include="../../Helpers/TripSchedule.cs" Link="TripSchedule.cs" />
+    <Compile Include="../../Helpers/Mappers.cs" Link="Mappers.cs" />
+    <Compile Include="../../Models/Enums/TripStatus.cs" Link="TripStatus.cs" />
+    <Compile Include="../../ViewModels/TripSetupViewModel.cs" Link="TripSetupViewModel.cs" />
+    <Compile Include="../../Models/ChildAgeItem.cs" Link="ChildAgeItem.cs" />
+    <Compile Include="../../Models/TransportOptionItem.cs" Link="TransportOptionItem.cs" />
+    <Compile Include="../../Models/TripTypeOption.cs" Link="TripTypeOption.cs" />
+    <Compile Include="../../Models/PackingItem.cs" Link="PackingItem.cs" />
+    <Compile Include="../../Models/DTO/PackingItemDTO.cs" Link="PackingItemDTO.cs" />
+    <Compile Include="../../Models/DTO/PackingSuggestion.cs" Link="PackingSuggestion.cs" />
+    <Compile Include="../../Models/Supabase/TripSupabase.cs" Link="TripSupabase.cs" />
+    <Compile Include="../../Models/Supabase/PackingItemSupabase.cs" Link="PackingItemSupabase.cs" />
+    <Compile Include="../../Services/Interfaces/IPackingSuggestionService.cs" Link="IPackingSuggestionService.cs" />
+    <Compile Include="../../Services/Interfaces/ITripClassificationService.cs" Link="ITripClassificationService.cs" />
+    <Compile Include="../../Services/ResponseObjects/TripClassificationData.cs" Link="TripClassificationData.cs" />
     <Compile Include="../../ViewModels/StartViewModel.cs" Link="StartViewModel.cs" />
     <Compile Include="../../ViewModels/TripListViewModel.cs" Link="TripListViewModel.cs" />
     <Compile Include="../../Extensions/ObservableRangeCollection.cs" Link="ObservableRangeCollection.cs" />

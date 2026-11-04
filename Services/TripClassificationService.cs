@@ -15,7 +15,7 @@ namespace Packo.Services
 
         public async Task<TripClassificationData> ClassifyTripAsync(string destination, DateTime start, DateTime end, List<string> selectedTransportTypes)
         {
-            var days = (end - start).Days;
+            var days = (end.Date - start.Date).Days + 1;
 
             var prompt = $@"
                 Classify the trip and select the most appropriate cover theme.

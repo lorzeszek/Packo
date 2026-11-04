@@ -12,6 +12,7 @@ public static class MainThread
 }
 
 public class ShellNavigationQueryParameters : Dictionary<string, object> { }
+public interface IQueryAttributable { void ApplyQueryAttributes(IDictionary<string, object> query); }
 public sealed class Command(Action execute) : System.Windows.Input.ICommand
 {
     public event EventHandler? CanExecuteChanged { add { } remove { } }
@@ -23,6 +24,7 @@ public sealed class Shell
     public static Shell Current { get; } = new();
     public string? Route { get; private set; }
     public IDictionary<string, object>? Query { get; private set; }
+    public Navigation Navigation { get; } = new();
     public Func<Task<bool>> Confirm { get; set; } = () => Task.FromResult(false);
     public string? ConfirmationMessage { get; private set; }
     public int ConfirmationCount { get; private set; }
@@ -45,6 +47,7 @@ public sealed class Shell
         return Task.CompletedTask;
     }
 }
+public sealed class Navigation { public Task PopAsync(bool animated) => Task.CompletedTask; }
 public sealed class Application
 {
     public static Application Current { get; } = new();
@@ -57,11 +60,16 @@ namespace CommunityToolkit.Maui.Extensions
     {
         public static Task<PopupResult<T>> ShowPopupAsync<T>(this object page, object popup)
             => Task.FromResult(new PopupResult<T>(default!));
+        public static Task ShowPopupAsync(this object page, object popup) => Task.CompletedTask;
     }
 }
 namespace Packo.Popups
 {
     public class ConfirmPopup(string title, string message) { }
+    public class PackingItemsPopup(List<PackingSuggestion> items)
+    {
+        public TaskCompletionSource<List<PackingSuggestion>> ResultSource { get; } = new();
+    }
 }
 
 namespace Packo.Services.Interfaces
@@ -69,12 +77,22 @@ namespace Packo.Services.Interfaces
     public interface ISessionService
     {
         string? LocalUserId { get; }
-        bool GlobalIsBusy { get; }
+        bool GlobalIsBusy { get; set; }
+        string? UserId => "remote";
+        void SetLocalUser(string id) { }
         bool IsAuthenticated => false;
     }
-    public interface ILocalUserService { }
-    public interface ISupabaseService { AuthClient Client { get; } }
-    public sealed class AuthClient
+    public interface ILocalUserService
+    {
+        Task<LocalUser> GetOrCreateLocalUserAsync();
+    }
+    public record LocalUser(string LocalUserId);
+    public interface ISupabaseService
+    {
+        AuthClient Client { get; }
+        Task EnsureRealtimeConnectedAsync() => Task.CompletedTask;
+    }
+    public sealed partial class AuthClient
     {
         public AuthClient Auth => this;
         public Task SignOut() => Task.CompletedTask;
@@ -87,11 +105,17 @@ namespace Packo.Repositories.Interfaces
     public interface IPackingItemRepository
     {
         Task UnsubscribeFromPackingItemChangesAsync();
+        Task AddPackingItemsAsync(List<PackingItemDTO> items) => Task.CompletedTask;
     }
     public interface ITripRepository
     {
         event Action<TripDTO, string>? TripChanged;
         Task DeleteTripAsync(TripDTO trip);
+        Task<int> AddTripAsync(TripDTO trip) => Task.FromResult(1);
+        Task<TripDTO?> GetTripAsync(TripDTO trip) => Task.FromResult<TripDTO?>(trip);
+        Task UpdateTripAsync(TripDTO trip) => Task.CompletedTask;
+        Task<IReadOnlyList<TripWithStats>> GetActiveTripsWithStatsAsync()
+            => Task.FromResult<IReadOnlyList<TripWithStats>>([]);
         Task DeleteLocalTrips() => Task.CompletedTask;
         Task UnsubscribeFromTripChangesAsync() => Task.CompletedTask;
         Task SyncPendingChangesAsync() => Task.CompletedTask;
@@ -113,6 +137,7 @@ namespace Packo.ViewModels
         protected readonly ITripRepository _tripRepository;
         protected readonly IPackingItemRepository _packingItemRepository;
         protected readonly ISupabaseService _supabase;
+        protected readonly ILocalUserService _localUserService;
         public Subscription? _subscription;
         protected BaseViewModel(ILocalUserService localUserService, ISupabaseService supabase,
             ISessionService session, IPackingItemRepository packing, ITripRepository trips,
@@ -122,6 +147,7 @@ namespace Packo.ViewModels
             _tripRepository = trips;
             _packingItemRepository = packing;
             _supabase = supabase;
+            _localUserService = localUserService;
         }
         protected virtual Task OnNavigatedToAsync(IDictionary<string, object> query) => Task.CompletedTask;
         public virtual Task OnNavigatedFromAsync(IDictionary<string, object> query) => Task.CompletedTask;
@@ -133,8 +159,15 @@ namespace Packo.Services
     public sealed class LocalizationResourceManager
     {
         public static LocalizationResourceManager Instance { get; } = new();
+        public string CurrentLanguage => "en";
         public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
-        public string this[string key] => key == "DeleteTripConfirm" ? "Delete trip {0}?" : key;
+        public string this[string key] => key switch
+        {
+            "DeleteTripConfirm" => "Delete trip {0}?",
+            "StartsAt" => "Starts today at {0}",
+            "EndsAt" => "Ends today at {0}",
+            _ => key
+        };
         public void ChangeLanguage() => PropertyChanged?.Invoke(this, new(null));
     }
 }

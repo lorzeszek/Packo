@@ -2,6 +2,7 @@
 using Packo.Models.DTO;
 using Packo.Models.Enums;
 using Packo.Services;
+using Packo.Helpers;
 using System;
 
 namespace Packo.ViewModels
@@ -10,6 +11,18 @@ namespace Packo.ViewModels
     {
         //public Trip TripModel { get; }
         public TripDTO TripModel { get; }
+        private readonly TimeProvider _timeProvider;
+        private DateTime _now;
+
+        public TripStatus Status => TripSchedule.GetStatus(TripModel.StartDate, TripModel.EndDate, _now);
+        public bool IsCompleted => Status == TripStatus.Completed;
+        public string StatusLabel => Status switch
+        {
+            TripStatus.Upcoming => LocalizationResourceManager.Instance["TripStatusUpcoming"],
+            TripStatus.Current => LocalizationResourceManager.Instance["TripStatusCurrent"],
+            TripStatus.Completed => LocalizationResourceManager.Instance["PastTrip"],
+            _ => string.Empty
+        };
 
         public string Destination => TripModel.Destination;
         public string CoverImageSource => TripModel.CoverTheme switch
@@ -30,7 +43,13 @@ namespace Packo.ViewModels
         public string TripDatesRange => GetTripDatesRange();
         public string TripDaysToGo => GetTripDaysToGo();
         public string TripDaysRemaining => GetTripDaysRemaining();
-        public string TripCountdown => HasTripStarted() ? TripDaysRemaining : TripDaysToGo;
+        public string TripCountdown => Status switch
+        {
+            TripStatus.Completed => LocalizationResourceManager.Instance["TripEnded"],
+            TripStatus.Current => TripDaysRemaining,
+            TripStatus.Upcoming => TripDaysToGo,
+            _ => string.Empty
+        };
 
         private string _packingSummary = string.Empty;
         public string PackingSummary
@@ -50,14 +69,44 @@ namespace Packo.ViewModels
         public string BackgroundImage => "italy.webp";
 
         //public TripViewModel(Trip trip)
-        public TripViewModel(TripDTO trip)
+        public TripViewModel(TripDTO trip, TimeProvider? timeProvider = null)
         {
             TripModel = trip;
+            _timeProvider = timeProvider ?? TimeProvider.System;
+            _now = _timeProvider.GetLocalNow().DateTime;
+            TripModel.IsActive = TripModel.EndDate > _now;
             LocalizationResourceManager.Instance.PropertyChanged += OnLanguageChanged;
         }
 
         private void OnLanguageChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
+            OnPropertyChanged(nameof(TripDatesRange));
+            OnPropertyChanged(nameof(TripDaysToGo));
+            OnPropertyChanged(nameof(TripDaysRemaining));
+            OnPropertyChanged(nameof(TripCountdown));
+            OnPropertyChanged(nameof(StatusLabel));
+        }
+
+        public bool RefreshSchedule()
+        {
+            var previousStatus = Status;
+            var now = _timeProvider.GetLocalNow().DateTime;
+            if (now.Ticks / TimeSpan.TicksPerMinute == _now.Ticks / TimeSpan.TicksPerMinute
+                && TripSchedule.GetStatus(TripModel.StartDate, TripModel.EndDate, now) == previousStatus)
+                return false;
+
+            _now = now;
+            NotifyScheduleChanged();
+            return Status != previousStatus;
+        }
+
+        private void NotifyScheduleChanged()
+        {
+            TripModel.IsActive = TripModel.EndDate > _now;
+            OnPropertyChanged(nameof(TripModel));
+            OnPropertyChanged(nameof(Status));
+            OnPropertyChanged(nameof(StatusLabel));
+            OnPropertyChanged(nameof(IsCompleted));
             OnPropertyChanged(nameof(TripDatesRange));
             OnPropertyChanged(nameof(TripDaysToGo));
             OnPropertyChanged(nameof(TripDaysRemaining));
@@ -69,22 +118,15 @@ namespace Packo.ViewModels
             var startDate = TripModel.StartDate;
             var endDate = TripModel.EndDate;
 
-            if (startDate.HasValue && endDate.HasValue && startDate.Value.Year == endDate.Value.Year)
-            {
-                return $"{startDate:dd MMM} - {endDate:dd MMM} {startDate:yyyy}";
-            }
-            else if (startDate.HasValue && !endDate.HasValue)
-            {
-                return $"{startDate:dd MMM yyyy}";
-            }
-            else
-                return $"{startDate:dd MMM yyyy} - {endDate:dd MMM yyyy}";
-        }
+            if (startDate.HasValue && endDate.HasValue && startDate.Value.Date == endDate.Value.Date)
+                return $"{startDate:dd MMM yyyy} · {startDate:HH:mm}–{endDate:HH:mm}";
 
-        private bool HasTripStarted()
-        {
-            var startDate = TripModel.StartDate;
-            return startDate.HasValue && startDate.Value.Date <= DateTime.Today;
+            if (startDate.HasValue && !endDate.HasValue)
+            {
+                return $"{startDate:dd MMM yyyy, HH:mm}";
+            }
+
+            return $"{startDate:dd MMM yyyy, HH:mm} – {endDate:dd MMM yyyy, HH:mm}";
         }
 
         private string GetTripDaysToGo()
@@ -94,10 +136,11 @@ namespace Packo.ViewModels
             if (!startDate.HasValue)
                 return string.Empty;
 
-            var days = (startDate.Value.Date - DateTime.Today).Days;
+            var days = (startDate.Value.Date - _now.Date).Days;
 
             if (days <= 0)
-                return LocalizationResourceManager.Instance["StartsToday"];
+                return string.Format(System.Globalization.CultureInfo.CurrentUICulture,
+                    LocalizationResourceManager.Instance["StartsAt"], startDate.Value.ToString("HH:mm"));
 
             var key = days == 1 ? "DayToGo" : "DaysToGo";
             return string.Format(System.Globalization.CultureInfo.CurrentUICulture, LocalizationResourceManager.Instance[key], days);
@@ -110,13 +153,14 @@ namespace Packo.ViewModels
             if (!endDate.HasValue)
                 return string.Empty;
 
-            var days = (endDate.Value.Date - DateTime.Today).Days;
+            var days = (endDate.Value.Date - _now.Date).Days;
 
             if (days < 0)
                 return LocalizationResourceManager.Instance["TripEnded"];
 
             if (days == 0)
-                return LocalizationResourceManager.Instance["LastDay"];
+                return string.Format(System.Globalization.CultureInfo.CurrentUICulture,
+                    LocalizationResourceManager.Instance["EndsAt"], endDate.Value.ToString("HH:mm"));
 
             var key = days == 1 ? "DayRemaining" : "DaysRemaining";
             return string.Format(System.Globalization.CultureInfo.CurrentUICulture, LocalizationResourceManager.Instance[key], days);
@@ -129,22 +173,16 @@ namespace Packo.ViewModels
             TripModel.ChildrenAges = trip.ChildrenAges.ToList();
             TripModel.SelectedTransportTypes = trip.SelectedTransportTypes.ToList();
             TripModel.TripType = trip.TripType;
-            TripModel.IsActive = trip.IsActive;
             TripModel.IsInTrash = trip.IsInTrash;
             TripModel.StartDate = trip.StartDate;
             TripModel.EndDate = trip.EndDate;
             TripModel.RemoteUserId = trip.RemoteUserId;
+            TripModel.CoverTheme = trip.CoverTheme;
 
             OnPropertyChanged(nameof(Destination));
-            OnPropertyChanged(nameof(TripModel.IsActive));
-            OnPropertyChanged(nameof(TripModel.IsInTrash));
-            OnPropertyChanged(nameof(TripModel.StartDate));
-            OnPropertyChanged(nameof(TripModel.EndDate));
-            OnPropertyChanged(nameof(TripModel.RemoteUserId));
-            OnPropertyChanged(nameof(TripDatesRange));
-            OnPropertyChanged(nameof(TripDaysToGo));
-            OnPropertyChanged(nameof(TripDaysRemaining));
-            OnPropertyChanged(nameof(TripCountdown));
+            OnPropertyChanged(nameof(CoverImageSource));
+            _now = _timeProvider.GetLocalNow().DateTime;
+            NotifyScheduleChanged();
         }
 
         //public event PropertyChangedEventHandler? PropertyChanged;

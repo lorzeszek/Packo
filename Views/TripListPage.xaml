@@ -13,8 +13,7 @@
 
     <ContentPage.Resources>
         <ResourceDictionary>
-            <BoolToOpacityConverter x:Key="BoolToOpacityConverter" TrueOpacity="1" FalseOpacity="0.72" />
-            <BoolToOppositeConverter x:Key="BoolToOppositeConverter" />
+            <BoolToOpacityConverter x:Key="BoolToOpacityConverter" TrueOpacity="0.72" FalseOpacity="1" />
         </ResourceDictionary>
     </ContentPage.Resources>
 
@@ -71,56 +70,54 @@
                 <DataTemplate x:DataType="TripViewModel">
                     <Border Margin="20,8" Padding="0" StrokeThickness="0"
                             StrokeShape="RoundRectangle 24" HeightRequest="194"
-                            Opacity="{Binding TripModel.IsActive, Converter={StaticResource BoolToOpacityConverter}}">
+                            Opacity="{Binding IsCompleted, Converter={StaticResource BoolToOpacityConverter}}">
                         <Grid>
                             <Image Source="{Binding CoverImageSource}" Aspect="AspectFill" />
-                            <BoxView IsVisible="{Binding TripModel.IsActive, Converter={StaticResource BoolToOppositeConverter}}"
+                            <BoxView IsVisible="{Binding IsCompleted}"
                                      BackgroundColor="#241D19" Opacity="0.35" />
 
-                            <Border HorizontalOptions="Start" VerticalOptions="End" Margin="14"
+                            <Border HorizontalOptions="Fill" VerticalOptions="End" Margin="14"
                                     Padding="14,10" StrokeThickness="0" StrokeShape="RoundRectangle 16"
                                     BackgroundColor="#B8181413">
                                 <VerticalStackLayout Spacing="2">
-                                    <Label Text="{Binding Destination}" FontSize="21" FontAttributes="Bold"
-                                           LineBreakMode="TailTruncation" MaxLines="1" TextColor="White" />
-                                    <HorizontalStackLayout Spacing="8">
-                                        <Label Text="{Binding TripDatesRange}" FontSize="12" TextColor="#F5FFFFFF" />
-                                        <BoxView WidthRequest="3" HeightRequest="3" CornerRadius="2"
-                                                 VerticalOptions="Center" Color="#D9FFFFFF" />
-                                        <Label Text="{Binding PackingSummary}" FontSize="12" FontAttributes="Bold"
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                        <Label Text="{Binding Destination}" FontSize="21" FontAttributes="Bold"
+                                               LineBreakMode="TailTruncation" MaxLines="1" TextColor="White" />
+                                        <Label Grid.Column="1" Text="{Binding PackingSummary}" FontSize="12" FontAttributes="Bold"
+                                               VerticalOptions="Center"
                                                TextColor="#F5FFFFFF" />
-                                    </HorizontalStackLayout>
+                                    </Grid>
+                                    <Label Text="{Binding TripDatesRange}" FontSize="12" TextColor="#F5FFFFFF"
+                                           LineBreakMode="WordWrap" MaxLines="2" />
                                 </VerticalStackLayout>
                             </Border>
 
-                            <Border IsVisible="{Binding TripModel.IsActive, Converter={StaticResource BoolToOppositeConverter}}"
-                                    HorizontalOptions="Start" VerticalOptions="Start" Margin="14"
-                                    Padding="10,6" StrokeThickness="0" StrokeShape="RoundRectangle 13"
-                                    BackgroundColor="#EFFFFFFF">
-                                <Label Text="{loc:Translate PastTrip}" FontSize="10" CharacterSpacing="1.2"
-                                       FontAttributes="Bold" TextColor="#5D514B" />
-                            </Border>
-
-                            <Button Text="&#xe8f9;" FontFamily="MaterialIcons" FontSize="22"
-                                    HorizontalOptions="End" VerticalOptions="Start" Margin="0,10,118,0"
-                                    WidthRequest="46" HeightRequest="46" Padding="6" CornerRadius="16"
-                                    BackgroundColor="#FFFFFFE8" TextColor="#5D514B"
-                                    SemanticProperties.Description="{loc:Translate OpenPackingList}"
-                                    Command="{Binding BindingContext.OpenPackingListCommand, Source={x:Reference TripListView}}"
-                                    CommandParameter="{Binding .}" />
-
-                            <Button Text="&#xe3c9;" FontFamily="MaterialIcons" FontSize="22"
-                                    HorizontalOptions="End" VerticalOptions="Start" Margin="0,10,64,0"
-                                    WidthRequest="46" HeightRequest="46" Padding="6" CornerRadius="16"
-                                    BackgroundColor="#FFFFFFE8" TextColor="#5D514B"
-                                    SemanticProperties.Description="{loc:Translate EditTrip}"
-                                    Command="{Binding BindingContext.EditTripCommand, Source={x:Reference TripListView}}"
-                                    CommandParameter="{Binding .}" />
-
-                            <views:DeleteIconButton HorizontalOptions="End" VerticalOptions="Start" Margin="10"
-                                                    ActionDescription="{loc:Translate DeleteTrip}"
-                                                    Command="{Binding BindingContext.TrashTripCommand, Source={x:Reference TripListView}}"
-                                                    CommandParameter="{Binding .}" />
+                            <Grid Margin="14,10,10,0" ColumnDefinitions="*,Auto" ColumnSpacing="8" VerticalOptions="Start">
+                                <Border HorizontalOptions="Start" VerticalOptions="Center"
+                                        Padding="10,6" StrokeThickness="0" StrokeShape="RoundRectangle 13"
+                                        BackgroundColor="#EFFFFFFF">
+                                    <Label Text="{Binding StatusLabel}" FontSize="10" CharacterSpacing="1"
+                                           LineBreakMode="WordWrap" MaxLines="2"
+                                           FontAttributes="Bold" TextColor="#5D514B" />
+                                </Border>
+                                <HorizontalStackLayout Grid.Column="1" Spacing="8">
+                                    <Button Text="&#xe8f9;" FontFamily="MaterialIcons" FontSize="22"
+                                            WidthRequest="46" HeightRequest="46" Padding="6" CornerRadius="16"
+                                            BackgroundColor="#FFFFFFE8" TextColor="#5D514B"
+                                            SemanticProperties.Description="{loc:Translate OpenPackingList}"
+                                            Command="{Binding BindingContext.OpenPackingListCommand, Source={x:Reference TripListView}}"
+                                            CommandParameter="{Binding .}" />
+                                    <Button Text="&#xe3c9;" FontFamily="MaterialIcons" FontSize="22"
+                                            WidthRequest="46" HeightRequest="46" Padding="6" CornerRadius="16"
+                                            BackgroundColor="#FFFFFFE8" TextColor="#5D514B"
+                                            SemanticProperties.Description="{loc:Translate EditTrip}"
+                                            Command="{Binding BindingContext.EditTripCommand, Source={x:Reference TripListView}}"
+                                            CommandParameter="{Binding .}" />
+                                    <views:DeleteIconButton ActionDescription="{loc:Translate DeleteTrip}"
+                                                            Command="{Binding BindingContext.TrashTripCommand, Source={x:Reference TripListView}}"
+                                                            CommandParameter="{Binding .}" />
+                                </HorizontalStackLayout>
+                            </Grid>
                         </Grid>
 
                         <Border.GestureRecognizers>

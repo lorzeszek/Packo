@@ -62,6 +62,12 @@
                                                     FontSize="13" HorizontalOptions="Fill" />
                                     </Grid>
                                 </Border>
+                                <Label Text="{loc:Translate StartTime}" Style="{StaticResource PackoFieldCaptionStyle}" />
+                                <Border Padding="10,5" StrokeThickness="1" Stroke="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoControlBorderDark}}"
+                                        StrokeShape="RoundRectangle 15" BackgroundColor="{AppThemeBinding Light={StaticResource PackoWhite}, Dark={StaticResource PackoInsetSurfaceDeepDark}}">
+                                    <TimePicker Time="{Binding StartTime}" Format="HH:mm" FontSize="15"
+                                                SemanticProperties.Description="{loc:Translate StartTime}" />
+                                </Border>
                             </VerticalStackLayout>
                             <VerticalStackLayout Grid.Column="1" Spacing="7">
                                 <Label Text="{loc:Translate End}" Style="{StaticResource PackoFieldCaptionStyle}" FontAttributes="Bold" CharacterSpacing="1" />
@@ -79,8 +85,17 @@
                                                     FontSize="13" HorizontalOptions="Fill" />
                                     </Grid>
                                 </Border>
+                                <Label Text="{loc:Translate EndTime}" Style="{StaticResource PackoFieldCaptionStyle}" />
+                                <Border Padding="10,5" StrokeThickness="1" Stroke="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoControlBorderDark}}"
+                                        StrokeShape="RoundRectangle 15" BackgroundColor="{AppThemeBinding Light={StaticResource PackoWhite}, Dark={StaticResource PackoInsetSurfaceDeepDark}}">
+                                    <TimePicker Time="{Binding EndTime}" Format="HH:mm" FontSize="15"
+                                                SemanticProperties.Description="{loc:Translate EndTime}" />
+                                </Border>
                             </VerticalStackLayout>
                         </Grid>
+                        <Label Text="{loc:Translate TripScheduleError}" IsVisible="{Binding HasScheduleError}"
+                               FontSize="13" LineBreakMode="WordWrap"
+                               TextColor="{AppThemeBinding Light={StaticResource PackoAccentStrongLight}, Dark={StaticResource PackoAccentDark}}" />
                     </VerticalStackLayout>
                 </Border>
 

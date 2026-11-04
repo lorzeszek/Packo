@@ -232,6 +232,12 @@ namespace Packo.ViewModels
 
         public Task OnAppearingAsync() => LoadSelectedTripAsync();
 
+        public void RefreshTripSchedule()
+        {
+            Trip?.RefreshSchedule();
+            OnPropertyChanged(nameof(TripCountdown));
+        }
+
         private async Task LoadSelectedTripAsync(bool forceRefresh = false)
         {
             try

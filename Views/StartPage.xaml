@@ -47,13 +47,15 @@
                     <VerticalStackLayout Grid.Row="2" Spacing="10">
                         <Border Padding="11,6" HorizontalOptions="Start" StrokeThickness="1"
                                 Stroke="#40FFFFFF" StrokeShape="RoundRectangle 12"
-                                BackgroundColor="#40000000">
-                            <Label Text="{Binding TripCountdown}" FontSize="12" FontAttributes="Bold"
-                                   TextColor="{StaticResource PackoWhite}" />
+                                BackgroundColor="#EFFFFFFF">
+                            <Label Text="{Binding Trip.StatusLabel}" FontSize="11" FontAttributes="Bold"
+                                   CharacterSpacing="1" TextColor="#5D514B" />
                         </Border>
                         <Label Text="{Binding TripDestination}" FontSize="34" FontAttributes="Bold"
                                TextColor="{StaticResource PackoWhite}" LineBreakMode="TailTruncation" MaxLines="3" />
                         <Label Text="{Binding TripDatesRange}" FontSize="14" TextColor="#F0FFFFFF" />
+                        <Label Text="{Binding TripCountdown}" FontSize="12" TextColor="#F0FFFFFF"
+                               IsVisible="{Binding Trip.IsCompleted, Converter={StaticResource BoolToOppositeConverter}}" />
                     </VerticalStackLayout>
                 </Grid>
             </Grid>

@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Packo.Interfaces;
+using Packo.Helpers;
 using Packo.Models;
 using Packo.Models.DTO;
 using Packo.Models.Enums;
@@ -67,8 +68,10 @@ namespace Packo.ViewModels
             OnPropertyChanged(nameof(Intro));
             OnPropertyChanged(nameof(SubmitText));
             Destination = trip.Destination;
-            StartDate = trip.StartDate ?? DateTime.Today;
-            EndDate = trip.EndDate ?? StartDate;
+            StartDate = trip.StartDate?.Date ?? DateTime.Today;
+            StartTime = trip.StartDate?.TimeOfDay ?? TimeSpan.Zero;
+            EndDate = trip.EndDate?.Date ?? StartDate;
+            EndTime = trip.EndDate?.TimeOfDay ?? new TimeSpan(23, 59, 0);
             AdultsCount = trip.AdultsCount;
             foreach (var child in Children)
                 child.PropertyChanged -= OnChildAgeChanged;
@@ -143,7 +146,19 @@ namespace Packo.ViewModels
 
         [ObservableProperty]
         [NotifyCanExecuteChangedFor("CreateTripCommand")]
-        private DateTime endDate = DateTime.Today.AddDays(1).Add(new TimeSpan(23, 59, 0));
+        private DateTime endDate = DateTime.Today.AddDays(1);
+
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor("CreateTripCommand")]
+        private TimeSpan startTime = TimeSpan.Zero;
+
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor("CreateTripCommand")]
+        private TimeSpan endTime = new(23, 59, 0);
+
+        public DateTime StartDateTime => TripSchedule.Combine(StartDate, StartTime);
+        public DateTime EndDateTime => TripSchedule.Combine(EndDate, EndTime);
+        public bool HasScheduleError => !TripSchedule.IsValid(StartDateTime, EndDateTime);
 
         [ObservableProperty]
         [NotifyCanExecuteChangedFor("CreateTripCommand")]
@@ -185,20 +200,33 @@ namespace Packo.ViewModels
             }
 
             if (EndDate.Date < normalized)
-                EndDate = normalized.Date.Add(new TimeSpan(23, 59, 0));
+                EndDate = normalized;
+
+            NotifyScheduleChanged();
         }
 
         partial void OnEndDateChanged(DateTime value)
         {
-            var endOfDay = value.Date.Add(new TimeSpan(23, 59, 0));
-            if (value != endOfDay)
+            if (value != value.Date)
             {
-                EndDate = endOfDay;
+                EndDate = value.Date;
                 return;
             }
 
             if (value.Date < StartDate.Date)
-                EndDate = StartDate.Date.Add(new TimeSpan(23, 59, 0));
+                EndDate = StartDate.Date;
+
+            NotifyScheduleChanged();
+        }
+
+        partial void OnStartTimeChanged(TimeSpan value) => NotifyScheduleChanged();
+        partial void OnEndTimeChanged(TimeSpan value) => NotifyScheduleChanged();
+
+        private void NotifyScheduleChanged()
+        {
+            OnPropertyChanged(nameof(StartDateTime));
+            OnPropertyChanged(nameof(EndDateTime));
+            OnPropertyChanged(nameof(HasScheduleError));
         }
 
         [RelayCommand]
@@ -289,7 +317,7 @@ namespace Packo.ViewModels
                 Session.SetLocalUser(localUser.LocalUserId);
             }
 
-            var classification = await _tripClassificationService.ClassifyTripAsync(Destination, StartDate, EndDate, SelectedTransportTypes);
+            var classification = await _tripClassificationService.ClassifyTripAsync(Destination, StartDateTime, EndDateTime, SelectedTransportTypes);
 
             Enum.TryParse<CoverThemeType>(classification.CoverTheme, true, out var coverTheme);
 
@@ -298,14 +326,14 @@ namespace Packo.ViewModels
                 LocalUserId = Session.LocalUserId,
                 RemoteUserId = Session.UserId,
                 CreatedDate = DateTime.Now,
-                StartDate = StartDate,
-                EndDate = EndDate,
+                StartDate = StartDateTime,
+                EndDate = EndDateTime,
                 Destination = Destination,
                 AdultsCount = AdultsCount,
                 ChildrenAges = ChildrenAge.ToList(),
                 SelectedTransportTypes = SelectedTransportTypes.ToList(),
                 TripType = SelectedTripTypeOption.Value,
-                IsActive = true,
+                IsActive = EndDateTime > DateTime.Now,
                 CoverTheme = coverTheme
             };
 
@@ -340,8 +368,8 @@ namespace Packo.ViewModels
                 {
                     var proposeListItems = await _packingSuggestionService.GenerateItemsAsync(
                         Destination,
-                        StartDate,
-                        EndDate,
+                        StartDateTime,
+                        EndDateTime,
                         AdultsCount,
                         ChildrenAge,
                         SelectedTransportTypes,
@@ -393,8 +421,9 @@ namespace Packo.ViewModels
         {
             var trip = _editingTrip!;
             trip.Destination = Destination.Trim();
-            trip.StartDate = StartDate;
-            trip.EndDate = EndDate;
+            trip.StartDate = StartDateTime;
+            trip.EndDate = EndDateTime;
+            trip.IsActive = EndDateTime > DateTime.Now;
             trip.AdultsCount = AdultsCount;
             trip.ChildrenAges = ChildrenAge.ToList();
             trip.SelectedTransportTypes = SelectedTransportTypes.ToList();
@@ -419,6 +448,6 @@ namespace Packo.ViewModels
 
         private bool CanCreateTrip()
             => !string.IsNullOrWhiteSpace(Destination)
-               && EndDate >= StartDate;
+               && TripSchedule.IsValid(StartDateTime, EndDateTime);
     }
 }
