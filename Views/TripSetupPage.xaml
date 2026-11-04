@@ -8,6 +8,7 @@
                 x:Class="Packo.Views.TripSetupPage"
                 x:DataType="TripSetupViewModel"
                 Title="{Binding PageTitle}"
+                HideSoftInputOnTapped="True"
                 BackgroundColor="{AppThemeBinding Light={StaticResource PackoPageBackgroundLight}, Dark={StaticResource PackoPageBackgroundDark}}">
 
     <ContentPage.Resources>
