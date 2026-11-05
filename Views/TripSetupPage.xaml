@@ -107,36 +107,38 @@
                             <Label Text="{loc:Translate TravelersDescription}" Style="{StaticResource PackoFieldCaptionStyle}" />
                         </VerticalStackLayout>
 
-                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <VerticalStackLayout Spacing="12">
                             <Border Padding="12" StrokeThickness="1" Stroke="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoControlBorderDark}}"
                                     StrokeShape="RoundRectangle 17" BackgroundColor="{AppThemeBinding Light={StaticResource PackoWhite}, Dark={StaticResource PackoInsetSurfaceDeepDark}}">
-                                <VerticalStackLayout Spacing="9" HorizontalOptions="Center">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
                                     <Label Text="{loc:Translate Adults}" FontSize="14" FontAttributes="Bold"
+                                           VerticalTextAlignment="Center" LineBreakMode="WordWrap"
                                            TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
-                                    <HorizontalStackLayout Spacing="12" VerticalOptions="Center">
-                                        <Button Text="−" Style="{StaticResource PackoCounterButtonStyle}" Command="{Binding DecreaseAdultsCountCommand}" />
-                                        <Label Text="{Binding AdultsCount}" FontSize="17" FontAttributes="Bold"
-                                               WidthRequest="20" HorizontalTextAlignment="Center" VerticalTextAlignment="Center"
+                                    <Grid Grid.Column="1" ColumnDefinitions="44,Auto,44" ColumnSpacing="6" VerticalOptions="Center">
+                                        <Button Text="−" WidthRequest="44" HeightRequest="44" Style="{StaticResource PackoCounterButtonStyle}" Command="{Binding DecreaseAdultsCountCommand}" />
+                                        <Label Grid.Column="1" Text="{Binding AdultsCount}" FontSize="17" FontAttributes="Bold"
+                                               MinimumWidthRequest="32" HorizontalTextAlignment="Center" VerticalTextAlignment="Center"
                                                TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
-                                        <Button Text="+" Style="{StaticResource PackoCounterButtonStyle}" Command="{Binding IncreaseAdultsCountCommand}" />
-                                    </HorizontalStackLayout>
-                                </VerticalStackLayout>
+                                        <Button Grid.Column="2" Text="+" WidthRequest="44" HeightRequest="44" Style="{StaticResource PackoCounterButtonStyle}" Command="{Binding IncreaseAdultsCountCommand}" />
+                                    </Grid>
+                                </Grid>
                             </Border>
-                            <Border Grid.Column="1" Padding="12" StrokeThickness="1" Stroke="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoControlBorderDark}}"
+                            <Border Padding="12" StrokeThickness="1" Stroke="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoControlBorderDark}}"
                                     StrokeShape="RoundRectangle 17" BackgroundColor="{AppThemeBinding Light={StaticResource PackoWhite}, Dark={StaticResource PackoInsetSurfaceDeepDark}}">
-                                <VerticalStackLayout Spacing="9" HorizontalOptions="Center">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
                                     <Label Text="{loc:Translate Children}" FontSize="14" FontAttributes="Bold"
+                                           VerticalTextAlignment="Center" LineBreakMode="WordWrap"
                                            TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
-                                    <HorizontalStackLayout Spacing="12" VerticalOptions="Center">
-                                        <Button Text="−" Style="{StaticResource PackoCounterButtonStyle}" Command="{Binding DecreaseChildrenCountCommand}" />
-                                        <Label Text="{Binding ChildrenCount}" FontSize="17" FontAttributes="Bold"
-                                               WidthRequest="20" HorizontalTextAlignment="Center" VerticalTextAlignment="Center"
+                                    <Grid Grid.Column="1" ColumnDefinitions="44,Auto,44" ColumnSpacing="6" VerticalOptions="Center">
+                                        <Button Text="−" WidthRequest="44" HeightRequest="44" Style="{StaticResource PackoCounterButtonStyle}" Command="{Binding DecreaseChildrenCountCommand}" />
+                                        <Label Grid.Column="1" Text="{Binding ChildrenCount}" FontSize="17" FontAttributes="Bold"
+                                               MinimumWidthRequest="32" HorizontalTextAlignment="Center" VerticalTextAlignment="Center"
                                                TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
-                                        <Button Text="+" Style="{StaticResource PackoCounterButtonStyle}" Command="{Binding IncreaseChildrenCountCommand}" />
-                                    </HorizontalStackLayout>
-                                </VerticalStackLayout>
+                                        <Button Grid.Column="2" Text="+" WidthRequest="44" HeightRequest="44" Style="{StaticResource PackoCounterButtonStyle}" Command="{Binding IncreaseChildrenCountCommand}" />
+                                    </Grid>
+                                </Grid>
                             </Border>
-                        </Grid>
+                        </VerticalStackLayout>
 
                         <VerticalStackLayout IsVisible="{Binding HasChildren}" Spacing="10"
                                              BindableLayout.ItemsSource="{Binding Children}">
