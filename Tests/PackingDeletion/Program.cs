@@ -199,8 +199,8 @@ try
 
     var fullList = Enumerable.Range(1, 27).Select(i => Item($"Progress {i}", 7)).ToList();
     var progressRecipient = new object();
-    TripDataChangedMessage? lastProgress = null;
-    WeakReferenceMessenger.Default.Register<TripDataChangedMessage>(progressRecipient, (_, message) =>
+    PackingProgressChangedMessage? lastProgress = null;
+    WeakReferenceMessenger.Default.Register<PackingProgressChangedMessage>(progressRecipient, (_, message) =>
     {
         if (message.LocalTripId == 7) lastProgress = message;
     });
@@ -266,12 +266,14 @@ static async Task VerifyStartupTripPreloadAsync()
     if (startup.IsCompleted || home.IsCompleted || trips.IsCompleted || requests != 1)
         throw new Exception("Startup must await trip data and share its request with Home and Trips.");
 
+    WeakReferenceMessenger.Default.Send(new PackingProgressChangedMessage(1, 42, "local", "4 / 10"));
     response.SetResult([new(new TripDTO { RemoteTripId = 42 }, "3 / 10")]);
     await Task.WhenAll(startup, home, trips).WaitAsync(TimeSpan.FromSeconds(5));
     var firstScreen = preload.GetTripsAsync();
-    if (!firstScreen.IsCompletedSuccessfully || requests != 1 || (await firstScreen).Single().PackingSummary != "3 / 10")
-        throw new Exception("The first screen must have cached trip data immediately without another network request.");
-    Console.WriteLine("PASS: Startup waits for trips; Home and Trips immediately reuse the same result and single request");
+    if (!firstScreen.IsCompletedSuccessfully || requests != 1 ||
+        new[] { startup, home, trips, firstScreen }.Any(load => load.Result.Single().PackingSummary != "4 / 10"))
+        throw new Exception("Packing progress arriving during startup must update every caller without another trip request.");
+    Console.WriteLine("PASS: Startup, Home and Trips share one request and receive packing progress published during that request");
 
     preload.Invalidate();
     repository.StatsSource = () => Task.FromException<IReadOnlyList<TripWithStats>>(new IOException("Network failure"));
@@ -333,9 +335,11 @@ static async Task VerifyStaleCacheAndAtomicClearAsync()
         Check((await local.GetPackingItemsForTripAsync(8, 80)).Count == 0,
             "Restarting schema initialization does not reactivate obsolete cache entries");
 
-        WeakReferenceMessenger.Default.Register<TripDataChangedMessage>(recipient, (_, message) =>
+        var tripChanges = 0;
+        WeakReferenceMessenger.Default.Register<TripDataChangedMessage>(recipient, (_, _) => tripChanges++);
+        WeakReferenceMessenger.Default.Register<PackingProgressChangedMessage>(recipient, (_, message) =>
         {
-            if (message.LocalTripId == 8 && message.PackingSummary != null)
+            if (message.LocalTripId == 8)
                 summaries.Add(message.PackingSummary);
         });
         Connectivity.Current.NetworkAccess = NetworkAccess.None;
@@ -352,6 +356,8 @@ static async Task VerifyStaleCacheAndAtomicClearAsync()
         var displayed = await repository.GetPackingItemsForTripAsync(8, 80);
         Check(displayed.Count == 22 && (await PackingStatsSnapshot.ReadAsync(regressionDb, "local")).SummaryFor(8) == "0 / 22",
             "A completed upload and cache reload keep the same 22-item count");
+        Check(tripChanges == 0 && summaries.SequenceEqual(["0 / 22", "0 / 22"]),
+            "Adding items, uploading the queue and fetching the list never request a trip reload");
 
         // A trip originating on another device can share its numeric local ID.
         for (var i = 0; i < 26; i++)
@@ -367,6 +373,7 @@ static async Task VerifyStaleCacheAndAtomicClearAsync()
         Check((await repository.GetPackingItemsForTripAsync(8, 80)).Count == 22 &&
             (await local.GetPackingItemsForTripAsync(8, 99)).Count == 26,
             "Refreshing one trip preserves the other trip's cached items");
+        summaries.Clear();
 
         cloud.DeleteStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
         cloud.ReleaseDelete = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -375,7 +382,7 @@ static async Task VerifyStaleCacheAndAtomicClearAsync()
         var cleared = await PackingStatsSnapshot.ReadAsync(regressionDb, "local");
         Check(cleared.SummaryFor(8, 80) == "0 / 0" && (await local.GetPackingItemsForTripAsync(8, 80)).Count == 0,
             "Clear list commits all 22 local removals before blocked cloud deletion finishes");
-        Check(summaries.SequenceEqual(new[] { "0 / 22", "0 / 0" }),
+        Check(summaries.SequenceEqual(["0 / 0"]),
             "Progress jumps directly 0 / 22 to 0 / 0 without intermediate decrements");
         Check(cleared.ApplyTo([new(trip, "0 / 22")], cleared).Single().PackingSummary == "0 / 0",
             "Pending cloud deletions cannot restore an old counter on Home/Trips");

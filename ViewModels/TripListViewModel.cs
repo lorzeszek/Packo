@@ -93,20 +93,16 @@ namespace Packo.ViewModels
                 await OnLoginCompleted();
             });
 
-            WeakReferenceMessenger.Default.Register<TripDataChangedMessage>(this, (r, m) =>
+            WeakReferenceMessenger.Default.Register<TripDataChangedMessage>(this, (_, _) => _isDirty = true);
+
+            WeakReferenceMessenger.Default.Register<PackingProgressChangedMessage>(this, (_, message) =>
             {
-                _isDirty = true;
-                _tripListPreloadService.Invalidate();
-                _weatherPreloadService.Invalidate();
-                if (m.PackingSummary != null && m.LocalUserId == Session.LocalUserId)
-                    MainThread.BeginInvokeOnMainThread(() =>
-                    {
-                        var trip = Trips.FirstOrDefault(x => m.RemoteTripId > 0
-                            ? x.TripModel.RemoteTripId == m.RemoteTripId
-                            : x.TripModel.LocalTripId == m.LocalTripId && x.TripModel.LocalUserId == m.LocalUserId);
-                        if (trip != null)
-                            trip.PackingSummary = m.PackingSummary;
-                    });
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    if (message.LocalUserId == Session.LocalUserId
+                        && Trips.FirstOrDefault(x => message.MatchesTrip(x.TripModel)) is { } trip)
+                        trip.PackingSummary = message.PackingSummary;
+                });
             });
 
             WeakReferenceMessenger.Default.Register<LogoutCompletedMessage>(this, async (r, m) =>

@@ -65,6 +65,25 @@ internal static class CompletedTripChecks
         Check(list.Trips[0].TripModel.RemoteTripId == 4,
             "Upcoming trips remain above completed trips after the list reloads");
 
+        var tile = list.Trips.Single(trip => trip.TripModel.RemoteTripId == 1);
+        var propertiesChanged = new List<string?>();
+        tile.PropertyChanged += (_, args) => propertiesChanged.Add(args.PropertyName);
+        var loadingStarted = false;
+        list.PropertyChanged += (_, args) => loadingStarted |= args.PropertyName == nameof(list.IsLoading) && list.IsLoading;
+        await list.OnNavigatedFromAsync(new Dictionary<string, object>());
+        WeakReferenceMessenger.Default.Send(new PackingProgressChangedMessage(1, 1, "local", "3 / 5"));
+        await list.OnAppearingAsync();
+        Check(list.ShowTrips && !loadingStarted && list.Trips.Contains(tile) && tile.PackingSummary == "3 / 5"
+            && propertiesChanged.SequenceEqual([nameof(TripViewModel.PackingSummary)]),
+            "Returning from packing updates only the existing tile's counter without entering the loading state");
+        await details.OnAppearingAsync();
+        Check(details.PackingSummary == "3 / 5", "Reopening details uses the updated counter from the trip cache");
+
+        WeakReferenceMessenger.Default.Send(new TripDataChangedMessage());
+        await list.OnAppearingAsync();
+        Check(loadingStarted && list.Trips.Single(trip => trip.TripModel.RemoteTripId == 1).PackingSummary == "2 / 5",
+            "A trip data change still reloads the list and its cloud stats");
+
         SQLitePCL.Batteries_V2.Init();
         var path = Path.Combine(Path.GetTempPath(), $"packo-completed-trips-{Guid.NewGuid():N}.db");
         var db = new SQLiteAsyncConnection(path);

@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
+using Packo.Messages;
 using Packo.Models.DTO;
 using Packo.Models.SQLite;
 using Packo.Repositories.Enums;
@@ -98,6 +99,7 @@ namespace Packo.Repositories
             {
                 await _tripRepository.SyncPendingChangesAsync();
                 await SyncPendingChangesAsync();
+                WeakReferenceMessenger.Default.Send(new TripDataChangedMessage());
             }
             catch (Exception ex)
             {
@@ -107,12 +109,14 @@ namespace Packo.Repositories
 
         public async Task<int> AddPackingItemAsync(PackingItemDTO item)
         {
-            int id;
             await _syncGate.WaitAsync();
-            try { id = await AddPackingItemCoreAsync(item); }
+            try
+            {
+                var id = await AddPackingItemCoreAsync(item);
+                await PublishPackingProgressAsync(item.LocalTripId, item.RemoteTripId, item.LocalUserId);
+                return id;
+            }
             finally { _syncGate.Release(); }
-            await PublishPackingProgressAsync(item.LocalTripId, item.RemoteTripId, item.LocalUserId);
-            return id;
         }
 
         private async Task<int> AddPackingItemCoreAsync(PackingItemDTO item)
@@ -210,20 +214,24 @@ namespace Packo.Repositories
                 });
                 for (var i = 0; i < items.Count; i++)
                     items[i].LocalPackingItemId = rows[i].LocalPackingItemId;
+
+                foreach (var trip in items.Select(x => (x.LocalTripId, x.RemoteTripId, x.LocalUserId)).Distinct())
+                    await PublishPackingProgressAsync(trip.LocalTripId, trip.RemoteTripId, trip.LocalUserId);
             }
             finally { _syncGate.Release(); }
 
-            foreach (var trip in items.Select(x => (x.LocalTripId, x.RemoteTripId, x.LocalUserId)).Distinct())
-                await PublishPackingProgressAsync(trip.LocalTripId, trip.RemoteTripId, trip.LocalUserId);
             SchedulePendingSync();
         }
 
         public async Task DeletePackingItemAsync(PackingItemDTO item)
         {
             await _syncGate.WaitAsync();
-            try { await DeletePackingItemCoreAsync(item); }
+            try
+            {
+                await DeletePackingItemCoreAsync(item);
+                await PublishPackingProgressAsync(item.LocalTripId, item.RemoteTripId, item.LocalUserId);
+            }
             finally { _syncGate.Release(); }
-            await PublishPackingProgressAsync(item.LocalTripId, item.RemoteTripId, item.LocalUserId);
         }
 
         private async Task DeletePackingItemCoreAsync(PackingItemDTO item)
@@ -368,7 +376,6 @@ namespace Packo.Repositories
                     // A successful full fetch defines current membership. Keep older cache rows
                     // recoverable, but stop counting entries no longer present in this trip.
                     var currentIds = result.Select(x => x.LocalPackingItemId).ToHashSet();
-                    var membershipChanged = false;
                     await _pendingDb.RunInTransactionAsync(db =>
                     {
                         var rows = db.Table<SQLitePackingItem>().Where(x => x.LocalUserId == _sessionService.LocalUserId
@@ -380,11 +387,11 @@ namespace Packo.Repositories
                                 continue;
                             row.IsStaleCache = stale;
                             db.Update(row);
-                            membershipChanged = true;
                         }
                     });
-                    if (membershipChanged)
-                        await PublishPackingProgressAsync(localTripId, remoteTripId, _sessionService.LocalUserId ?? string.Empty);
+                    var summary = $"{result.Count(x => x.IsPacked)} / {result.Count}";
+                    WeakReferenceMessenger.Default.Send(new PackingProgressChangedMessage(
+                        localTripId, remoteTripId, _sessionService.LocalUserId ?? string.Empty, summary));
                     return result;
                 }
                 finally { _syncGate.Release(); }
@@ -411,21 +418,19 @@ namespace Packo.Repositories
         public async Task UpdatePackingItemAsync(PackingItemDTO item)
         {
             await _syncGate.WaitAsync();
-            try { await UpdatePackingItemCoreAsync(item); }
+            try
+            {
+                await UpdatePackingItemCoreAsync(item);
+                await PublishPackingProgressAsync(item.LocalTripId, item.RemoteTripId, item.LocalUserId);
+            }
             finally { _syncGate.Release(); }
-            await PublishPackingProgressAsync(item.LocalTripId, item.RemoteTripId, item.LocalUserId);
         }
 
         private async Task PublishPackingProgressAsync(int localTripId, int? remoteTripId, string localUserId)
         {
             var progress = await PackingStatsSnapshot.ReadAsync(_pendingDb, localUserId);
-            WeakReferenceMessenger.Default.Send(new Packo.Messages.TripDataChangedMessage
-            {
-                LocalTripId = localTripId,
-                RemoteTripId = remoteTripId,
-                LocalUserId = localUserId,
-                PackingSummary = progress.SummaryFor(localTripId, remoteTripId)
-            });
+            WeakReferenceMessenger.Default.Send(new PackingProgressChangedMessage(
+                localTripId, remoteTripId, localUserId, progress.SummaryFor(localTripId, remoteTripId)));
         }
 
         private async Task UpdatePackingItemCoreAsync(PackingItemDTO item)
@@ -619,8 +624,6 @@ namespace Packo.Repositories
                 }
                 finally { _syncGate.Release(); }
             }
-
-            WeakReferenceMessenger.Default.Send(new Packo.Messages.TripDataChangedMessage());
 
         }
 

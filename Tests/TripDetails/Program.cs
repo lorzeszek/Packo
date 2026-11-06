@@ -31,15 +31,9 @@ await vm.OnAppearingAsync();
 Check(vm.TripDestination == "Updated destination" && vm.PackingProgress == .75,
     "Returning from editing or packing reloads the same trip's details and progress");
 
-WeakReferenceMessenger.Default.Send(new TripDataChangedMessage
-{
-    LocalUserId = "local", LocalTripId = 1, RemoteTripId = 10, PackingSummary = "4 / 4"
-});
+WeakReferenceMessenger.Default.Send(new PackingProgressChangedMessage(1, 10, "local", "4 / 4"));
 Check(vm.PackingSummary == "6 / 8", "Packing updates for another trip cannot change the selected trip");
-WeakReferenceMessenger.Default.Send(new TripDataChangedMessage
-{
-    LocalUserId = "local", LocalTripId = 2, RemoteTripId = 20, PackingSummary = "7 / 8"
-});
+WeakReferenceMessenger.Default.Send(new PackingProgressChangedMessage(2, 20, "local", "7 / 8"));
 Check(vm.PackingSummary == "7 / 8" && vm.PackingProgress == .875,
     "Packing updates immediately refresh the selected trip's progress");
 

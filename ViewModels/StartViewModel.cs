@@ -166,16 +166,12 @@ namespace Packo.ViewModels
             RetryLoadCommand = new AsyncRelayCommand(() => LoadSelectedTripAsync(forceRefresh: true));
             Title = LocalizationResourceManager.Instance["TripDetails"];
             LocalizationResourceManager.Instance.PropertyChanged += OnLanguageChanged;
-            WeakReferenceMessenger.Default.Register<TripDataChangedMessage>(this, (recipient, message) =>
+            WeakReferenceMessenger.Default.Register<PackingProgressChangedMessage>(this, (recipient, message) =>
             {
-                if (message.PackingSummary == null)
-                    return;
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
                     var trip = Trip?.TripModel;
-                    if (trip != null && message.LocalUserId == Session.LocalUserId
-                        && (message.RemoteTripId > 0 ? trip.RemoteTripId == message.RemoteTripId
-                            : trip.LocalTripId == message.LocalTripId && trip.LocalUserId == message.LocalUserId))
+                    if (trip != null && message.LocalUserId == Session.LocalUserId && message.MatchesTrip(trip))
                     {
                         Trip!.PackingSummary = message.PackingSummary;
                         OnPropertyChanged(nameof(PackingSummary));

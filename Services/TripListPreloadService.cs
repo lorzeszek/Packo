@@ -9,7 +9,7 @@ namespace Packo.Services
     public class TripListPreloadService : ITripListPreloadService
     {
         private readonly ITripRepository _tripRepository;
-        private readonly SemaphoreSlim _gate = new(1, 1);
+        private readonly object _gate = new();
         private Task<IReadOnlyList<TripWithStats>>? _cachedRequest;
         private long _dataVersion;
         private long _cachedVersion;
@@ -17,8 +17,10 @@ namespace Packo.Services
         public TripListPreloadService(ITripRepository tripRepository)
         {
             _tripRepository = tripRepository;
-            WeakReferenceMessenger.Default.Register<TripDataChangedMessage>(this, (recipient, message) =>
-                ((TripListPreloadService)recipient).Invalidate());
+            WeakReferenceMessenger.Default.Register<TripListPreloadService, TripDataChangedMessage>(this, (recipient, _) =>
+                recipient.Invalidate());
+            WeakReferenceMessenger.Default.Register<TripListPreloadService, PackingProgressChangedMessage>(this, (recipient, message) =>
+                recipient.UpdatePackingProgress(message));
         }
 
         public async Task PrefetchAsync()
@@ -39,44 +41,36 @@ namespace Packo.Services
             {
                 Task<IReadOnlyList<TripWithStats>> request;
                 long requestVersion;
-                await _gate.WaitAsync();
-                try
+                lock (_gate)
                 {
-                    var version = Volatile.Read(ref _dataVersion);
-                    if (forceRefresh || _cachedRequest is null || _cachedVersion != version)
+                    if (forceRefresh || _cachedRequest is null || _cachedRequest.IsFaulted || _cachedRequest.IsCanceled)
                     {
-                        _cachedVersion = version;
+                        _cachedVersion = _dataVersion;
                         _cachedRequest = _tripRepository.GetActiveTripsWithStatsAsync();
                     }
                     request = _cachedRequest;
                     requestVersion = _cachedVersion;
                 }
-                finally { _gate.Release(); }
 
                 try
                 {
                     var result = await request;
-                    await _gate.WaitAsync();
-                    try
+                    lock (_gate)
                     {
-                        if (ReferenceEquals(_cachedRequest, request) && requestVersion == Volatile.Read(ref _dataVersion))
+                        if (ReferenceEquals(_cachedRequest, request) && requestVersion == _dataVersion)
                             return result;
                     }
-                    finally { _gate.Release(); }
 
-                    // A local change invalidated this request while it was loading.
-                    // Join/start the newer request instead of returning an obsolete counter.
+                    // A trip change or a packing update superseded this result.
                     forceRefresh = false;
                 }
                 catch
                 {
-                    await _gate.WaitAsync();
-                    try
+                    lock (_gate)
                     {
-                        if (ReferenceEquals(_cachedRequest, request))
+                        if (ReferenceEquals(_cachedRequest, request) && requestVersion == _dataVersion)
                             _cachedRequest = null;
                     }
-                    finally { _gate.Release(); }
                     throw;
                 }
             }
@@ -84,8 +78,29 @@ namespace Packo.Services
 
         public void Invalidate()
         {
-            Interlocked.Increment(ref _dataVersion);
-            _cachedRequest = null;
+            lock (_gate)
+            {
+                _dataVersion++;
+                _cachedRequest = null;
+            }
+        }
+
+        private void UpdatePackingProgress(PackingProgressChangedMessage message)
+        {
+            lock (_gate)
+            {
+                if (_cachedRequest is { IsFaulted: false, IsCanceled: false } request)
+                    _cachedRequest = WithPackingProgressAsync(request, message);
+            }
+        }
+
+        private static async Task<IReadOnlyList<TripWithStats>> WithPackingProgressAsync(
+            Task<IReadOnlyList<TripWithStats>> request, PackingProgressChangedMessage message)
+        {
+            var trips = await request.ConfigureAwait(false);
+            return trips.Select(entry => message.MatchesTrip(entry.Trip) && entry.PackingSummary != message.PackingSummary
+                ? new TripWithStats(entry.Trip, message.PackingSummary)
+                : entry).ToList();
         }
     }
 }

@@ -28,6 +28,7 @@
     <Compile Include="../../Models/Enums/TripType.cs" Link="TripType.cs" />
     <Compile Include="../../Models/Enums/CoverThemeType.cs" Link="CoverThemeType.cs" />
     <Compile Include="../../Messages/TripDataChangedMessage.cs" Link="TripDataChangedMessage.cs" />
+    <Compile Include="../../Messages/PackingProgressChangedMessage.cs" Link="PackingProgressChangedMessage.cs" />
     <Compile Include="../../Services/TripListPreloadService.cs" Link="TripListPreloadService.cs" />
     <Compile Include="../../Services/Interfaces/ITripListPreloadService.cs" Link="ITripListPreloadService.cs" />
   </ItemGroup>

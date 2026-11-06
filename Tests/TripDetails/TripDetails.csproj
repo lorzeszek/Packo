@@ -43,6 +43,7 @@
     <Compile Include="../../Repositories/Models/TripWithStats.cs" Link="TripWithStats.cs" />
     <Compile Include="../../Services/Interfaces/ITripListPreloadService.cs" Link="ITripListPreloadService.cs" />
     <Compile Include="../../Messages/TripDataChangedMessage.cs" Link="TripDataChangedMessage.cs" />
+    <Compile Include="../../Messages/PackingProgressChangedMessage.cs" Link="PackingProgressChangedMessage.cs" />
     <Compile Include="../../Messages/LoginCompletedMessage.cs" Link="LoginCompletedMessage.cs" />
     <Compile Include="../../Messages/LogoutCompletedMessage.cs" Link="LogoutCompletedMessage.cs" />
   </ItemGroup>
