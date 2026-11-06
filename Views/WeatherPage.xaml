@@ -91,17 +91,22 @@
                                    FontAttributes="Bold" TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
 
                             <CollectionView ItemsSource="{Binding ForecastDays}" ItemsLayout="HorizontalList"
-                                            HeightRequest="92" SelectionMode="None"
+                                            HeightRequest="104" SelectionMode="None"
                                             HorizontalScrollBarVisibility="Never">
                                 <CollectionView.ItemTemplate>
                                     <DataTemplate x:DataType="dto:DailyForecastDTO">
-                                        <Border Margin="0,0,8,0" Padding="10,9" StrokeThickness="0"
+                                        <Border Margin="0,0,8,0" Padding="10,9" MinimumWidthRequest="56" StrokeThickness="0"
                                                 StrokeShape="RoundRectangle 15"
                                                 BackgroundColor="{AppThemeBinding Light={StaticResource PackoRaisedSurfaceLight}, Dark={StaticResource PackoRaisedSurfaceDark}}">
                                             <VerticalStackLayout Spacing="5" HorizontalOptions="Center">
-                                                <Label Text="{Binding Date, StringFormat='{0:ddd}'}" FontSize="11"
-                                                       HorizontalTextAlignment="Center"
-                                                       TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+                                                <VerticalStackLayout Spacing="1">
+                                                    <Label Text="{Binding Date, StringFormat='{}{0:ddd}'}" FontSize="11"
+                                                           FontAttributes="Bold" HorizontalTextAlignment="Center"
+                                                           TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+                                                    <Label Text="{Binding Date, StringFormat='{}{0:dd.MM}'}" FontSize="11"
+                                                           HorizontalTextAlignment="Center"
+                                                           TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+                                                </VerticalStackLayout>
                                                 <Label Text="{Binding MaxTemp, StringFormat='{}{0:0}°'}" FontSize="15"
                                                        FontAttributes="Bold" HorizontalTextAlignment="Center"
                                                        TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
