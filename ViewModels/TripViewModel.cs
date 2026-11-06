@@ -40,7 +40,7 @@ namespace Packo.ViewModels
             _ => "big_city.png"
         };
 
-        public string TripDatesRange => GetTripDatesRange();
+        public string TripDatesRange => TripSchedule.FormatRange(TripModel.StartDate, TripModel.EndDate);
         public string TripDaysToGo => GetTripDaysToGo();
         public string TripDaysRemaining => GetTripDaysRemaining();
         public string TripCountdown => Status switch
@@ -111,22 +111,6 @@ namespace Packo.ViewModels
             OnPropertyChanged(nameof(TripDaysToGo));
             OnPropertyChanged(nameof(TripDaysRemaining));
             OnPropertyChanged(nameof(TripCountdown));
-        }
-
-        private string GetTripDatesRange()
-        {
-            var startDate = TripModel.StartDate;
-            var endDate = TripModel.EndDate;
-
-            if (startDate.HasValue && endDate.HasValue && startDate.Value.Date == endDate.Value.Date)
-                return $"{startDate:dd MMM yyyy} · {startDate:HH:mm}–{endDate:HH:mm}";
-
-            if (startDate.HasValue && !endDate.HasValue)
-            {
-                return $"{startDate:dd MMM yyyy, HH:mm}";
-            }
-
-            return $"{startDate:dd MMM yyyy, HH:mm} – {endDate:dd MMM yyyy, HH:mm}";
         }
 
         private string GetTripDaysToGo()

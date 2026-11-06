@@ -148,10 +148,9 @@ namespace Packo.ViewModels
         {
             if (trip == null || Session.GlobalIsBusy)
                 return;
-            await Shell.Current.GoToAsync(nameof(PackingListPage), new Dictionary<string, object>
+            await Shell.Current.GoToAsync(nameof(PackingListPage), new ShellNavigationQueryParameters
             {
-                ["remoteTripId"] = trip.TripModel.RemoteTripId,
-                ["localTripId"] = trip.TripModel.LocalTripId
+                ["trip"] = trip.TripModel
             });
         }
 

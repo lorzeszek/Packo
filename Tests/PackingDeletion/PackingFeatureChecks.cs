@@ -48,6 +48,17 @@ internal static class PackingFeatureChecks
         Check(collection.SequenceEqual(new[] { first, third, added, second }),
             "New unpacked items appear before packed items");
 
+        var copiedItems = PackingListCopy.ExcludeExisting(
+        [
+            new() { Name = "koszulka", Quantity = 4 },
+            new() { Name = "T-shirt", Quantity = 3 },
+            new() { Name = " t-SHIRT ", Quantity = 1 }
+        ], [" Koszulka "]);
+        Check(copiedItems is [{ Name: "T-shirt", Quantity: 3 }],
+            "Copy skips case and whitespace variants, keeping the quantity of the first distinct item");
+        Check(PackingListCopy.ExcludeExisting(copiedItems, ["t-shirt"]).Count == 0,
+            "Repeating the copy with the newly added item is a no-op");
+
         var ai = new FakeAI { Response = "[{\"name\":\" Koszulki \",\"quantity\":6},{\"name\":\"Ładowarka\",\"quantity\":2}]" };
         var service = new PackingSuggestionService(ai);
         var result = await service.GenerateItemsAsync("Warsaw", date.AddHours(18), date.AddDays(4).AddHours(9),

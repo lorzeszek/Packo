@@ -30,13 +30,19 @@ internal static class CompletedTripChecks
         Check(loaded.Any(row => row.Trip.RemoteTripId == 2) && loaded.Any(row => row.Trip.RemoteTripId == 4),
             "The real Supabase list query includes completed trips and other trips with IsActive=false");
         Check(loaded.All(row => row.Trip.RemoteTripId != 3), "The Supabase list still excludes trashed trips");
+        var otherDeviceTrip = await remote.GetTripAsync(new TripDTO
+        {
+            RemoteTripId = completed.RemoteTripId, LocalTripId = selected.LocalTripId, LocalUserId = selected.LocalUserId
+        });
+        Check(otherDeviceTrip?.RemoteTripId == completed.RemoteTripId && otherDeviceTrip.EndDate == completed.EndDate,
+            "Refreshing the schedule for AI uses the cloud trip ID even when local identities differ");
 
         var preload = new TripListPreloadService(remote);
         var details = new Details(preload);
         await details.SelectAsync(selected);
         await details.OnAppearingAsync();
         Check(details.HasTrip && details.TripDestination == "Edited trip", "Details are loaded before editing the end time");
-        var edit = new TripSetupViewModel(null!, null!, new Session(), null!, remote, null!, null!, null!);
+        var edit = new TripSetupViewModel(null!, null!, new Session(), null!, remote, null!, null!);
         edit.ApplyQueryAttributes(new Dictionary<string, object> { ["editTrip"] = selected });
         edit.EndDate = DateTime.Today;
         edit.EndTime = TimeSpan.Zero;

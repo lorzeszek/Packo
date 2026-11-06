@@ -31,7 +31,6 @@
   <data name="PlanTrip" xml:space="preserve"><value>Plan a trip   +</value></data>
   <data name="PackingEyebrow" xml:space="preserve"><value>ONE THING AT A TIME</value></data>
   <data name="PackingListTitle" xml:space="preserve"><value>Packing list</value></data>
-  <data name="PackingDescription" xml:space="preserve"><value>Check items off as they find their way into your bag.</value></data>
   <data name="ListReady" xml:space="preserve"><value>Your list is ready for ideas</value></data>
   <data name="AddFirstItem" xml:space="preserve"><value>Add your first item below and start planning.</value></data>
   <data name="AddItemPlaceholder" xml:space="preserve"><value>Add an item...</value></data>
@@ -157,4 +156,16 @@
   <data name="TripStatusCurrent" xml:space="preserve"><value>CURRENT TRIP</value></data>
   <data name="StartsAt" xml:space="preserve"><value>Starts today at {0}</value></data>
   <data name="EndsAt" xml:space="preserve"><value>Ends today at {0}</value></data>
+  <data name="CopyPackingList" xml:space="preserve"><value>Add from another trip</value></data>
+  <data name="ChoosePackingSource" xml:space="preserve"><value>Choose a trip to copy from</value></data>
+  <data name="NoPackingSource" xml:space="preserve"><value>There are no other trips to copy from yet.</value></data>
+  <data name="EmptyPackingSource" xml:space="preserve"><value>The selected trip has an empty packing list.</value></data>
+  <data name="CopyPackingDone" xml:space="preserve"><value>All set!</value></data>
+  <data name="CopyPackingAddedOne" xml:space="preserve"><value>One item was added to your packing list.</value></data>
+  <data name="CopyPackingAddedMany" xml:space="preserve"><value>{0} items were added to your packing list.</value></data>
+  <data name="CopyPackingSkippedOne" xml:space="preserve"><value>One item was left out to avoid adding it twice.</value></data>
+  <data name="CopyPackingSkippedMany" xml:space="preserve"><value>{0} items were left out to avoid repeats.</value></data>
+  <data name="CopyPackingAlreadyOnList" xml:space="preserve"><value>Already on your list</value></data>
+  <data name="CopyPackingAlreadyOnListMessage" xml:space="preserve"><value>Those items are already on your packing list.</value></data>
+  <data name="CopyPackingError" xml:space="preserve"><value>Couldn't copy packing items. Please try again.</value></data>
 </root>

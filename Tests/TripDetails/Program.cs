@@ -19,9 +19,8 @@ Check(vm.Title == "TripDetails", "Details use a stable title");
 
 await vm.OpenPackingListCommand.ExecuteAsync(null);
 Check(Shell.Current.Route == "PackingListPage"
-    && (int)Shell.Current.Query!["remoteTripId"] == 20
-    && (int)Shell.Current.Query["localTripId"] == 2,
-    "Packing from details navigates with the selected trip's local and remote identities");
+    && ReferenceEquals(Shell.Current.Query?["trip"], later),
+    "Packing from details navigates with the selected trip's identities and schedule");
 await vm.EditTripCommand.ExecuteAsync(null);
 Check(Shell.Current.Route == "TripSetupPage" && ReferenceEquals(Shell.Current.Query!["editTrip"], later),
     "Editing opens the selected trip");

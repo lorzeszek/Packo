@@ -22,8 +22,11 @@
                    FontAttributes="Bold" TextColor="{StaticResource PackoAccentLight}" />
             <Label Text="{loc:Translate PackingListTitle}" FontSize="29" FontAttributes="Bold"
                    TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
-            <Label Text="{loc:Translate PackingDescription}"
-                   FontSize="14" LineBreakMode="WordWrap"
+            <Label Text="{Binding TripDestination}" IsVisible="{Binding HasTripDestination}"
+                   FontSize="17" FontAttributes="Bold" LineBreakMode="WordWrap" MaxLines="2"
+                   TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+            <Label Text="{Binding TripDatesRange}" IsVisible="{Binding HasTripDates}"
+                   FontSize="13" LineBreakMode="WordWrap"
                    TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
             <Button Text="{loc:Translate ClearPackingList}" Command="{Binding ClearListCommand}"
                     IsVisible="{Binding HasItems}" IsEnabled="{Binding CanEditItems}"
@@ -102,8 +105,14 @@
                             Command="{Binding AddItemCommand}" />
                 </Grid>
                 <Button Text="{loc:Translate GeneratePackingList}" Command="{Binding GeneratePackingListCommand}"
+                        IsVisible="{Binding CanGeneratePackingList}"
                         Style="{StaticResource PackoPrimaryActionButtonStyle}" FontSize="14" FontAttributes="Bold"
                         HeightRequest="48" CornerRadius="15" />
+                <Button Text="{loc:Translate CopyPackingList}" Command="{Binding CopyPackingListCommand}"
+                        IsVisible="{Binding CanCopyPackingList}"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource PackoAccentSoftLight}, Dark={StaticResource PackoAccentSoftDark}}"
+                        TextColor="{AppThemeBinding Light={StaticResource PackoAccentStrongLight}, Dark={StaticResource PackoAccentStrongDark}}"
+                        FontSize="14" FontAttributes="Bold" HeightRequest="48" CornerRadius="15" />
             </VerticalStackLayout>
         </Border>
 

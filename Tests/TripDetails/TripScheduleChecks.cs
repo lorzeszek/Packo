@@ -49,6 +49,10 @@ internal static class TripScheduleChecks
         Check(crossYear.TripDatesRange.Contains("2026") && crossYear.TripDatesRange.Contains("2027")
             && crossYear.TripDatesRange.Contains("23:30") && crossYear.TripDatesRange.Contains("01:15"),
             "Overnight trips spanning years retain both dates and times");
+        var endOnly = TripSchedule.FormatRange(null, day.AddHours(11));
+        Check(TripSchedule.FormatRange(null, null) == string.Empty && endOnly.Contains("11:00")
+            && endOnly == TripSchedule.FormatRange(day.AddHours(11), null),
+            "Trips with incomplete schedules show only the date that is available");
         Check(TripSchedule.GetStatus(null, null, clock.Now) == TripStatus.Unknown,
             "Incomplete historical dates cannot be labelled as a current trip");
 
@@ -75,6 +79,9 @@ internal static class TripScheduleChecks
             && repository.Added.EndDate == form.StartDate.AddHours(17).AddMinutes(45)
             && classification.Start == repository.Added.StartDate && classification.End == repository.Added.EndDate,
             "Creation passes the selected timestamps to storage and trip classification");
+        Check(Shell.Current.Route == "PackingListPage" && ReferenceEquals(Shell.Current.Query?["trip"], repository.Added)
+            && repository.Added.LocalTripId == 1,
+            "Creation opens the saved trip's packing list with its assigned local identity");
 
         var existing = Trip(day.AddHours(13).AddMinutes(20), day.AddHours(18).AddMinutes(50));
         var edit = Form(repository, classification);
@@ -115,7 +122,7 @@ internal static class TripScheduleChecks
         StartDate = start, EndDate = end
     };
     private static TripSetupViewModel Form(Trips repository, Classification classification)
-        => new(null!, null!, new Session(), null!, repository, null!, null!, classification);
+        => new(null!, null!, new Session(), null!, repository, null!, classification);
     private static void Check(bool passed, string message)
     {
         if (!passed) throw new Exception(message);

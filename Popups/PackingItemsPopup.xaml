@@ -17,7 +17,7 @@
                            VerticalTextAlignment="Center" TextColor="{StaticResource PackoAccentLight}" />
                 </Border>
                 <VerticalStackLayout Grid.Column="1" Spacing="3" VerticalOptions="Center">
-                    <Label Text="{loc:Translate SuggestedList}" FontSize="19" FontAttributes="Bold"
+                    <Label x:Name="TitleLabel" Text="{loc:Translate SuggestedList}" FontSize="19" FontAttributes="Bold"
                            TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
                     <Label Text="{loc:Translate SelectItemsToAdd}" FontSize="13"
                            TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />

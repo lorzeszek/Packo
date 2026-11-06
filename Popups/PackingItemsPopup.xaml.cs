@@ -10,11 +10,14 @@ public partial class PackingItemsPopup : Popup
 {
     public ObservableCollection<SelectableItem> Items { get; set; }
 
-    public TaskCompletionSource<List<PackingSuggestion>> ResultSource { get; } = new();
+    public List<PackingSuggestion> SelectedItems { get; private set; } = [];
 
-    public PackingItemsPopup(List<PackingSuggestion> items)
+    public PackingItemsPopup(List<PackingSuggestion> items, string? title = null)
     {
         InitializeComponent();
+
+        if (title != null)
+            TitleLabel.Text = title;
 
         Items = new ObservableCollection<SelectableItem>(
             items.Select(x => new SelectableItem
@@ -41,20 +44,15 @@ public partial class PackingItemsPopup : Popup
 
     private async void OnConfirmClicked(object sender, EventArgs e)
     {
-        var selected = Items
+        SelectedItems = Items
             .Where(x => x.IsSelected)
             .Select(x => new PackingSuggestion { Name = x.Name, Quantity = x.Quantity })
             .ToList();
 
         await CloseAsync();
-        ResultSource.TrySetResult(selected);
     }
 
-    private async void OnCancelClicked(object sender, EventArgs e)
-    {
-        await CloseAsync();
-        ResultSource.TrySetResult([]);
-    }
+    private async void OnCancelClicked(object sender, EventArgs e) => await CloseAsync();
 
     private bool _isEditingQuantity;
     private async void OnQuantityClicked(object? sender, EventArgs e)

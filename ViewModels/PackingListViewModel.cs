@@ -4,11 +4,13 @@ using Packo.Helpers;
 using Packo.Interfaces;
 using Packo.Models;
 using Packo.Models.DTO;
+using Packo.Models.Enums;
 using Packo.Repositories.Enums;
 using Packo.Repositories.Interfaces;
 using Packo.Services;
 using Packo.Services.Interfaces;
 using Packo.Popups;
+using System.Globalization;
 using System.Windows.Input;
 
 namespace Packo.ViewModels
@@ -19,24 +21,50 @@ namespace Packo.ViewModels
 
         private int _remoteTripId { get; set; }
         private int _localTripId { get; set; }
+        private TripDTO? _trip;
         private bool _channelsInitialized;
         private bool _isLoading;
         private readonly IPackingSuggestionService _packingSuggestionService;
         private bool _isDeleting;
         private bool _isEditingItem;
+        private bool _isAddingItems;
         private List<PackingItemDTO>? _itemsBeingAdded;
-        public bool CanEditItems => !_isDeleting && !_isEditingItem && !IsGeneratingPackingList;
+        public bool CanEditItems => _channelsInitialized && !_isLoading && !_isDeleting && !_isEditingItem && !IsAddingItems;
         public bool HasItems => Items.Count > 0;
+        public string TripDestination => _trip?.Destination ?? string.Empty;
+        public string TripDatesRange => TripSchedule.FormatRange(_trip?.StartDate, _trip?.EndDate);
+        public bool HasTripDestination => !string.IsNullOrWhiteSpace(TripDestination);
+        public bool HasTripDates => _trip?.StartDate.HasValue == true || _trip?.EndDate.HasValue == true;
+
+        private bool IsAddingItems
+        {
+            get => _isAddingItems;
+            set
+            {
+                SetProperty(ref _isAddingItems, value);
+                OnPropertyChanged(nameof(CanEditItems));
+            }
+        }
+
+        private bool _canGeneratePackingList;
+        public bool CanGeneratePackingList
+        {
+            get => _canGeneratePackingList;
+            private set => SetProperty(ref _canGeneratePackingList, value);
+        }
+
+        private bool _canCopyPackingList;
+        public bool CanCopyPackingList
+        {
+            get => _canCopyPackingList;
+            private set => SetProperty(ref _canCopyPackingList, value);
+        }
 
         private bool _isGeneratingPackingList;
         public bool IsGeneratingPackingList
         {
             get => _isGeneratingPackingList;
-            private set
-            {
-                SetProperty(ref _isGeneratingPackingList, value);
-                OnPropertyChanged(nameof(CanEditItems));
-            }
+            private set => SetProperty(ref _isGeneratingPackingList, value);
         }
 
         private string _newItemName = string.Empty;
@@ -55,6 +83,7 @@ namespace Packo.ViewModels
 
         public ICommand AddItemCommand => new Command(async () => await AddItemAsync());
         public ICommand GeneratePackingListCommand => new Command(async () => await GeneratePackingListAsync());
+        public ICommand CopyPackingListCommand => new Command(async () => await CopyPackingListAsync());
         public ICommand ToggleIsPackedCommand => new Command<PackingItem>(async packingItem => await ToggleIsPackedAsync(packingItem));
         public ICommand EditQuantityCommand => new Command<PackingItem>(async item => await EditQuantityAsync(item));
         public ICommand DeleteItemCommand => new Command<PackingItem>(async item => await DeleteItemsAsync(item));
@@ -156,77 +185,71 @@ namespace Packo.ViewModels
 
             var newItem = new PackingItemDTO { Name = NewItemName, RemoteTripId = _remoteTripId, LocalTripId = _localTripId, RemoteUserId = Session.UserId, LocalUserId = Session.LocalUserId, CreatedDate = DateTime.Now };
 
-            await _packingItemRepository.AddPackingItemAsync(newItem);
-
-            NewItemName = string.Empty;
-
-            Items.Add(Mappers.MapToPackingItem(newItem));
-            SortItems();
+            IsAddingItems = true;
+            try
+            {
+                await _packingItemRepository.AddPackingItemAsync(newItem);
+                NewItemName = string.Empty;
+                Items.Add(Mappers.MapToPackingItem(newItem));
+                SortItems();
+            }
+            finally
+            {
+                IsAddingItems = false;
+            }
         }
 
         private async Task GeneratePackingListAsync()
         {
-            if (_isLoading || !CanEditItems)
+            RefreshTripSchedule();
+            if (!CanEditItems || !CanGeneratePackingList)
                 return;
 
-            var confirmation = await Application.Current.MainPage.ShowPopupAsync<bool>(
-                new ConfirmPopup(LocalizationResourceManager.Instance["SuggestedPackingTitle"], string.Empty));
-
-            if (!confirmation.Result)
-                return;
-
-            IsGeneratingPackingList = true;
+            IsAddingItems = true;
             try
             {
+                var confirmation = await Application.Current.MainPage.ShowPopupAsync<bool>(
+                    new ConfirmPopup(LocalizationResourceManager.Instance["SuggestedPackingTitle"], string.Empty));
+                if (!confirmation.Result)
+                    return;
+
+                IsGeneratingPackingList = true;
                 // Let MAUI render the loading overlay before the AI request starts.
                 await Task.Yield();
 
-                var trip = await _tripRepository.GetTripAsync(new TripDTO
-                {
-                    LocalTripId = _localTripId,
-                    RemoteTripId = _remoteTripId,
-                    LocalUserId = Session.LocalUserId ?? string.Empty,
-                    RemoteUserId = Session.UserId ?? string.Empty
-                });
+                var localUserId = Session.LocalUserId ?? string.Empty;
+                var trip = _remoteTripId == 0
+                    ? await _tripRepository.GetLocalTripAsync(_localTripId, localUserId)
+                    : await _tripRepository.GetTripAsync(new TripDTO
+                    {
+                        LocalTripId = _localTripId,
+                        RemoteTripId = _remoteTripId,
+                        LocalUserId = localUserId,
+                        RemoteUserId = Session.UserId ?? string.Empty
+                    });
 
-                if (trip?.StartDate is null || trip.EndDate is null || string.IsNullOrWhiteSpace(trip.Destination))
+                if (_remoteTripId > 0 && trip?.RemoteTripId != _remoteTripId)
+                    return;
+
+                SetTrip(trip);
+                if (!_channelsInitialized || trip?.StartDate is not DateTime start || trip.EndDate is not DateTime end
+                    || !CanGeneratePackingList)
                     return;
 
                 var suggestedItems = await _packingSuggestionService.GenerateItemsAsync(
                     trip.Destination,
-                    trip.StartDate.Value,
-                    trip.EndDate.Value,
+                    start,
+                    end,
                     trip.AdultsCount,
                     trip.ChildrenAges,
                     trip.SelectedTransportTypes,
                     trip.TripType,
                     LocalizationResourceManager.Instance.CurrentLanguage);
 
-                var selectItemsPopup = new PackingItemsPopup(suggestedItems);
-                _ = Application.Current.MainPage.ShowPopupAsync(selectItemsPopup);
-                var selectedItems = await selectItemsPopup.ResultSource.Task;
-
-                if (selectedItems.Count == 0)
-                    return;
-
-                var newItems = selectedItems.Select(item => new PackingItemDTO
-                {
-                    Name = item.Name,
-                    Quantity = item.Quantity,
-                    RemoteTripId = _remoteTripId,
-                    LocalTripId = _localTripId,
-                    RemoteUserId = Session.UserId ?? string.Empty,
-                    LocalUserId = Session.LocalUserId ?? string.Empty,
-                    CreatedDate = DateTime.Now
-                }).ToList();
-
-                _itemsBeingAdded = newItems;
-                await _packingItemRepository.AddPackingItemsAsync(newItems);
-                await MainThread.InvokeOnMainThreadAsync(() =>
-                {
-                    Items.ReplaceRange(PackingItemOrder.Sort(Items.Concat(newItems.Select(Mappers.MapToPackingItem))).ToList());
-                    _itemsBeingAdded = null;
-                });
+                IsGeneratingPackingList = false;
+                var popup = new PackingItemsPopup(suggestedItems);
+                await Application.Current.MainPage.ShowPopupAsync(popup);
+                await AddSelectedItemsAsync(popup.SelectedItems);
             }
             catch (Exception ex)
             {
@@ -237,8 +260,164 @@ namespace Packo.ViewModels
             }
             finally
             {
-                _itemsBeingAdded = null;
                 IsGeneratingPackingList = false;
+                IsAddingItems = false;
+            }
+        }
+
+        public void RefreshTripSchedule()
+        {
+            var tripIsOpen = _trip is { IsInTrash: false }
+                && TripSchedule.GetStatus(_trip.StartDate, _trip.EndDate, DateTime.Now) != TripStatus.Completed;
+            CanCopyPackingList = tripIsOpen;
+            CanGeneratePackingList = tripIsOpen && _trip is { StartDate: not null, EndDate: not null }
+                && !string.IsNullOrWhiteSpace(_trip.Destination);
+        }
+
+        private void SetTrip(TripDTO? trip)
+        {
+            _trip = trip;
+            OnPropertyChanged(nameof(TripDestination));
+            OnPropertyChanged(nameof(TripDatesRange));
+            OnPropertyChanged(nameof(HasTripDestination));
+            OnPropertyChanged(nameof(HasTripDates));
+            RefreshTripSchedule();
+        }
+
+        private async Task CopyPackingListAsync()
+        {
+            RefreshTripSchedule();
+            if (!CanEditItems || !CanCopyPackingList)
+                return;
+
+            IsAddingItems = true;
+            var strings = LocalizationResourceManager.Instance;
+            var title = strings["CopyPackingList"];
+            try
+            {
+                var trips = await _tripRepository.GetActiveTripsWithStatsAsync();
+                var sources = trips.Select(row => row.Trip)
+                    .Where(trip => !trip.IsInTrash && !IsCurrentPackingTrip(trip))
+                    .OrderByDescending(trip => trip.CreatedDate)
+                    .ToList();
+
+                if (sources.Count == 0)
+                {
+                    await Shell.Current.DisplayAlertAsync(title, strings["NoPackingSource"], strings["Ok"]);
+                    return;
+                }
+
+                var options = sources.Select((trip, index) =>
+                {
+                    var date = (trip.StartDate ?? trip.CreatedDate).ToString("g", CultureInfo.CurrentUICulture);
+                    return $"{index + 1}. {trip.Destination} · {date}";
+                }).ToArray();
+                var selection = await Shell.Current.DisplayActionSheetAsync(strings["ChoosePackingSource"],
+                    strings["Cancel"], null, options);
+                var sourceIndex = Array.IndexOf(options, selection);
+                if (sourceIndex < 0 || !_channelsInitialized)
+                    return;
+
+                var source = sources[sourceIndex];
+                var sourceItems = await _packingItemRepository.GetPackingItemsForTripAsync(source.LocalTripId, source.RemoteTripId);
+                if (!_channelsInitialized)
+                    return;
+
+                var candidates = sourceItems.Where(item => !string.IsNullOrWhiteSpace(item.Name))
+                    .Select(item => new PackingSuggestion { Name = item.Name.Trim(), Quantity = Math.Max(1, item.Quantity) })
+                    .ToList();
+                if (candidates.Count == 0)
+                {
+                    await Shell.Current.DisplayAlertAsync(title, strings["EmptyPackingSource"], strings["Ok"]);
+                    return;
+                }
+
+                var available = PackingListCopy.ExcludeExisting(candidates, Items.Select(item => item.Name));
+                var skippedSelected = 0;
+                var added = 0;
+                if (available.Count > 0)
+                {
+                    var popup = new PackingItemsPopup(available, title);
+                    await Application.Current.MainPage.ShowPopupAsync(popup);
+                    if (popup.SelectedItems.Count == 0 || !_channelsInitialized)
+                        return;
+
+                    var latest = await _packingItemRepository.GetPackingItemsForTripAsync(_localTripId, _remoteTripId);
+                    RefreshTripSchedule();
+                    if (!CanCopyPackingList)
+                        return;
+
+                    var missing = PackingListCopy.ExcludeExisting(popup.SelectedItems,
+                        latest.Select(item => item.Name).Concat(Items.Select(item => item.Name)));
+                    skippedSelected = popup.SelectedItems.Count - missing.Count;
+                    await AddSelectedItemsAsync(missing);
+                    added = missing.Count;
+                }
+
+                if (_channelsInitialized)
+                {
+                    var summaryTitle = strings[added > 0 ? "CopyPackingDone" : "CopyPackingAlreadyOnList"];
+                    var summary = added switch
+                    {
+                        0 => strings["CopyPackingAlreadyOnListMessage"],
+                        1 => strings["CopyPackingAddedOne"],
+                        _ => string.Format(CultureInfo.CurrentUICulture, strings["CopyPackingAddedMany"], added)
+                    };
+                    if (added > 0 && skippedSelected > 0)
+                    {
+                        var skippedMessage = skippedSelected == 1
+                            ? strings["CopyPackingSkippedOne"]
+                            : string.Format(CultureInfo.CurrentUICulture, strings["CopyPackingSkippedMany"], skippedSelected);
+                        summary += "\n\n" + skippedMessage;
+                    }
+
+                    await Shell.Current.DisplayAlertAsync(summaryTitle, summary, strings["Ok"]);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex);
+                await Shell.Current.DisplayAlertAsync(strings["Error"], strings["CopyPackingError"], strings["Ok"]);
+            }
+            finally
+            {
+                IsAddingItems = false;
+            }
+        }
+
+        private bool IsCurrentPackingTrip(TripDTO trip) => trip.RemoteTripId > 0 && _remoteTripId > 0
+            ? trip.RemoteTripId == _remoteTripId
+            : trip.LocalTripId == _localTripId;
+
+        private async Task AddSelectedItemsAsync(List<PackingSuggestion> selectedItems)
+        {
+            if (!_channelsInitialized || selectedItems.Count == 0)
+                return;
+
+            var createdDate = DateTime.Now;
+            var newItems = selectedItems.Select(item => new PackingItemDTO
+            {
+                Name = item.Name,
+                Quantity = item.Quantity,
+                RemoteTripId = _remoteTripId,
+                LocalTripId = _localTripId,
+                RemoteUserId = Session.UserId ?? string.Empty,
+                LocalUserId = Session.LocalUserId ?? string.Empty,
+                CreatedDate = createdDate
+            }).ToList();
+
+            _itemsBeingAdded = newItems;
+            try
+            {
+                await _packingItemRepository.AddPackingItemsAsync(newItems);
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    Items.ReplaceRange(PackingItemOrder.Sort(Items.Concat(newItems.Select(Mappers.MapToPackingItem))).ToList());
+                });
+            }
+            finally
+            {
+                _itemsBeingAdded = null;
             }
         }
 
@@ -428,21 +607,20 @@ namespace Packo.ViewModels
             {
                 SetBusy(false);
                 _isLoading = false;
+                OnPropertyChanged(nameof(CanEditItems));
             }
         }
 
         protected override async Task OnNavigatedToAsync(IDictionary<string, object> query)
         {
-            if (query.TryGetValue("remoteTripId", out var remoteTripIdObj) && query.TryGetValue("localTripId", out var localTripIdObj))
+            if (query.TryGetValue("trip", out var value) && value is TripDTO trip)
             {
-                var newRemoteTripId = Convert.ToInt32(remoteTripIdObj);
-                var newLocalTripId = Convert.ToInt32(localTripIdObj);
-
-                if (_channelsInitialized && newRemoteTripId == _remoteTripId && newLocalTripId == _localTripId)
+                if (_channelsInitialized && trip.RemoteTripId == _remoteTripId && trip.LocalTripId == _localTripId)
                     return;
 
-                _remoteTripId = newRemoteTripId;
-                _localTripId = newLocalTripId;
+                _remoteTripId = trip.RemoteTripId;
+                _localTripId = trip.LocalTripId;
+                SetTrip(trip);
 
                 if (Session.IsAuthenticated && !await _packingItemRepository.IsChannelCreatedAsync())
                 {
@@ -459,10 +637,12 @@ namespace Packo.ViewModels
             }
         }
 
-        public override async Task OnNavigatedFromAsync(IDictionary<string, object> query)
+        public override Task OnNavigatedFromAsync(IDictionary<string, object> query)
         {
             _packingItemRepository.PackingItemChanged -= OnPackingItemChanged;
             _channelsInitialized = false;
+            OnPropertyChanged(nameof(CanEditItems));
+            return Task.CompletedTask;
         }
     }
 }

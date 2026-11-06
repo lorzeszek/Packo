@@ -104,11 +104,14 @@ namespace Packo.Repositories.Supabase
         {
             try
             {
-                var response = await _supabase.Client.From<TripSupabase>().Where(x => x.ClientId == trip.LocalUserId && x.LocalTripId == trip.LocalTripId).Get();
+                var trips = _supabase.Client.From<TripSupabase>();
+                var response = trip.RemoteTripId > 0
+                    ? await trips.Where(x => x.Id == trip.RemoteTripId).Get()
+                    : await trips.Where(x => x.ClientId == trip.LocalUserId && x.LocalTripId == trip.LocalTripId).Get();
 
                 var tripModel = response.Models.FirstOrDefault();
 
-                return tripModel != null ? Mappers.MapToTripDTO(tripModel) : new TripDTO();
+                return tripModel != null ? Mappers.MapToTripDTO(tripModel) : null;
             }
             catch (Exception)
             {

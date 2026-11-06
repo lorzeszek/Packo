@@ -1,15 +1,14 @@
-﻿using CommunityToolkit.Maui.Extensions;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Packo.Interfaces;
 using Packo.Helpers;
 using Packo.Models;
 using Packo.Models.DTO;
 using Packo.Models.Enums;
-using Packo.Popups;
 using Packo.Repositories.Interfaces;
 using Packo.Services;
 using Packo.Services.Interfaces;
+using Packo.Views;
 using System.Collections.ObjectModel;
 
 namespace Packo.ViewModels
@@ -89,12 +88,10 @@ namespace Packo.ViewModels
             SelectedTripTypeOption = TripTypeOptions.FirstOrDefault(option => option.Value == trip.TripType)
                 ?? TripTypeOptions.First();
         }
-        private readonly IPackingSuggestionService _packingSuggestionService;
         private readonly ITripClassificationService _tripClassificationService;
 
-        public TripSetupViewModel(ILocalUserService localUserService, ISupabaseService supabase, ISessionService sessionService, IPackingItemRepository packingItemRepository, ITripRepository tripRepository, IGoogleAuthService googleAuthService, IPackingSuggestionService packingSuggestionService, ITripClassificationService tripClassificationService) : base(localUserService, supabase, sessionService, packingItemRepository, tripRepository, googleAuthService)
+        public TripSetupViewModel(ILocalUserService localUserService, ISupabaseService supabase, ISessionService sessionService, IPackingItemRepository packingItemRepository, ITripRepository tripRepository, IGoogleAuthService googleAuthService, ITripClassificationService tripClassificationService) : base(localUserService, supabase, sessionService, packingItemRepository, tripRepository, googleAuthService)
         {
-            _packingSuggestionService = packingSuggestionService;
             _tripClassificationService = tripClassificationService;
 
             TransportOptions = new ObservableCollection<TransportOptionItem>
@@ -305,116 +302,56 @@ namespace Packo.ViewModels
                 await SaveTripAsync();
                 return;
             }
-            MainThread.BeginInvokeOnMainThread(() =>
+            TripDTO trip;
+            Session.GlobalIsBusy = true;
+            try
             {
-                Session.GlobalIsBusy = true;
-            });
+                if (Session.LocalUserId == null)
+                {
+                    var localUser = await _localUserService.GetOrCreateLocalUserAsync();
+                    Session.SetLocalUser(localUser.LocalUserId);
+                }
 
-            if (Session.LocalUserId == null)
-            {
-                var localUser = await _localUserService.GetOrCreateLocalUserAsync();
+                var classification = await _tripClassificationService.ClassifyTripAsync(
+                    Destination, StartDateTime, EndDateTime, SelectedTransportTypes);
+                Enum.TryParse<CoverThemeType>(classification.CoverTheme, true, out var coverTheme);
 
-                Session.SetLocalUser(localUser.LocalUserId);
+                trip = new TripDTO
+                {
+                    LocalUserId = Session.LocalUserId,
+                    RemoteUserId = Session.UserId,
+                    CreatedDate = DateTime.Now,
+                    StartDate = StartDateTime,
+                    EndDate = EndDateTime,
+                    Destination = Destination,
+                    AdultsCount = AdultsCount,
+                    ChildrenAges = ChildrenAge.ToList(),
+                    SelectedTransportTypes = SelectedTransportTypes.ToList(),
+                    TripType = SelectedTripTypeOption.Value,
+                    IsActive = EndDateTime > DateTime.Now,
+                    CoverTheme = coverTheme
+                };
+
+                trip.LocalTripId = await _tripRepository.AddTripAsync(trip);
             }
-
-            var classification = await _tripClassificationService.ClassifyTripAsync(Destination, StartDateTime, EndDateTime, SelectedTransportTypes);
-
-            Enum.TryParse<CoverThemeType>(classification.CoverTheme, true, out var coverTheme);
-
-            var trip = new TripDTO
+            catch (Exception ex)
             {
-                LocalUserId = Session.LocalUserId,
-                RemoteUserId = Session.UserId,
-                CreatedDate = DateTime.Now,
-                StartDate = StartDateTime,
-                EndDate = EndDateTime,
-                Destination = Destination,
-                AdultsCount = AdultsCount,
-                ChildrenAges = ChildrenAge.ToList(),
-                SelectedTransportTypes = SelectedTransportTypes.ToList(),
-                TripType = SelectedTripTypeOption.Value,
-                IsActive = EndDateTime > DateTime.Now,
-                CoverTheme = coverTheme
-            };
-
-            //var renderer = new TripCoverRenderer();
-            //var bitmap = renderer.Render(trip);
-
-            //var path = SaveBitmap(bitmap, trip);
-
-            //trip.CoverImagePath = path;
-
-            await _tripRepository.AddTripAsync(trip);
-
-            MainThread.BeginInvokeOnMainThread(() =>
+                System.Diagnostics.Debug.WriteLine(ex);
+                var strings = LocalizationResourceManager.Instance;
+                await Shell.Current.DisplayAlertAsync(strings["Error"], strings["SaveTripError"], strings["Ok"]);
+                return;
+            }
+            finally
             {
                 Session.GlobalIsBusy = false;
-            });
-
-            var proposeListPopup = new ConfirmPopup(LocalizationResourceManager.Instance["SuggestedPackingTitle"], "");
-
-            var result = await Application.Current.MainPage.ShowPopupAsync<bool>(proposeListPopup);
-
-            var proposeListPopupResult = result.Result;
-
-            if (proposeListPopupResult)
-            {
-                MainThread.BeginInvokeOnMainThread(() =>
-                {
-                    Session.GlobalIsBusy = true;
-                });
-
-                try
-                {
-                    var proposeListItems = await _packingSuggestionService.GenerateItemsAsync(
-                        Destination,
-                        StartDateTime,
-                        EndDateTime,
-                        AdultsCount,
-                        ChildrenAge,
-                        SelectedTransportTypes,
-                        SelectedTripTypeOption.Value,
-                        LocalizationResourceManager.Instance.CurrentLanguage);
-
-                    var addSelectedItemsPopup = new PackingItemsPopup(proposeListItems);
-
-                    _ = Application.Current.MainPage.ShowPopupAsync(addSelectedItemsPopup);
-
-                    var selectedItems = await addSelectedItemsPopup.ResultSource.Task;
-
-                    if (selectedItems.Count > 0)
-                    {
-                        var createdTrip = await _tripRepository.GetTripAsync(trip);
-
-                        var newPackingItems = selectedItems.Select(item => new PackingItemDTO { Name = item.Name, Quantity = item.Quantity, RemoteTripId = createdTrip.RemoteTripId, LocalTripId = createdTrip.LocalTripId, RemoteUserId = Session.UserId, LocalUserId = Session.LocalUserId, CreatedDate = DateTime.Now }).ToList();
-
-                        await _packingItemRepository.AddPackingItemsAsync(newPackingItems);
-                    }
-                    else
-                    {
-                        return;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine(ex);
-                    await Shell.Current.DisplayAlertAsync(LocalizationResourceManager.Instance["Error"],
-                        LocalizationResourceManager.Instance["AddPackingItemsError"],
-                        LocalizationResourceManager.Instance["Ok"]);
-                }
-                finally
-                {
-                    Session.GlobalIsBusy = false;
-                }
             }
-            //else
-            //{
-            //    return;
-            //}
 
-            // Return to the trip list after creating a trip.
             await Shell.Current.Navigation.PopAsync(false);
             await Shell.Current.GoToAsync("//TripList");
+            await Shell.Current.GoToAsync(nameof(PackingListPage), new ShellNavigationQueryParameters
+            {
+                ["trip"] = trip
+            });
         }
 
         private async Task SaveTripAsync()

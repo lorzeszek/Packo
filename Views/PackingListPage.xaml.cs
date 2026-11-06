@@ -1,17 +1,29 @@
 ﻿using Packo.Models.Pages;
 using Packo.ViewModels;
+using Microsoft.Maui.Dispatching;
 
 namespace Packo.Views;
 
 public partial class PackingListPage : BasePage//ContentPage//, IQueryAttributable
 {
     private readonly PackingListViewModel _viewModel;
+    private readonly IDispatcherTimer _scheduleTimer;
 
     public PackingListPage(PackingListViewModel viewModel)
     {
         InitializeComponent();
         _viewModel = viewModel;
         BindingContext = _viewModel;
+        _scheduleTimer = Dispatcher.CreateTimer();
+        _scheduleTimer.Interval = TimeSpan.FromSeconds(1);
+        _scheduleTimer.Tick += (_, _) => _viewModel.RefreshTripSchedule();
+    }
+
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        _viewModel.RefreshTripSchedule();
+        _scheduleTimer.Start();
     }
 
     private void OnPackedChanged(object? sender, CheckedChangedEventArgs e)
@@ -43,12 +55,6 @@ public partial class PackingListPage : BasePage//ContentPage//, IQueryAttributab
     //    }
     //}
 
-    //protected override async void OnAppearing()
-    //{
-    //    base.OnAppearing();
-    //    await _viewModel.InitializeRealtimeAsync();
-    //}
-
     private async void OnBackButtonClicked(object sender, EventArgs e)
     {
         if (Shell.Current.Navigation.NavigationStack.Count > 1)
@@ -59,6 +65,7 @@ public partial class PackingListPage : BasePage//ContentPage//, IQueryAttributab
 
     protected override async void OnDisappearing()
     {
+        _scheduleTimer.Stop();
         base.OnDisappearing();
         await _viewModel.DisposeRealtimeAsync();
     }
