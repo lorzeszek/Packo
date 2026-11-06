@@ -48,6 +48,35 @@ internal static class PackingFeatureChecks
         Check(collection.SequenceEqual(new[] { first, third, added, second }),
             "New unpacked items appear before packed items");
 
+        Check(PackingItemOrder.Sort(items, PackingItemSortMode.PackedFirst).SequenceEqual(new[] { second, first, third }),
+            "Packed-first order preserves creation order within each status");
+        Check(PackingItemOrder.Sort(items, PackingItemSortMode.NameAscending).SequenceEqual(new[] { second, third, first }),
+            "Alphabetical order includes packed and unpacked items in one sequence");
+        Check(PackingItemOrder.Sort(items, PackingItemSortMode.NameDescending).SequenceEqual(new[] { first, third, second }),
+            "Reverse alphabetical order runs from Z to A");
+        first.Quantity = 3;
+        third.Quantity = 3;
+        Check(PackingItemOrder.Sort(items, PackingItemSortMode.QuantityAscending).SequenceEqual(new[] { second, third, first }),
+            "Quantity sorts lowest first and keeps alphabetical ties in ascending order");
+        var byQuantity = new System.Collections.ObjectModel.ObservableCollection<PackingItem>(
+            PackingItemOrder.Sort(items, PackingItemSortMode.QuantityDescending));
+        Check(byQuantity.SequenceEqual(new[] { third, first, second }),
+            "Quantity sorts highest first and uses name to break ties");
+        moves = resets = 0;
+        byQuantity.CollectionChanged += (_, e) =>
+        {
+            if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Move) moves++;
+            if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Reset) resets++;
+        };
+        second.Quantity = 4;
+        PackingItemOrder.Apply(byQuantity, second, PackingItemSortMode.QuantityDescending);
+        Check(byQuantity.SequenceEqual(new[] { second, third, first }) && moves == 1 && resets == 0,
+            "Editing quantity moves only the affected row");
+        second.Quantity = 1;
+        PackingItemOrder.Apply(byQuantity, second, PackingItemSortMode.QuantityDescending);
+        Check(byQuantity.SequenceEqual(new[] { third, first, second }) && moves == 2 && resets == 0,
+            "Rolling back a quantity edit restores the previous position");
+
         var copiedItems = PackingListCopy.ExcludeExisting(
         [
             new() { Name = "koszulka", Quantity = 4 },

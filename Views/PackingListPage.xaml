@@ -2,6 +2,7 @@
 <local:BasePage xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
                 xmlns="http://schemas.microsoft.com/dotnet/maui/global"
                 xmlns:viewmodels="clr-namespace:Packo.ViewModels"
+                xmlns:helpers="clr-namespace:Packo.Helpers"
                 xmlns:loc="clr-namespace:Packo.Extensions"
                 xmlns:local="clr-namespace:Packo.Models.Pages"
                 x:Class="Packo.Views.PackingListPage"
@@ -28,10 +29,36 @@
             <Label Text="{Binding TripDatesRange}" IsVisible="{Binding HasTripDates}"
                    FontSize="13" LineBreakMode="WordWrap"
                    TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
-            <Button Text="{loc:Translate ClearPackingList}" Command="{Binding ClearListCommand}"
-                    IsVisible="{Binding HasItems}" IsEnabled="{Binding CanEditItems}"
-                    HorizontalOptions="End" BackgroundColor="Transparent" TextColor="#C24141"
-                    FontSize="13" MinimumHeightRequest="44" Padding="8,0" />
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" IsVisible="{Binding HasItems}">
+                <Button Text="{loc:Translate ClearPackingList}" Command="{Binding ClearListCommand}"
+                        IsEnabled="{Binding CanEditItems}" HorizontalOptions="Start"
+                        FontSize="13" FontAttributes="Bold" MinimumHeightRequest="44" Padding="12,0" CornerRadius="12"
+                        BackgroundColor="{AppThemeBinding Light=#FDE8E7, Dark=#432429}"
+                        TextColor="{AppThemeBinding Light=#9E3030, Dark=#F3A7A6}" />
+                <Button Grid.Column="1" Text="{loc:Translate PackingSortButton}" Command="{Binding SelectSortCommand}"
+                        IsEnabled="{Binding CanEditItems}" SemanticProperties.Hint="{loc:Translate PackingSortTitle}"
+                        FontSize="13" FontAttributes="Bold" MinimumHeightRequest="44" Padding="12,0" CornerRadius="12"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource PackoAccentSoftLight}, Dark={StaticResource PackoAccentSoftDark}}"
+                        TextColor="{AppThemeBinding Light={StaticResource PackoAccentStrongLight}, Dark={StaticResource PackoAccentStrongDark}}">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding SortMode}" Value="{x:Static helpers:PackingItemSortMode.PackedFirst}">
+                            <Setter Property="Text" Value="{loc:Translate PackingSortPackedButton}" />
+                        </DataTrigger>
+                        <DataTrigger TargetType="Button" Binding="{Binding SortMode}" Value="{x:Static helpers:PackingItemSortMode.NameAscending}">
+                            <Setter Property="Text" Value="A–Z ▾" />
+                        </DataTrigger>
+                        <DataTrigger TargetType="Button" Binding="{Binding SortMode}" Value="{x:Static helpers:PackingItemSortMode.NameDescending}">
+                            <Setter Property="Text" Value="Z–A ▾" />
+                        </DataTrigger>
+                        <DataTrigger TargetType="Button" Binding="{Binding SortMode}" Value="{x:Static helpers:PackingItemSortMode.QuantityDescending}">
+                            <Setter Property="Text" Value="{loc:Translate PackingSortQuantityDescendingButton}" />
+                        </DataTrigger>
+                        <DataTrigger TargetType="Button" Binding="{Binding SortMode}" Value="{x:Static helpers:PackingItemSortMode.QuantityAscending}">
+                            <Setter Property="Text" Value="{loc:Translate PackingSortQuantityAscendingButton}" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+            </Grid>
         </VerticalStackLayout>
 
         <CollectionView x:Name="PackingListView" Grid.Row="1" ItemsSource="{Binding Items}"

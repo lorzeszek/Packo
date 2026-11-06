@@ -43,6 +43,17 @@
   <data name="DeletePackingItem" xml:space="preserve"><value>Usuń przedmiot</value></data>
   <data name="DeletePackingItemConfirm" xml:space="preserve"><value>Usunąć „{0}” z tej listy pakowania?</value></data>
   <data name="ClearPackingList" xml:space="preserve"><value>Wyczyść listę</value></data>
+  <data name="PackingSortTitle" xml:space="preserve"><value>Sortuj listę pakowania</value></data>
+  <data name="PackingSortButton" xml:space="preserve"><value>Sortuj ▾</value></data>
+  <data name="PackingSortUnpacked" xml:space="preserve"><value>Najpierw niespakowane</value></data>
+  <data name="PackingSortPacked" xml:space="preserve"><value>Najpierw spakowane</value></data>
+  <data name="PackingSortPackedButton" xml:space="preserve"><value>Spakowane ▾</value></data>
+  <data name="PackingSortNameAscending" xml:space="preserve"><value>Alfabetycznie (A–Z)</value></data>
+  <data name="PackingSortNameDescending" xml:space="preserve"><value>Alfabetycznie (Z–A)</value></data>
+  <data name="PackingSortQuantityDescending" xml:space="preserve"><value>Ilość od największej</value></data>
+  <data name="PackingSortQuantityAscending" xml:space="preserve"><value>Ilość od najmniejszej</value></data>
+  <data name="PackingSortQuantityDescendingButton" xml:space="preserve"><value>Ilość malejąco ▾</value></data>
+  <data name="PackingSortQuantityAscendingButton" xml:space="preserve"><value>Ilość rosnąco ▾</value></data>
   <data name="ClearPackingListConfirm" xml:space="preserve"><value>Usunąć wszystkie przedmioty ({0}) z tej listy pakowania? Tej operacji nie można cofnąć.</value></data>
   <data name="DeletePackingItemsError" xml:space="preserve"><value>Nie udało się usunąć części przedmiotów. Spróbuj ponownie.</value></data>
   <data name="EditTrip" xml:space="preserve"><value>Edytuj podróż</value></data>

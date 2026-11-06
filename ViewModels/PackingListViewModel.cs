@@ -1,5 +1,6 @@
 ﻿using Packo.Extensions;
 using CommunityToolkit.Maui.Extensions;
+using CommunityToolkit.Mvvm.Input;
 using Packo.Helpers;
 using Packo.Interfaces;
 using Packo.Models;
@@ -29,6 +30,9 @@ namespace Packo.ViewModels
         private bool _isEditingItem;
         private bool _isAddingItems;
         private List<PackingItemDTO>? _itemsBeingAdded;
+        private PackingItemSortMode _sortMode;
+        public PackingItemSortMode SortMode => _sortMode;
+        private bool IsSortingByQuantity => SortMode is PackingItemSortMode.QuantityAscending or PackingItemSortMode.QuantityDescending;
         public bool CanEditItems => _channelsInitialized && !_isLoading && !_isDeleting && !_isEditingItem && !IsAddingItems;
         public bool HasItems => Items.Count > 0;
         public string TripDestination => _trip?.Destination ?? string.Empty;
@@ -88,11 +92,37 @@ namespace Packo.ViewModels
         public ICommand EditQuantityCommand => new Command<PackingItem>(async item => await EditQuantityAsync(item));
         public ICommand DeleteItemCommand => new Command<PackingItem>(async item => await DeleteItemsAsync(item));
         public ICommand ClearListCommand => new Command(async () => await DeleteItemsAsync(null));
+        public IAsyncRelayCommand SelectSortCommand { get; }
 
         public PackingListViewModel(ILocalUserService localUserService, ISupabaseService supabase, ISessionService sessionService, IPackingItemRepository packingItemRepository, ITripRepository tripRepository, IGoogleAuthService googleAuthService, IPackingSuggestionService packingSuggestionService) : base(localUserService, supabase, sessionService, packingItemRepository, tripRepository, googleAuthService)
         {
             _packingSuggestionService = packingSuggestionService;
             Items.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasItems));
+            SelectSortCommand = new AsyncRelayCommand(SelectSortAsync);
+        }
+
+        private async Task SelectSortAsync()
+        {
+            var strings = LocalizationResourceManager.Instance;
+            var modes = new[]
+            {
+                (Mode: PackingItemSortMode.UnpackedFirst, Label: strings["PackingSortUnpacked"]),
+                (Mode: PackingItemSortMode.PackedFirst, Label: strings["PackingSortPacked"]),
+                (Mode: PackingItemSortMode.NameAscending, Label: strings["PackingSortNameAscending"]),
+                (Mode: PackingItemSortMode.NameDescending, Label: strings["PackingSortNameDescending"]),
+                (Mode: PackingItemSortMode.QuantityDescending, Label: strings["PackingSortQuantityDescending"]),
+                (Mode: PackingItemSortMode.QuantityAscending, Label: strings["PackingSortQuantityAscending"])
+            };
+            var options = modes.Select(option => option.Mode == SortMode ? $"✓  {option.Label}" : option.Label).ToArray();
+            var selection = await Shell.Current.DisplayActionSheetAsync(strings["PackingSortTitle"],
+                strings["Cancel"], null, options);
+            var index = Array.IndexOf(options, selection);
+            if (index < 0 || !_channelsInitialized || !SetProperty(ref _sortMode, modes[index].Mode, nameof(SortMode)))
+                return;
+
+            var ordered = PackingItemOrder.Sort(Items, SortMode).ToList();
+            if (!Items.SequenceEqual(ordered))
+                Items.ReplaceRange(ordered);
         }
 
         private async Task DeleteItemsAsync(PackingItem? item)
@@ -190,8 +220,9 @@ namespace Packo.ViewModels
             {
                 await _packingItemRepository.AddPackingItemAsync(newItem);
                 NewItemName = string.Empty;
-                Items.Add(Mappers.MapToPackingItem(newItem));
-                SortItems();
+                var item = Mappers.MapToPackingItem(newItem);
+                Items.Add(item);
+                SortItems(item);
             }
             finally
             {
@@ -412,7 +443,7 @@ namespace Packo.ViewModels
                 await _packingItemRepository.AddPackingItemsAsync(newItems);
                 await MainThread.InvokeOnMainThreadAsync(() =>
                 {
-                    Items.ReplaceRange(PackingItemOrder.Sort(Items.Concat(newItems.Select(Mappers.MapToPackingItem))).ToList());
+                    Items.ReplaceRange(PackingItemOrder.Sort(Items.Concat(newItems.Select(Mappers.MapToPackingItem)), SortMode).ToList());
                 });
             }
             finally
@@ -464,12 +495,16 @@ namespace Packo.ViewModels
                 if (!quantity.HasValue || quantity.Value == item.Quantity || !Items.Contains(item)) return;
                 original = item.Quantity;
                 item.Quantity = quantity.Value;
+                if (IsSortingByQuantity)
+                    SortItems(item);
                 await _packingItemRepository.UpdatePackingItemAsync(Mappers.MapToPackingItemDTO(item));
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine(ex);
                 item.Quantity = original;
+                if (IsSortingByQuantity)
+                    SortItems(item);
                 await ShowUpdateErrorAsync();
             }
             finally
@@ -484,7 +519,7 @@ namespace Packo.ViewModels
             LocalizationResourceManager.Instance["UpdatePackingItemError"],
             LocalizationResourceManager.Instance["Ok"]);
 
-        private void SortItems(PackingItem? changedItem = null) => PackingItemOrder.Apply(Items, changedItem);
+        private void SortItems(PackingItem? changedItem = null) => PackingItemOrder.Apply(Items, changedItem, SortMode);
 
         //private async Task<bool> CheckItemExist(string newItemName)
         //{
@@ -545,6 +580,7 @@ namespace Packo.ViewModels
                             localItem.RemoteId = change.Item.RemotePackingItemId;
                             localItem.RemoteTripId = change.Item.RemoteTripId;
                             localItem.RemoteUserId = change.Item.RemoteUserId;
+                            SortItems(localItem);
                         }
                         break;
                     case PackingItemChangeType.Insert:
@@ -600,7 +636,7 @@ namespace Packo.ViewModels
 
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
-                    Items.ReplaceRange(PackingItemOrder.Sort(tripsWithStats.Select(Mappers.MapToPackingItem)).ToList());
+                    Items.ReplaceRange(PackingItemOrder.Sort(tripsWithStats.Select(Mappers.MapToPackingItem), SortMode).ToList());
                 });
             }
             finally

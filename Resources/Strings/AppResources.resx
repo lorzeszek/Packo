@@ -113,6 +113,17 @@
   <data name="DeletePackingItem" xml:space="preserve"><value>Delete item</value></data>
   <data name="DeletePackingItemConfirm" xml:space="preserve"><value>Delete “{0}” from this packing list?</value></data>
   <data name="ClearPackingList" xml:space="preserve"><value>Clear list</value></data>
+  <data name="PackingSortTitle" xml:space="preserve"><value>Sort packing list</value></data>
+  <data name="PackingSortButton" xml:space="preserve"><value>Sort ▾</value></data>
+  <data name="PackingSortUnpacked" xml:space="preserve"><value>Unpacked first</value></data>
+  <data name="PackingSortPacked" xml:space="preserve"><value>Packed first</value></data>
+  <data name="PackingSortPackedButton" xml:space="preserve"><value>Packed first ▾</value></data>
+  <data name="PackingSortNameAscending" xml:space="preserve"><value>Alphabetical (A–Z)</value></data>
+  <data name="PackingSortNameDescending" xml:space="preserve"><value>Alphabetical (Z–A)</value></data>
+  <data name="PackingSortQuantityDescending" xml:space="preserve"><value>Quantity (highest first)</value></data>
+  <data name="PackingSortQuantityAscending" xml:space="preserve"><value>Quantity (lowest first)</value></data>
+  <data name="PackingSortQuantityDescendingButton" xml:space="preserve"><value>Qty (high–low) ▾</value></data>
+  <data name="PackingSortQuantityAscendingButton" xml:space="preserve"><value>Qty (low–high) ▾</value></data>
   <data name="ClearPackingListConfirm" xml:space="preserve"><value>Delete all items ({0}) from this packing list? This cannot be undone.</value></data>
   <data name="DeletePackingItemsError" xml:space="preserve"><value>Some items could not be deleted. Please try again.</value></data>
   <data name="EditTrip" xml:space="preserve"><value>Edit trip</value></data>
