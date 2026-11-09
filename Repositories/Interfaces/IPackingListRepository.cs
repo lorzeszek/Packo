@@ -4,6 +4,7 @@ namespace Packo.Repositories.Interfaces;
 
 public interface IPackingListRepository
 {
+    Task RefreshPackingTripAsync(TripDTO trip);
     Task<IReadOnlyList<PackingListDTO>> GetPackingListsAsync(TripDTO trip, bool refresh = true);
     Task<IReadOnlyList<PackingItemDTO>> GetPackingListItemsAsync(TripDTO trip, Guid listId, bool refresh = true);
     Task<IReadOnlyList<PackingItemDTO>> GetPackingListItemsAsync(TripDTO trip, IReadOnlyCollection<Guid> listIds, bool refresh = true);

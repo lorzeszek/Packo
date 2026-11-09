@@ -84,6 +84,7 @@ namespace Packo.ViewModels
                     _hasTrip = value;
                     OnPropertyChanged();
                     OnPropertyChanged(nameof(ShowTripUnavailable));
+                    OnPropertyChanged(nameof(IsLoadingTrip));
                 }
             }
         }
@@ -99,6 +100,7 @@ namespace Packo.ViewModels
                     _isDataLoaded = value;
                     OnPropertyChanged();
                     OnPropertyChanged(nameof(ShowTripUnavailable));
+                    OnPropertyChanged(nameof(IsLoadingTrip));
                 }
             }
         }
@@ -117,6 +119,7 @@ namespace Packo.ViewModels
         }
 
         public bool ShowTripUnavailable => IsDataLoaded && !HasTrip && !HasLoadError;
+        public bool IsLoadingTrip => !HasTrip && !IsDataLoaded;
 
         public StartViewModel(ILocalUserService localUserService, ISupabaseService supabase, ISessionService sessionService, IPackingItemRepository packingItemRepository, ITripRepository tripRepository, IGoogleAuthService googleAuthService, ITripListPreloadService tripListPreloadService) : base(localUserService, supabase, sessionService, packingItemRepository, tripRepository, googleAuthService)
         {

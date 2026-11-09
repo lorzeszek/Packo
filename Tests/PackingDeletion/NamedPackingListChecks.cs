@@ -71,6 +71,31 @@ static class NamedPackingListChecks
             Check(remote.Lists[(10, lists[0].Id)].Name == "Kids" && remote.Items.Count == 40,
                 "Restarted sync creates parent lists with their latest names before uploading items");
 
+            var listsRequested = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var releaseLists = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            remote.ListsRequested = listsRequested;
+            remote.ReleaseLists = releaseLists;
+            var detailsRefresh = restarted.RefreshPackingTripAsync(trip);
+            Task editorRefresh;
+            try
+            {
+                await listsRequested.Task.WaitAsync(TimeSpan.FromSeconds(5));
+                editorRefresh = restarted.RefreshPackingTripAsync(trip);
+                var cachedLists = await restarted.GetPackingListsAsync(trip, refresh: false).WaitAsync(TimeSpan.FromSeconds(5));
+                var cachedItems = await restarted.GetPackingListItemsAsync(trip, lists[0].Id, refresh: false)
+                    .WaitAsync(TimeSpan.FromSeconds(5));
+                Check(cachedLists.Count == 4 && cachedItems.Count == 10 && !detailsRefresh.IsCompleted,
+                    "Both screens can read SQLite while the cloud refresh is blocked");
+            }
+            finally
+            {
+                releaseLists.TrySetResult();
+            }
+            await Task.WhenAll(detailsRefresh, editorRefresh).WaitAsync(TimeSpan.FromSeconds(5));
+            await restarted.RefreshPackingTripAsync(trip);
+            Check(remote.ListRequestCount == 1,
+                "Opening details and the editor together and quickly reopening reuse one cloud refresh");
+
             var openOfflineEditor = new PackingItemDTO
             {
                 PackingListId = lists[0].Id, Name = "New after reconnect", LocalUserId = "local", LocalTripId = 1
@@ -124,10 +149,18 @@ static class NamedPackingListChecks
     {
         public Dictionary<(int Trip, Guid Id), PackingListDTO> Lists { get; } = [];
         public bool FailListDelete { get; set; }
+        public TaskCompletionSource? ListsRequested { get; set; }
+        public TaskCompletionSource? ReleaseLists { get; set; }
+        public int ListRequestCount { get; private set; }
 
-        public Task<IReadOnlyList<PackingListDTO>> GetPackingListsAsync(int remoteTripId) =>
-            Task.FromResult<IReadOnlyList<PackingListDTO>>(Lists.Where(x => x.Key.Trip == remoteTripId)
-                .Select(x => x.Value).ToList());
+        public async Task<IReadOnlyList<PackingListDTO>> GetPackingListsAsync(int remoteTripId)
+        {
+            ListRequestCount++;
+            ListsRequested?.TrySetResult();
+            if (ReleaseLists is not null)
+                await ReleaseLists.Task;
+            return Lists.Where(x => x.Key.Trip == remoteTripId).Select(x => x.Value).ToList();
+        }
 
         public Task SavePackingListAsync(int remoteTripId, PackingListDTO list, bool create)
         {

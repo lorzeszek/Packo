@@ -13,6 +13,7 @@ var preload = new Preload { Trips = [new(nearest, "0 / 4"), new(later, "2 / 8"),
 var localTrips = new LocalTripLookup();
 var vm = new Details(preload, localTrips);
 await vm.SelectAsync(later);
+Check(!vm.IsLoadingTrip, "Opening known trip details skips the loading indicator while refreshing trip data");
 await vm.OnAppearingAsync();
 Check(vm.TripDestination == "Selected", "Details show the selected trip instead of the nearest trip");
 Check(vm.Title == "TripDetails", "Details use a stable title");

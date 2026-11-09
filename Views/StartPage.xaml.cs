@@ -32,8 +32,8 @@ public partial class StartPage : ContentPage
         _viewModel.RefreshTripSchedule();
         _scheduleTimer.Start();
 
-        await _viewModel.OnAppearingAsync();
-        await PackingLists.ShowAsync(_viewModel.Trip?.TripModel);
+        await Task.WhenAll(PackingLists.ShowAsync(_viewModel.Trip?.TripModel), _viewModel.OnAppearingAsync());
+        await PackingLists.UpdateTripAsync(_viewModel.Trip?.TripModel);
     }
 
     protected override void OnDisappearing()

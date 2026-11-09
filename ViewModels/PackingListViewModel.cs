@@ -28,6 +28,7 @@ namespace Packo.ViewModels
         public string ListName => _list?.Name ?? LocalizationResourceManager.Instance["PackingListTitle"];
         private bool _channelsInitialized;
         private bool _isLoading;
+        private int _itemsVersion;
         private readonly IPackingSuggestionService _packingSuggestionService;
         private bool _isDeleting;
         private bool _isEditingItem;
@@ -49,7 +50,7 @@ namespace Packo.ViewModels
             set
             {
                 SetProperty(ref _isAddingItems, value);
-                OnPropertyChanged(nameof(CanEditItems));
+                NotifyItemStateChanged();
             }
         }
 
@@ -134,7 +135,7 @@ namespace Packo.ViewModels
                 return;
 
             _isDeleting = true;
-            OnPropertyChanged(nameof(CanEditItems));
+            NotifyItemStateChanged();
             var remainingItems = new List<PackingItem>();
             var clearedView = false;
             try
@@ -206,7 +207,7 @@ namespace Packo.ViewModels
             finally
             {
                 _isDeleting = false;
-                OnPropertyChanged(nameof(CanEditItems));
+                NotifyItemStateChanged();
             }
         }
 
@@ -491,7 +492,7 @@ namespace Packo.ViewModels
             if (CanEditItems && packingItem != null && Items.Contains(packingItem))
             {
                 _isEditingItem = true;
-                OnPropertyChanged(nameof(CanEditItems));
+                NotifyItemStateChanged();
                 var original = !packingItem.IsPacked;
                 try
                 {
@@ -511,7 +512,7 @@ namespace Packo.ViewModels
                 finally
                 {
                     _isEditingItem = false;
-                    OnPropertyChanged(nameof(CanEditItems));
+                    NotifyItemStateChanged();
                 }
             }
         }
@@ -520,7 +521,7 @@ namespace Packo.ViewModels
         {
             if (!CanEditItems || item is null || !Items.Contains(item)) return;
             _isEditingItem = true;
-            OnPropertyChanged(nameof(CanEditItems));
+            NotifyItemStateChanged();
             var original = item.Quantity;
             try
             {
@@ -544,7 +545,7 @@ namespace Packo.ViewModels
             finally
             {
                 _isEditingItem = false;
-                OnPropertyChanged(nameof(CanEditItems));
+                NotifyItemStateChanged();
             }
         }
 
@@ -581,9 +582,14 @@ namespace Packo.ViewModels
                 // DELETE payloads may only contain the primary key.
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
-                    var deleted = Items.FirstOrDefault(x => x.RemoteId == change.Item.RemotePackingItemId);
+                    if (!_channelsInitialized || change.Item.RemotePackingItemId is not int deletedId)
+                        return;
+                    var deleted = Items.FirstOrDefault(x => x.RemoteId == deletedId);
                     if (deleted != null)
+                    {
+                        _itemsVersion++;
                         Items.Remove(deleted);
+                    }
                 });
                 return;
             }
@@ -595,6 +601,10 @@ namespace Packo.ViewModels
 
             MainThread.BeginInvokeOnMainThread(() =>
             {
+                if (!_channelsInitialized)
+                    return;
+                _itemsVersion++;
+
                 // Upload/realtime may finish between the local commit and the UI batch update.
                 var pendingAddition = change.Item.LocalPackingItemId > 0
                     ? _itemsBeingAdded?.FirstOrDefault(x => x.LocalPackingItemId == change.Item.LocalPackingItemId)
@@ -658,25 +668,40 @@ namespace Packo.ViewModels
             return item;
         }
 
-        private async Task LoadData()
+        private void NotifyItemStateChanged()
         {
-            if (_isLoading || _trip is null || _list is null)
-                return;
-
-            _isLoading = true;
+            _itemsVersion++;
             OnPropertyChanged(nameof(CanEditItems));
+        }
 
+        private void DisplayItems(IReadOnlyList<PackingItemDTO> items)
+        {
+            var sorted = PackingItemOrder.Sort(items.Select(Mappers.MapToPackingItem), SortMode).ToList();
+            if (Items.Count != sorted.Count || !Items.Zip(sorted, SameItem).All(same => same))
+                Items.ReplaceRange(sorted);
+        }
+
+        private static bool SameItem(PackingItem current, PackingItem updated) =>
+            current.LocalId == updated.LocalId && current.RemoteId == updated.RemoteId
+            && current.RemoteTripId == updated.RemoteTripId && current.RemoteUserId == updated.RemoteUserId
+            && current.Name == updated.Name && current.IsPacked == updated.IsPacked
+            && current.Quantity == updated.Quantity && current.CreatedDate == updated.CreatedDate;
+
+        private async Task RefreshItemsAsync(TripDTO trip, Guid listId)
+        {
+            var version = _itemsVersion;
             try
             {
-                var items = await _packingLists.GetPackingListItemsAsync(_trip, _list.Id);
-                if (_channelsInitialized)
-                    Items.ReplaceRange(PackingItemOrder.Sort(items.Select(Mappers.MapToPackingItem), SortMode).ToList());
+                await _packingLists.RefreshPackingTripAsync(trip);
+                if (version != _itemsVersion || !CanEditItems)
+                    return;
+
+                // A refresh must not replace a newer edit or realtime change on this page.
+                var items = await _packingLists.GetPackingListItemsAsync(trip, listId, refresh: false);
+                if (version == _itemsVersion && CanEditItems)
+                    DisplayItems(items);
             }
-            finally
-            {
-                _isLoading = false;
-                OnPropertyChanged(nameof(CanEditItems));
-            }
+            catch (Exception ex) { System.Diagnostics.Debug.WriteLine(ex); }
         }
 
         protected override async Task OnNavigatedToAsync(IDictionary<string, object> query)
@@ -688,26 +713,36 @@ namespace Packo.ViewModels
                     && list.Id == _list?.Id)
                     return;
 
+                _packingItemRepository.PackingItemChanged -= OnPackingItemChanged;
                 _remoteTripId = trip.RemoteTripId;
                 _localTripId = trip.LocalTripId;
                 _list = list;
                 OnPropertyChanged(nameof(ListName));
                 SetTrip(trip);
 
+                _channelsInitialized = true;
+                _isLoading = true;
+                NotifyItemStateChanged();
+                var version = _itemsVersion;
                 try
                 {
-                    if (Session.IsAuthenticated && !await _packingItemRepository.IsChannelCreatedAsync())
-                        _ = StartRealtimeAsync();
+                    var items = query.TryGetValue("items", out var snapshot) && snapshot is IReadOnlyList<PackingItemDTO> cached
+                        ? cached
+                        : await _packingLists.GetPackingListItemsAsync(trip, list.Id, refresh: false);
+                    if (version == _itemsVersion)
+                        DisplayItems(items);
                 }
                 catch (Exception ex) { System.Diagnostics.Debug.WriteLine(ex); }
 
-                _packingItemRepository.PackingItemChanged -= OnPackingItemChanged;
+                if (version != _itemsVersion)
+                    return;
+
+                _isLoading = false;
+                NotifyItemStateChanged();
                 _packingItemRepository.PackingItemChanged += OnPackingItemChanged;
-
-                _channelsInitialized = true;
-
-                await LoadData();
-
+                if (Session.IsAuthenticated)
+                    _ = StartRealtimeAsync();
+                _ = RefreshItemsAsync(trip, list.Id);
             }
         }
 
@@ -721,7 +756,8 @@ namespace Packo.ViewModels
         {
             _packingItemRepository.PackingItemChanged -= OnPackingItemChanged;
             _channelsInitialized = false;
-            OnPropertyChanged(nameof(CanEditItems));
+            _isLoading = false;
+            NotifyItemStateChanged();
             return Task.CompletedTask;
         }
     }

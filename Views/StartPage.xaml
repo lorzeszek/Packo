@@ -61,8 +61,7 @@
                 </Grid>
             </Grid>
 
-            <ActivityIndicator IsRunning="{Binding IsDataLoaded, Converter={StaticResource BoolToOppositeConverter}}"
-                               IsVisible="{Binding IsDataLoaded, Converter={StaticResource BoolToOppositeConverter}}"
+            <ActivityIndicator IsRunning="{Binding IsLoadingTrip}" IsVisible="{Binding IsLoadingTrip}"
                                Margin="24" Color="{StaticResource PackoAccentLight}" />
 
             <VerticalStackLayout IsVisible="{Binding HasTrip}" Padding="24,0,24,32" Spacing="20">

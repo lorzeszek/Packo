@@ -9,6 +9,10 @@ namespace Packo.Repositories;
 
 public partial class SyncPackingItemRepository : IPackingListRepository
 {
+    private static readonly TimeSpan ScreenRefreshInterval = TimeSpan.FromSeconds(5);
+    private readonly SemaphoreSlim _packingRefreshGate = new(1, 1);
+    private (string LocalUser, string? RemoteUser, int LocalTrip, int RemoteTrip)? _lastScreenRefreshTrip;
+    private long _lastScreenRefreshAt;
     private IPackingListRemote? ListRemote => _remote as IPackingListRemote;
     private bool IsOnline => _sessionService.IsAuthenticated && Connectivity.Current.NetworkAccess == NetworkAccess.Internet;
 
@@ -25,30 +29,41 @@ public partial class SyncPackingItemRepository : IPackingListRepository
         return items.Where(item => selectedIds.Contains(item.PackingListId)).ToList();
     }
 
+    public async Task RefreshPackingTripAsync(TripDTO trip)
+    {
+        if (!IsOnline || ListRemote is not { } remote)
+            return;
+        var userId = _sessionService.LocalUserId ?? string.Empty;
+        var remoteUserId = _sessionService.UserId;
+        var remoteTripId = await ResolveListTripIdAsync(trip, userId);
+        if (remoteTripId <= 0)
+            return;
+
+        var key = (userId, remoteUserId, trip.LocalTripId, remoteTripId);
+        await _packingRefreshGate.WaitAsync();
+        try
+        {
+            if (!IsOnline || _sessionService.LocalUserId != userId || _sessionService.UserId != remoteUserId)
+                return;
+            // Details and the editor share the same refresh when opened back-to-back.
+            if (_lastScreenRefreshTrip == key && System.Diagnostics.Stopwatch.GetElapsedTime(_lastScreenRefreshAt) < ScreenRefreshInterval)
+                return;
+
+            if (await RefreshPackingTripCoreAsync(trip.LocalTripId, remoteTripId, userId, remoteUserId, remote))
+            {
+                _lastScreenRefreshTrip = key;
+                _lastScreenRefreshAt = System.Diagnostics.Stopwatch.GetTimestamp();
+            }
+        }
+        finally { _packingRefreshGate.Release(); }
+    }
+
     public async Task<IReadOnlyList<PackingListDTO>> GetPackingListsAsync(TripDTO trip, bool refresh = true)
     {
         var userId = _sessionService.LocalUserId ?? string.Empty;
         var remoteTripId = await ResolveListTripIdAsync(trip, userId);
         if (refresh && IsOnline && remoteTripId > 0 && ListRemote is { } remote)
-        {
-            try
-            {
-                await SyncPendingChangesAsync();
-                await _syncGate.WaitAsync();
-                try
-                {
-                    var lists = await remote.GetPackingListsAsync(remoteTripId);
-                    if (_sessionService.LocalUserId == userId)
-                        await MergePackingListsAsync(trip.LocalTripId, remoteTripId, userId, lists);
-                }
-                finally { _syncGate.Release(); }
-                await ReadPackingItemsAsync(trip.LocalTripId, remoteTripId, syncPending: false);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine(ex);
-            }
-        }
+            await RefreshPackingTripCoreAsync(trip.LocalTripId, remoteTripId, userId, _sessionService.UserId, remote);
 
         IReadOnlyList<PackingListDTO> result = [];
         await _pendingDb.RunInTransactionAsync(db =>
@@ -67,6 +82,31 @@ public partial class SyncPackingItemRepository : IPackingListRepository
                 .ToList();
         });
         return result;
+    }
+
+    private async Task<bool> RefreshPackingTripCoreAsync(
+        int localTripId, int remoteTripId, string userId, string? remoteUserId, IPackingListRemote remote)
+    {
+        try
+        {
+            await SyncPendingChangesAsync();
+            await _syncGate.WaitAsync();
+            try
+            {
+                var lists = await remote.GetPackingListsAsync(remoteTripId);
+                if (_sessionService.LocalUserId != userId || _sessionService.UserId != remoteUserId)
+                    return false;
+                await MergePackingListsAsync(localTripId, remoteTripId, userId, lists);
+            }
+            finally { _syncGate.Release(); }
+            await ReadPackingItemsAsync(localTripId, remoteTripId, syncPending: false);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine(ex);
+            return false;
+        }
     }
 
     public async Task<PackingListDTO> CreatePackingListAsync(TripDTO trip, string name)

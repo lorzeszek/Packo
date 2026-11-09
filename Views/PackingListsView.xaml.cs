@@ -20,7 +20,8 @@ public partial class PackingListsView : ContentView
 {
     private TripDTO? _trip;
     private bool _working;
-    private bool _refreshing;
+    private int _loadVersion;
+    private IReadOnlyList<PackingListDTO>? _shownLists;
 
     public IPackingListRepository Repository { private get; set; } = null!;
 
@@ -28,34 +29,67 @@ public partial class PackingListsView : ContentView
 
     public async Task ShowAsync(TripDTO? trip)
     {
-        if (_working || _refreshing || trip is null)
-            return;
         _trip = trip;
-        _refreshing = true;
+        if (_working)
+            return;
+        var version = ++_loadVersion;
+        if (trip is null)
+            return;
+
         try
         {
-            await LoadAsync(trip, refresh: false);
-            LoadingIndicator.IsVisible = LoadingIndicator.IsRunning = true;
-            var refreshed = await Repository.GetPackingListsAsync(trip);
-            if (!_working)
+            var cached = await Repository.GetPackingListsAsync(trip, refresh: false);
+            if (version != _loadVersion || _working)
+                return;
+            if (cached.Count > 0 || _shownLists is not null)
+                DisplayLists(cached);
+            _ = RefreshAsync(trip, version);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine(ex);
+        }
+    }
+
+    public Task UpdateTripAsync(TripDTO? trip)
+    {
+        if (_trip?.LocalTripId != trip?.LocalTripId || _trip?.RemoteTripId != trip?.RemoteTripId
+            || _trip?.LocalUserId != trip?.LocalUserId)
+            return ShowAsync(trip);
+        _trip = trip;
+        return Task.CompletedTask;
+    }
+
+    private async Task RefreshAsync(TripDTO trip, int version)
+    {
+        try
+        {
+            await Repository.RefreshPackingTripAsync(trip);
+            if (version != _loadVersion || _working)
+                return;
+            var refreshed = await Repository.GetPackingListsAsync(trip, refresh: false);
+            if (version == _loadVersion && !_working)
                 DisplayLists(refreshed);
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine(ex);
         }
-        finally
-        {
-            _refreshing = false;
-            LoadingIndicator.IsVisible = LoadingIndicator.IsRunning = false;
-        }
     }
 
-    private async Task LoadAsync(TripDTO trip, bool refresh) =>
-        DisplayLists(await Repository.GetPackingListsAsync(trip, refresh));
+    private async Task LoadAsync(TripDTO trip)
+    {
+        var version = ++_loadVersion;
+        var lists = await Repository.GetPackingListsAsync(trip, refresh: false);
+        if (version == _loadVersion)
+            DisplayLists(lists);
+    }
 
     private void DisplayLists(IReadOnlyList<PackingListDTO> lists)
     {
+        if (_shownLists?.SequenceEqual(lists) == true)
+            return;
+        _shownLists = lists;
         BindableLayout.SetItemsSource(ListCards, lists.Select(list => new PackingListCard(list)).ToList());
         EmptyLabel.IsVisible = lists.Count == 0;
     }
@@ -71,7 +105,7 @@ public partial class PackingListsView : ContentView
             if (name is null)
                 return;
             await Repository.CreatePackingListAsync(trip, name);
-            await LoadAsync(trip, refresh: false);
+            await LoadAsync(trip);
         });
     }
 
@@ -79,11 +113,16 @@ public partial class PackingListsView : ContentView
     {
         if (_trip is not { } trip || sender is not Button { BindingContext: PackingListCard card })
             return;
-        await RunAsync(() => Shell.Current.GoToAsync(PackingListPage.EditorRoute, new ShellNavigationQueryParameters
+        await RunAsync(async () =>
         {
-            ["trip"] = trip,
-            ["list"] = card.List
-        }));
+            var items = await Repository.GetPackingListItemsAsync(trip, card.List.Id, refresh: false);
+            await Shell.Current.GoToAsync(PackingListPage.EditorRoute, new ShellNavigationQueryParameters
+            {
+                ["trip"] = trip,
+                ["list"] = card.List,
+                ["items"] = items
+            });
+        });
     }
 
     private async void OnListOptionsClicked(object? sender, EventArgs e)
@@ -116,7 +155,7 @@ public partial class PackingListsView : ContentView
             else
                 return;
 
-            await LoadAsync(trip, refresh: false);
+            await LoadAsync(trip);
         });
     }
 
