@@ -1,5 +1,4 @@
-﻿using CommunityToolkit.Maui.Extensions;
-using CommunityToolkit.Mvvm.Input;
+﻿using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Packo.Extensions;
 using Packo.Interfaces;
@@ -157,7 +156,7 @@ namespace Packo.ViewModels
                 return;
 
             var strings = LocalizationResourceManager.Instance;
-            var confirmed = await Shell.Current.DisplayAlertAsync(
+            var confirmed = await ConfirmPopup.AskAsync(
                 strings["DeleteTrip"],
                 string.Format(CultureInfo.CurrentUICulture, strings["DeleteTripConfirm"], trip.Destination),
                 strings["Delete"], strings["Cancel"]);
@@ -173,7 +172,7 @@ namespace Packo.ViewModels
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Trip deletion failed: {ex}");
-                await Shell.Current.DisplayAlertAsync(strings["Error"], strings["DeleteTripError"], strings["Ok"]);
+                await ConfirmPopup.ShowMessageAsync(strings["Error"], strings["DeleteTripError"]);
             }
         }
 
@@ -198,14 +197,11 @@ namespace Packo.ViewModels
 
         public async Task Logout()
         {
-            var popup = new ConfirmPopup(
+            var confirmed = await ConfirmPopup.AskAsync(
                 LocalizationResourceManager.Instance["LogoutConfirmTitle"],
-                LocalizationResourceManager.Instance["LogoutConfirmMessage"],
-                showIcon: false);
+                LocalizationResourceManager.Instance["LogoutConfirmMessage"]);
 
-            var result = await Application.Current.MainPage.ShowPopupAsync<bool>(popup);
-
-            if (result.Result)
+            if (confirmed)
             {
                 //_tripRepository.TripChanged -= OnTripChanged;
                 await _tripRepository.UnsubscribeFromTripChangesAsync();

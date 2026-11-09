@@ -25,21 +25,6 @@ public sealed class Shell
     public string? Route { get; private set; }
     public IDictionary<string, object>? Query { get; private set; }
     public Navigation Navigation { get; } = new();
-    public Func<Task<bool>> Confirm { get; set; } = () => Task.FromResult(false);
-    public string? ConfirmationMessage { get; private set; }
-    public int ConfirmationCount { get; private set; }
-    public string? ErrorMessage { get; private set; }
-    public Task<bool> DisplayAlertAsync(string title, string message, string accept, string cancel)
-    {
-        ConfirmationMessage = message;
-        ConfirmationCount++;
-        return Confirm();
-    }
-    public Task DisplayAlertAsync(string title, string message, string cancel)
-    {
-        ErrorMessage = message;
-        return Task.CompletedTask;
-    }
     public Task GoToAsync(string route, IDictionary<string, object>? query = null)
     {
         Route = route;
@@ -48,27 +33,28 @@ public sealed class Shell
     }
 }
 public sealed class Navigation { public Task PopAsync(bool animated) => Task.CompletedTask; }
-public sealed class Application
-{
-    public static Application Current { get; } = new();
-    public object MainPage { get; } = new();
-}
-namespace CommunityToolkit.Maui.Extensions
-{
-    public record PopupResult<T>(T Result);
-    public static class PopupExtensions
-    {
-        public static Task<PopupResult<T>> ShowPopupAsync<T>(this object page, object popup)
-            => Task.FromResult(new PopupResult<T>(default!));
-        public static Task ShowPopupAsync(this object page, object popup) => Task.CompletedTask;
-    }
-}
 namespace Packo.Popups
 {
-    public class ConfirmPopup(string title, string message, bool showIcon = true) { }
-    public class PackingItemsPopup(List<PackingSuggestion> items)
+    public static class ConfirmPopup
     {
-        public TaskCompletionSource<List<PackingSuggestion>> ResultSource { get; } = new();
+        public static Func<Task<bool>> Confirm { get; set; } = () => Task.FromResult(false);
+        public static string? ConfirmationMessage { get; private set; }
+        public static int ConfirmationCount { get; private set; }
+        public static string? LastMessage { get; private set; }
+
+        public static Task<bool> AskAsync(string title, string? message = null,
+            string? confirmText = null, string? cancelText = null)
+        {
+            ConfirmationMessage = message;
+            ConfirmationCount++;
+            return Confirm();
+        }
+
+        public static Task ShowMessageAsync(string title, string message)
+        {
+            LastMessage = message;
+            return Task.CompletedTask;
+        }
     }
 }
 

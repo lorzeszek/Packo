@@ -1,4 +1,3 @@
-using CommunityToolkit.Maui.Extensions;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Packo.Interfaces;
@@ -90,14 +89,11 @@ namespace Packo.ViewModels
         {
             try
             {
-                var popup = new ConfirmPopup(
+                var confirmed = await ConfirmPopup.AskAsync(
                     LocalizationResourceManager.Instance["LogoutConfirmTitle"],
-                    LocalizationResourceManager.Instance["LogoutConfirmMessage"],
-                    showIcon: false);
+                    LocalizationResourceManager.Instance["LogoutConfirmMessage"]);
 
-                var result = await Application.Current.MainPage.ShowPopupAsync<bool>(popup);
-
-                if (result.Result)
+                if (confirmed)
                 {
                     MainThread.BeginInvokeOnMainThread(() =>
                     {

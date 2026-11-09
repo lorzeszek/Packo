@@ -1,3 +1,4 @@
+using CommunityToolkit.Maui.Extensions;
 using Packo.Models.Pages;
 using Packo.ViewModels;
 
@@ -14,10 +15,11 @@ namespace Packo.Views
             BindingContext = _viewModel;
         }
 
-        protected override async void OnAppearing()
+        protected override async void OnNavigatedTo(NavigatedToEventArgs args)
         {
-            base.OnAppearing();
-            await _viewModel.OnAppearingAsync();
+            base.OnNavigatedTo(args);
+            if (!args.WasPreviousPageACommunityToolkitPopupPage())
+                await _viewModel.LoadDocumentsAsync();
         }
     }
 }

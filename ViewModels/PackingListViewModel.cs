@@ -114,8 +114,7 @@ namespace Packo.ViewModels
                 (Mode: PackingItemSortMode.QuantityAscending, Label: strings["PackingSortQuantityAscending"])
             };
             var options = modes.Select(option => option.Mode == SortMode ? $"✓  {option.Label}" : option.Label).ToArray();
-            var selection = await Shell.Current.DisplayActionSheetAsync(strings["PackingSortTitle"],
-                strings["Cancel"], null, options);
+            var selection = await OptionsPopup.ChooseAsync(strings["PackingSortTitle"], options);
             var index = Array.IndexOf(options, selection);
             if (index < 0 || !_channelsInitialized || !SetProperty(ref _sortMode, modes[index].Mode, nameof(SortMode)))
                 return;
@@ -138,7 +137,7 @@ namespace Packo.ViewModels
             {
                 var targets = item is null ? Items.ToList() : new List<PackingItem> { item };
                 var resources = LocalizationResourceManager.Instance;
-                var confirmed = await Shell.Current.DisplayAlertAsync(
+                var confirmed = await ConfirmPopup.AskAsync(
                     resources[item is null ? "ClearPackingList" : "DeletePackingItem"],
                     string.Format(System.Globalization.CultureInfo.CurrentUICulture,
                         resources[item is null ? "ClearPackingListConfirm" : "DeletePackingItemConfirm"],
@@ -197,9 +196,8 @@ namespace Packo.ViewModels
                     Items.AddRange(toRestore, System.Collections.Specialized.NotifyCollectionChangedAction.Reset);
                     SortItems();
                 }
-                await Shell.Current.DisplayAlertAsync(LocalizationResourceManager.Instance["Error"],
-                    LocalizationResourceManager.Instance["DeletePackingItemsError"],
-                    LocalizationResourceManager.Instance["Ok"]);
+                await ConfirmPopup.ShowMessageAsync(LocalizationResourceManager.Instance["Error"],
+                    LocalizationResourceManager.Instance["DeletePackingItemsError"]);
             }
             finally
             {
@@ -239,9 +237,8 @@ namespace Packo.ViewModels
             IsAddingItems = true;
             try
             {
-                var confirmation = await Application.Current.MainPage.ShowPopupAsync<bool>(
-                    new ConfirmPopup(LocalizationResourceManager.Instance["SuggestedPackingTitle"], string.Empty));
-                if (!confirmation.Result)
+                var confirmed = await ConfirmPopup.AskAsync(LocalizationResourceManager.Instance["SuggestedPackingTitle"]);
+                if (!confirmed)
                     return;
 
                 IsGeneratingPackingList = true;
@@ -285,9 +282,8 @@ namespace Packo.ViewModels
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine(ex);
-                await Shell.Current.DisplayAlertAsync(LocalizationResourceManager.Instance["Error"],
-                    LocalizationResourceManager.Instance["AddPackingItemsError"],
-                    LocalizationResourceManager.Instance["Ok"]);
+                await ConfirmPopup.ShowMessageAsync(LocalizationResourceManager.Instance["Error"],
+                    LocalizationResourceManager.Instance["AddPackingItemsError"]);
             }
             finally
             {
@@ -334,7 +330,7 @@ namespace Packo.ViewModels
 
                 if (sources.Count == 0)
                 {
-                    await Shell.Current.DisplayAlertAsync(title, strings["NoPackingSource"], strings["Ok"]);
+                    await ConfirmPopup.ShowMessageAsync(title, strings["NoPackingSource"]);
                     return;
                 }
 
@@ -343,8 +339,7 @@ namespace Packo.ViewModels
                     var date = (trip.StartDate ?? trip.CreatedDate).ToString("g", CultureInfo.CurrentUICulture);
                     return $"{index + 1}. {trip.Destination} · {date}";
                 }).ToArray();
-                var selection = await Shell.Current.DisplayActionSheetAsync(strings["ChoosePackingSource"],
-                    strings["Cancel"], null, options);
+                var selection = await OptionsPopup.ChooseAsync(strings["ChoosePackingSource"], options);
                 var sourceIndex = Array.IndexOf(options, selection);
                 if (sourceIndex < 0 || !_channelsInitialized)
                     return;
@@ -359,7 +354,7 @@ namespace Packo.ViewModels
                     .ToList();
                 if (candidates.Count == 0)
                 {
-                    await Shell.Current.DisplayAlertAsync(title, strings["EmptyPackingSource"], strings["Ok"]);
+                    await ConfirmPopup.ShowMessageAsync(title, strings["EmptyPackingSource"]);
                     return;
                 }
 
@@ -402,13 +397,13 @@ namespace Packo.ViewModels
                         summary += "\n\n" + skippedMessage;
                     }
 
-                    await Shell.Current.DisplayAlertAsync(summaryTitle, summary, strings["Ok"]);
+                    await ConfirmPopup.ShowMessageAsync(summaryTitle, summary);
                 }
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine(ex);
-                await Shell.Current.DisplayAlertAsync(strings["Error"], strings["CopyPackingError"], strings["Ok"]);
+                await ConfirmPopup.ShowMessageAsync(strings["Error"], strings["CopyPackingError"]);
             }
             finally
             {
@@ -514,10 +509,9 @@ namespace Packo.ViewModels
             }
         }
 
-        private static Task ShowUpdateErrorAsync() => Shell.Current.DisplayAlertAsync(
+        private static Task ShowUpdateErrorAsync() => ConfirmPopup.ShowMessageAsync(
             LocalizationResourceManager.Instance["Error"],
-            LocalizationResourceManager.Instance["UpdatePackingItemError"],
-            LocalizationResourceManager.Instance["Ok"]);
+            LocalizationResourceManager.Instance["UpdatePackingItemError"]);
 
         private void SortItems(PackingItem? changedItem = null) => PackingItemOrder.Apply(Items, changedItem, SortMode);
 

@@ -9,8 +9,7 @@
     Padding="0"
     CanBeDismissedByTappingOutsideOfPopup="False">
 
-    <Border WidthRequest="280" Padding="20" Style="{StaticResource PackoCardBorderStyle}"
-            StrokeShape="RoundRectangle 24">
+    <Border WidthRequest="280" Padding="20" Margin="0" Style="{StaticResource PackoPopupCardStyle}">
         <VerticalStackLayout x:Name="EditorContent" Spacing="16">
             <VerticalStackLayout Spacing="6">
                 <Label Text="{loc:Translate PackingQuantity}" FontSize="20" FontAttributes="Bold"
@@ -46,12 +45,11 @@
 
             <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
                 <Button Text="{loc:Translate Cancel}" Clicked="OnCancelClicked"
-                        BackgroundColor="{AppThemeBinding Light={StaticResource PackoSubtleSurfaceLight}, Dark={StaticResource PackoSubtleSurfaceDark}}"
-                        TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}"
-                        FontSize="14" FontAttributes="Bold" CornerRadius="14" HeightRequest="48" Padding="4,0" />
+                        Style="{StaticResource PackoPopupSecondaryButtonStyle}"
+                        FontSize="14" HeightRequest="48" Padding="4,0" />
                 <Button x:Name="ConfirmButton" Grid.Column="1" Text="{loc:Translate SaveChanges}" Clicked="OnConfirmClicked"
-                        Style="{StaticResource PackoPrimaryActionButtonStyle}"
-                        FontSize="14" FontAttributes="Bold" CornerRadius="14" HeightRequest="48" Padding="4,0" />
+                        Style="{StaticResource PackoPopupPrimaryButtonStyle}"
+                        FontSize="14" HeightRequest="48" Padding="4,0" />
             </Grid>
         </VerticalStackLayout>
     </Border>

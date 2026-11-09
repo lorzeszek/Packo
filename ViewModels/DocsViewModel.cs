@@ -3,6 +3,7 @@ using Packo.Extensions;
 using Packo.Interfaces;
 using Packo.Models;
 using Packo.Models.DTO;
+using Packo.Popups;
 using Packo.Repositories.Interfaces;
 using Packo.Services.Interfaces;
 using Packo.Services;
@@ -32,10 +33,7 @@ namespace Packo.ViewModels
 
             if (!File.Exists(document.LocalPath))
             {
-                await Shell.Current.DisplayAlertAsync(
-                    T("Error"),
-                    T("FileNotFound"),
-                    T("Ok"));
+                await ConfirmPopup.ShowMessageAsync(T("Error"), T("FileNotFound"));
 
                 return;
             }
@@ -51,11 +49,10 @@ namespace Packo.ViewModels
             if (document == null)
                 return;
 
-            var confirmed = await Shell.Current.DisplayAlertAsync(
-            T("DeleteDocument"),
-            string.Format(CultureInfo.CurrentUICulture, T("DeleteDocumentConfirm"), document.FileName),
-            T("Delete"),
-            T("Cancel"));
+            var confirmed = await ConfirmPopup.AskAsync(
+                T("DeleteDocument"),
+                string.Format(CultureInfo.CurrentUICulture, T("DeleteDocumentConfirm"), document.FileName),
+                T("Delete"), T("Cancel"));
 
             if (!confirmed)
                 return;
@@ -90,10 +87,7 @@ namespace Packo.ViewModels
 
             if (alreadyExists)
             {
-                await Shell.Current.DisplayAlert(
-                    T("DuplicateDocument"),
-                    T("DuplicateDocumentMessage"),
-                    T("Ok"));
+                await ConfirmPopup.ShowMessageAsync(T("DuplicateDocument"), T("DuplicateDocumentMessage"));
 
                 return;
             }
@@ -139,7 +133,7 @@ namespace Packo.ViewModels
 
         private static string T(string key) => LocalizationResourceManager.Instance[key];
 
-        private async Task LoadDocumentsAsync()
+        public async Task LoadDocumentsAsync()
         {
             var documents = await _documentPreloadService.GetDocumentsAsync();
 
@@ -154,11 +148,6 @@ namespace Packo.ViewModels
                 });
 
             Docs.ReplaceRange(mappedDocuments);
-        }
-
-        public async Task OnAppearingAsync()
-        {
-            await LoadDocumentsAsync();
         }
 
         //protected override async Task OnNavigatedToAsync(IDictionary<string, object> query)

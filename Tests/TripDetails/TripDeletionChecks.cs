@@ -1,4 +1,5 @@
 using Packo.Models.DTO;
+using Packo.Popups;
 using Packo.Repositories.Interfaces;
 using Packo.Repositories.Models;
 using Packo.Services.Interfaces;
@@ -15,17 +16,17 @@ internal static class TripDeletionChecks
         var other = new TripViewModel(new TripDTO { Destination = "Paris", LocalTripId = 2, LocalUserId = "local" });
         vm.Trips.AddRange([trip, other]);
 
-        Shell.Current.Confirm = () => Task.FromResult(false);
+        ConfirmPopup.Confirm = () => Task.FromResult(false);
         await vm.TrashTripCommand.ExecuteAsync(trip);
         Check(repository.DeleteCalls == 0 && vm.Trips.Contains(trip),
             "Cancelling trip deletion leaves the trip untouched and never calls the repository");
-        Check(Shell.Current.ConfirmationMessage!.Contains("Rome"),
+        Check(ConfirmPopup.ConfirmationMessage!.Contains("Rome"),
             "The confirmation identifies the trip by destination");
         Check(ReferenceEquals(vm.DeleteTripCommand, vm.TrashTripCommand),
             "Both deletion command names share the same confirmation flow");
 
         var answer = new TaskCompletionSource<bool>();
-        Shell.Current.Confirm = () => answer.Task;
+        ConfirmPopup.Confirm = () => answer.Task;
         var pending = vm.TrashTripCommand.ExecuteAsync(trip);
         Check(repository.DeleteCalls == 0 && !vm.TrashTripCommand.CanExecute(other),
             "Deletion waits for an answer and disables repeated clicks while the dialog is open");
@@ -36,18 +37,18 @@ internal static class TripDeletionChecks
             "Confirming deletes exactly the selected trip and immediately removes its tile");
 
         repository.Fail = true;
-        Shell.Current.Confirm = () => Task.FromResult(true);
+        ConfirmPopup.Confirm = () => Task.FromResult(true);
         await vm.TrashTripCommand.ExecuteAsync(other);
-        Check(vm.Trips.Contains(other) && Shell.Current.ErrorMessage == "DeleteTripError",
+        Check(vm.Trips.Contains(other) && ConfirmPopup.LastMessage == "DeleteTripError",
             "A failed deletion keeps the trip visible and reports an error");
 
-        var prompts = Shell.Current.ConfirmationCount;
+        var prompts = ConfirmPopup.ConfirmationCount;
         var calls = repository.DeleteCalls;
         session.GlobalIsBusy = true;
         await vm.TrashTripCommand.ExecuteAsync(other);
         session.GlobalIsBusy = false;
         await vm.TrashTripCommand.ExecuteAsync(null);
-        Check(repository.DeleteCalls == calls && Shell.Current.ConfirmationCount == prompts,
+        Check(repository.DeleteCalls == calls && ConfirmPopup.ConfirmationCount == prompts,
             "Busy or missing selections cannot open a dialog or delete a trip");
     }
 

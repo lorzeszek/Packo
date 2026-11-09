@@ -461,6 +461,30 @@
         <Setter Property="FontAttributes" Value="Bold" />
     </Style>
 
+    <Style x:Key="PackoPopupCardStyle" TargetType="Border" BasedOn="{StaticResource PackoCardBorderStyle}">
+        <Setter Property="Padding" Value="24" />
+        <Setter Property="Margin" Value="20" />
+        <Setter Property="MaximumWidthRequest" Value="420" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 26" />
+    </Style>
+
+    <Style x:Key="PackoPopupTitleStyle" TargetType="Label" BasedOn="{StaticResource PackoSectionTitleStyle}">
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="HorizontalTextAlignment" Value="Center" />
+        <Setter Property="LineBreakMode" Value="WordWrap" />
+    </Style>
+
+    <Style x:Key="PackoPopupPrimaryButtonStyle" TargetType="Button" BasedOn="{StaticResource PackoPrimaryActionButtonStyle}">
+        <Setter Property="FontSize" Value="15" />
+        <Setter Property="CornerRadius" Value="15" />
+        <Setter Property="HeightRequest" Value="52" />
+    </Style>
+
+    <Style x:Key="PackoPopupSecondaryButtonStyle" TargetType="Button" BasedOn="{StaticResource PackoPopupPrimaryButtonStyle}">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PackoSubtleSurfaceLight}, Dark={StaticResource PackoSubtleSurfaceDark}}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+    </Style>
+
     <Style x:Key="PackoCounterButtonStyle" TargetType="Button">
         <Setter Property="WidthRequest" Value="42" />
         <Setter Property="HeightRequest" Value="42" />

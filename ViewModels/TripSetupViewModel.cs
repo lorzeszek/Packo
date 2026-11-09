@@ -5,6 +5,7 @@ using Packo.Helpers;
 using Packo.Models;
 using Packo.Models.DTO;
 using Packo.Models.Enums;
+using Packo.Popups;
 using Packo.Repositories.Interfaces;
 using Packo.Services;
 using Packo.Services.Interfaces;
@@ -338,7 +339,7 @@ namespace Packo.ViewModels
             {
                 System.Diagnostics.Debug.WriteLine(ex);
                 var strings = LocalizationResourceManager.Instance;
-                await Shell.Current.DisplayAlertAsync(strings["Error"], strings["SaveTripError"], strings["Ok"]);
+                await ConfirmPopup.ShowMessageAsync(strings["Error"], strings["SaveTripError"]);
                 return;
             }
             finally
@@ -372,8 +373,8 @@ namespace Packo.ViewModels
             }
             catch (Exception)
             {
-                await Shell.Current.DisplayAlertAsync(LocalizationResourceManager.Instance["Error"],
-                    LocalizationResourceManager.Instance["SaveTripError"], "OK");
+                await ConfirmPopup.ShowMessageAsync(LocalizationResourceManager.Instance["Error"],
+                    LocalizationResourceManager.Instance["SaveTripError"]);
                 return;
             }
             finally

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<toolkit:Popup
+    x:TypeArguments="x:String"
+    x:Class="Packo.Popups.OptionsPopup"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:loc="clr-namespace:Packo.Extensions"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit">
+
+    <Border Style="{StaticResource PackoPopupCardStyle}">
+        <Grid RowDefinitions="Auto,*,Auto" RowSpacing="16">
+            <Label x:Name="TitleLabel" Style="{StaticResource PackoPopupTitleStyle}" />
+
+            <ScrollView Grid.Row="1" MaximumHeightRequest="264">
+                <VerticalStackLayout x:Name="OptionsList" Spacing="6">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="x:String">
+                            <Button Text="{Binding .}" Clicked="OnOptionClicked"
+                                    Style="{StaticResource PackoPopupSecondaryButtonStyle}"
+                                    HeightRequest="-1" MinimumHeightRequest="48" Padding="12,10"
+                                    FontAttributes="None" LineBreakMode="WordWrap" />
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+            </ScrollView>
+
+            <Button Grid.Row="2" Text="{loc:Translate Cancel}" Clicked="OnCancelClicked"
+                    Style="{StaticResource PackoPopupSecondaryButtonStyle}" />
+        </Grid>
+    </Border>
+</toolkit:Popup>
