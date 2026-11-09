@@ -4,9 +4,10 @@ namespace Packo.Popups;
 
 public partial class ConfirmPopup : Popup<bool>
 {
-    public ConfirmPopup(string title, string message)
+    public ConfirmPopup(string title, string message, bool showIcon = true)
     {
         InitializeComponent();
+        IconBadge.IsVisible = showIcon;
         TitleLabel.Text = title;
         MessageLabel.Text = message;
     }

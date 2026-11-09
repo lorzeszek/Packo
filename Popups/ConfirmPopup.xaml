@@ -11,7 +11,7 @@
     <Border Padding="24" Margin="20" Style="{StaticResource PackoCardBorderStyle}"
             StrokeShape="RoundRectangle 26">
         <VerticalStackLayout Spacing="16">
-            <Border WidthRequest="54" HeightRequest="54" StrokeThickness="0"
+            <Border x:Name="IconBadge" WidthRequest="54" HeightRequest="54" StrokeThickness="0"
                     StrokeShape="RoundRectangle 18" BackgroundColor="{StaticResource PackoAccentSoftLight}"
                     HorizontalOptions="Center">
                 <Label Text="✦" FontSize="26" HorizontalTextAlignment="Center"

@@ -90,7 +90,10 @@ namespace Packo.ViewModels
         {
             try
             {
-                var popup = new ConfirmPopup(LocalizationResourceManager.Instance["LogoutConfirmTitle"], LocalizationResourceManager.Instance["LogoutConfirmMessage"]);
+                var popup = new ConfirmPopup(
+                    LocalizationResourceManager.Instance["LogoutConfirmTitle"],
+                    LocalizationResourceManager.Instance["LogoutConfirmMessage"],
+                    showIcon: false);
 
                 var result = await Application.Current.MainPage.ShowPopupAsync<bool>(popup);
 

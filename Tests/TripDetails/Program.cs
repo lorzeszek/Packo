@@ -5,6 +5,7 @@ using Packo.Repositories.Models;
 using Packo.Services;
 using Packo.Services.Interfaces;
 using Packo.ViewModels;
+using System.ComponentModel;
 
 var nearest = Trip(1, 10, "Nearest", DateTime.Today);
 var later = Trip(2, 20, "Selected", DateTime.Today.AddDays(60));
@@ -98,10 +99,21 @@ sealed class Details(ITripListPreloadService preload)
         ["selectedTrip"] = new TripViewModel(trip)
     });
 }
-sealed class Session : ISessionService
+sealed class Session : ISessionService, INotifyPropertyChanged
 {
     public string LocalUserId => "local";
-    public bool GlobalIsBusy { get; set; }
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    private bool _globalIsBusy;
+    public bool GlobalIsBusy
+    {
+        get => _globalIsBusy;
+        set
+        {
+            _globalIsBusy = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(GlobalIsBusy)));
+        }
+    }
 }
 sealed class Preload : ITripListPreloadService
 {

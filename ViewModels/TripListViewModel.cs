@@ -13,6 +13,7 @@ using Packo.Services;
 using Packo.Views;
 using System.Windows.Input;
 using System.Globalization;
+using System.ComponentModel;
 
 namespace Packo.ViewModels
 {
@@ -197,7 +198,10 @@ namespace Packo.ViewModels
 
         public async Task Logout()
         {
-            var popup = new ConfirmPopup(LocalizationResourceManager.Instance["LogoutConfirmTitle"], LocalizationResourceManager.Instance["LogoutConfirmMessage"]);
+            var popup = new ConfirmPopup(
+                LocalizationResourceManager.Instance["LogoutConfirmTitle"],
+                LocalizationResourceManager.Instance["LogoutConfirmMessage"],
+                showIcon: false);
 
             var result = await Application.Current.MainPage.ShowPopupAsync<bool>(popup);
 
@@ -407,6 +411,14 @@ namespace Packo.ViewModels
 
         public async Task OnAppearingAsync()
         {
+            if (Session is INotifyPropertyChanged session)
+            {
+                session.PropertyChanged -= OnSessionPropertyChanged;
+                session.PropertyChanged += OnSessionPropertyChanged;
+            }
+
+            RefreshTripCommands();
+
             if (_isAppearing)
                 return;
 
@@ -456,6 +468,9 @@ namespace Packo.ViewModels
 
         public override async Task OnNavigatedFromAsync(IDictionary<string, object> query)
         {
+            if (Session is INotifyPropertyChanged session)
+                session.PropertyChanged -= OnSessionPropertyChanged;
+
             _tripRepository.TripChanged -= OnTripChanged;
             _tripRepository.TripChanged -= OnTripChangedWhileAway;
             _tripRepository.TripChanged += OnTripChangedWhileAway;
@@ -463,5 +478,18 @@ namespace Packo.ViewModels
         }
 
         private void OnTripChangedWhileAway(TripDTO trip, string operation) => _isDirty = true;
+
+        private void OnSessionPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(ISessionService.GlobalIsBusy))
+                MainThread.BeginInvokeOnMainThread(RefreshTripCommands);
+        }
+
+        private void RefreshTripCommands()
+        {
+            TripTappedCommand.NotifyCanExecuteChanged();
+            OpenPackingListCommand.NotifyCanExecuteChanged();
+            TrashTripCommand.NotifyCanExecuteChanged();
+        }
     }
 }

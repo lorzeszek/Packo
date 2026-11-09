@@ -58,7 +58,8 @@ internal static class CompletedTripChecks
             && details.Trip.StatusLabel == "PastTrip" && details.PackingSummary == "2 / 5",
             "Returning after Save keeps the selected trip details, completed badge and packing progress");
 
-        var list = new TripListViewModel(null!, null!, new Session(), null!, remote, null!, preload, new Weather());
+        var session = new Session();
+        var list = new TripListViewModel(null!, null!, session, null!, remote, null!, preload, new Weather());
         await list.OnAppearingAsync();
         Check(list.Trips.Any(trip => trip.TripModel.RemoteTripId == 1 && trip.IsCompleted),
             "The trip whose end time was edited into the past stays on the Trips list");
@@ -66,16 +67,45 @@ internal static class CompletedTripChecks
             "Upcoming trips remain above completed trips after the list reloads");
 
         var tile = list.Trips.Single(trip => trip.TripModel.RemoteTripId == 1);
+        var packingCommand = list.OpenPackingListCommand;
+        await packingCommand.ExecuteAsync(tile);
+        Check(Shell.Current.Route == "PackingListPage" && ReferenceEquals(Shell.Current.Query?["trip"], tile.TripModel),
+            "The suitcase opens the selected tile's packing list");
+
         var propertiesChanged = new List<string?>();
         tile.PropertyChanged += (_, args) => propertiesChanged.Add(args.PropertyName);
         var loadingStarted = false;
         list.PropertyChanged += (_, args) => loadingStarted |= args.PropertyName == nameof(list.IsLoading) && list.IsLoading;
         await list.OnNavigatedFromAsync(new Dictionary<string, object>());
+        session.GlobalIsBusy = true;
         WeakReferenceMessenger.Default.Send(new PackingProgressChangedMessage(1, 1, "local", "3 / 5"));
+        await Shell.Current.GoToAsync("//TripList");
         await list.OnAppearingAsync();
+        var otherTile = list.Trips[0];
+        var suitcaseEnabled = packingCommand.CanExecute(otherTile);
+        packingCommand.CanExecuteChanged += (_, _) => suitcaseEnabled = packingCommand.CanExecute(otherTile);
+        Check(!suitcaseEnabled, "The suitcase is disabled while packing is still loading");
+        session.GlobalIsBusy = false;
+        Check(suitcaseEnabled, "Finishing the load after returning to Trips re-enables the suitcase buttons");
+        await packingCommand.ExecuteAsync(otherTile);
+        Check(Shell.Current.Route == "PackingListPage" && ReferenceEquals(Shell.Current.Query?["trip"], otherTile.TripModel),
+            "A different packing list can be opened after returning to Trips");
+
         Check(list.ShowTrips && !loadingStarted && list.Trips.Contains(tile) && tile.PackingSummary == "3 / 5"
             && propertiesChanged.SequenceEqual([nameof(TripViewModel.PackingSummary)]),
             "Returning from packing updates only the existing tile's counter without entering the loading state");
+
+        session.GlobalIsBusy = true;
+        Check(!suitcaseEnabled, "Starting another load disables the suitcase buttons again");
+        await list.OnNavigatedFromAsync(new Dictionary<string, object>());
+        session.GlobalIsBusy = false;
+        await Shell.Current.GoToAsync("//TripList");
+        await list.OnAppearingAsync();
+        Check(suitcaseEnabled, "Returning to Trips also refreshes the buttons when the load finished offscreen");
+        await packingCommand.ExecuteAsync(otherTile);
+        Check(Shell.Current.Route == "PackingListPage" && ReferenceEquals(Shell.Current.Query?["trip"], otherTile.TripModel),
+            "The same packing list can be reopened after returning to Trips");
+
         await details.OnAppearingAsync();
         Check(details.PackingSummary == "3 / 5", "Reopening details uses the updated counter from the trip cache");
 

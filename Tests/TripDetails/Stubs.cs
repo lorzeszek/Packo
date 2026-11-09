@@ -65,7 +65,7 @@ namespace CommunityToolkit.Maui.Extensions
 }
 namespace Packo.Popups
 {
-    public class ConfirmPopup(string title, string message) { }
+    public class ConfirmPopup(string title, string message, bool showIcon = true) { }
     public class PackingItemsPopup(List<PackingSuggestion> items)
     {
         public TaskCompletionSource<List<PackingSuggestion>> ResultSource { get; } = new();
