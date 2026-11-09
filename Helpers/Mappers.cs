@@ -60,6 +60,7 @@ namespace Packo.Helpers
             {
                 Id = item.RemotePackingItemId ?? 0,
                 TripId = item.RemoteTripId.Value,
+                PackingListId = item.PackingListId,
                 Name = item.Name,
                 CreatedDate = item.CreatedDate,
                 User_id = item.RemoteUserId,
@@ -74,6 +75,7 @@ namespace Packo.Helpers
             {
                 RemotePackingItemId = item.Id,
                 RemoteTripId = item.TripId,
+                PackingListId = item.PackingListId,
                 Name = item.Name,
                 CreatedDate = item.CreatedDate,
                 RemoteUserId = item.User_id,
@@ -89,6 +91,7 @@ namespace Packo.Helpers
                 LocalPackingItemId = item.LocalId,
                 RemotePackingItemId = item.RemoteId,
                 RemoteTripId = item.RemoteTripId,
+                PackingListId = item.PackingListId,
                 LocalTripId = item.LocalTripId,
                 Name = item.Name,
                 CreatedDate = item.CreatedDate,
@@ -106,6 +109,7 @@ namespace Packo.Helpers
                 LocalId = item.LocalPackingItemId,
                 RemoteId = item.RemotePackingItemId,
                 RemoteTripId = item.RemoteTripId,
+                PackingListId = item.PackingListId,
                 LocalTripId = item.LocalTripId,
                 Name = item.Name,
                 CreatedDate = item.CreatedDate,

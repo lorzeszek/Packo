@@ -1,6 +1,5 @@
-using CommunityToolkit.Mvvm.Messaging;
-using Packo.Messages;
 using Packo.Models.DTO;
+using Packo.Repositories.Interfaces;
 using Packo.Repositories.Models;
 using Packo.Services;
 using Packo.Services.Interfaces;
@@ -11,17 +10,13 @@ var nearest = Trip(1, 10, "Nearest", DateTime.Today);
 var later = Trip(2, 20, "Selected", DateTime.Today.AddDays(60));
 var past = Trip(3, 30, "Past", DateTime.Today.AddDays(-60));
 var preload = new Preload { Trips = [new(nearest, "0 / 4"), new(later, "2 / 8"), new(past, "1 / 3")] };
-var vm = new Details(preload);
+var localTrips = new LocalTripLookup();
+var vm = new Details(preload, localTrips);
 await vm.SelectAsync(later);
 await vm.OnAppearingAsync();
-Check(vm.TripDestination == "Selected" && vm.PackingProgress == .25,
-    "Details show the selected trip and its progress instead of the nearest trip");
+Check(vm.TripDestination == "Selected", "Details show the selected trip instead of the nearest trip");
 Check(vm.Title == "TripDetails", "Details use a stable title");
 
-await vm.OpenPackingListCommand.ExecuteAsync(null);
-Check(Shell.Current.Route == "PackingListPage"
-    && ReferenceEquals(Shell.Current.Query?["trip"], later),
-    "Packing from details navigates with the selected trip's identities and schedule");
 await vm.EditTripCommand.ExecuteAsync(null);
 Check(Shell.Current.Route == "TripSetupPage" && ReferenceEquals(Shell.Current.Query!["editTrip"], later),
     "Editing opens the selected trip");
@@ -29,14 +24,8 @@ Check(Shell.Current.Route == "TripSetupPage" && ReferenceEquals(Shell.Current.Qu
 var updated = Trip(2, 20, "Updated destination", later.StartDate!.Value);
 preload.Trips = [new(nearest, "0 / 4"), new(updated, "6 / 8")];
 await vm.OnAppearingAsync();
-Check(vm.TripDestination == "Updated destination" && vm.PackingProgress == .75,
-    "Returning from editing or packing reloads the same trip's details and progress");
-
-WeakReferenceMessenger.Default.Send(new PackingProgressChangedMessage(1, 10, "local", "4 / 4"));
-Check(vm.PackingSummary == "6 / 8", "Packing updates for another trip cannot change the selected trip");
-WeakReferenceMessenger.Default.Send(new PackingProgressChangedMessage(2, 20, "local", "7 / 8"));
-Check(vm.PackingSummary == "7 / 8" && vm.PackingProgress == .875,
-    "Packing updates immediately refresh the selected trip's progress");
+Check(vm.TripDestination == "Updated destination",
+    "Returning from editing or packing reloads the same trip's details");
 
 preload.Trips = [new(nearest, "0 / 4"), new(past, "1 / 3")];
 await vm.SelectAsync(past);
@@ -50,10 +39,15 @@ otherUser.LocalUserId = "other";
 preload.Trips = [new(otherUser, "9 / 9"), new(offline, "1 / 5")];
 await vm.SelectAsync(offline);
 await vm.OnAppearingAsync();
-Check(vm.TripDestination == "Offline trip" && vm.PackingSummary == "1 / 5",
+Check(vm.TripDestination == "Offline trip",
     "Unsynced trips use both the local ID and owner when selecting details");
 
 preload.Trips = [new(nearest, "0 / 4")];
+localTrips.Trip = offline;
+await vm.OnAppearingAsync();
+Check(ReferenceEquals(vm.Trip?.TripModel, offline),
+    "A just-created local trip opens in details before it appears in the trip feed");
+localTrips.Trip = null;
 await vm.OnAppearingAsync();
 Check(vm.Trip == null && vm.ShowTripUnavailable && !vm.HasLoadError,
     "A missing trip shows an unavailable state instead of switching to another trip");
@@ -91,13 +85,21 @@ static void Check(bool passed, string message)
     Console.WriteLine($"PASS: {message}");
 }
 
-sealed class Details(ITripListPreloadService preload)
-    : StartViewModel(null!, null!, new Session(), null!, null!, null!, preload)
+sealed class Details(ITripListPreloadService preload, ITripRepository? localTrips = null)
+    : StartViewModel(null!, null!, new Session(), null!, localTrips ?? new LocalTripLookup(), null!, preload)
 {
     public Task SelectAsync(TripDTO trip) => OnNavigatedToAsync(new Dictionary<string, object>
     {
-        ["selectedTrip"] = new TripViewModel(trip)
+        ["trip"] = trip
     });
+}
+sealed class LocalTripLookup : ITripRepository
+{
+    public TripDTO? Trip { get; set; }
+    public event Action<TripDTO, string>? TripChanged { add { } remove { } }
+    public Task DeleteTripAsync(TripDTO trip) => Task.CompletedTask;
+    public Task<TripDTO?> GetLocalTripAsync(int localTripId, string localUserId) =>
+        Task.FromResult(Trip?.LocalTripId == localTripId && Trip.LocalUserId == localUserId ? Trip : null);
 }
 sealed class Session : ISessionService, INotifyPropertyChanged
 {

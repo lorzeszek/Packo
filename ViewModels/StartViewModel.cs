@@ -4,8 +4,6 @@ using Packo.Repositories.Interfaces;
 using Packo.Services.Interfaces;
 using Packo.Services;
 using Packo.Views;
-using CommunityToolkit.Mvvm.Messaging;
-using Packo.Messages;
 using Packo.Models.DTO;
 using System.Globalization;
 
@@ -13,13 +11,13 @@ namespace Packo.ViewModels
 {
     public class StartViewModel : BaseViewModel
     {
+        public const string Route = "TripDetails";
         private readonly ITripListPreloadService _tripListPreloadService;
 
         private TripDTO? _selectedTrip;
 
         public IAsyncRelayCommand BackToTripsCommand { get; }
         public IAsyncRelayCommand RetryLoadCommand { get; }
-        public IAsyncRelayCommand OpenPackingListCommand { get; }
         public IAsyncRelayCommand EditTripCommand { get; }
 
         private TripViewModel? _trip;
@@ -35,15 +33,11 @@ namespace Packo.ViewModels
                     OnPropertyChanged(nameof(TripDestination));
                     OnPropertyChanged(nameof(TripDatesRange));
                     OnPropertyChanged(nameof(TripCountdown));
-                    OnPropertyChanged(nameof(PackingSummary));
                     OnPropertyChanged(nameof(TripDetailsSummary));
-                    NotifyPackingProgressChanged();
                     EditTripCommand.NotifyCanExecuteChanged();
                 }
             }
         }
-
-        public string PackingSummary => Trip?.PackingSummary ?? string.Empty;
 
         public string TripDestination => Trip?.Destination ?? string.Empty;
         public string TripDatesRange => Trip?.TripDatesRange ?? string.Empty;
@@ -77,39 +71,6 @@ namespace Packo.ViewModels
 
                 return string.Join(" · ", details);
             }
-        }
-
-        // Progress summaries from both repositories and change messages use "packed / total".
-        private (int Packed, int Total) PackingCounts
-        {
-            get
-            {
-                var counts = PackingSummary.Split('/');
-                if (counts.Length == 2
-                    && int.TryParse(counts[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out var packed)
-                    && int.TryParse(counts[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var total)
-                    && total > 0)
-                    return (Math.Clamp(packed, 0, total), total);
-
-                return (0, 0);
-            }
-        }
-
-        public double PackingProgress => PackingCounts.Total > 0
-            ? (double)PackingCounts.Packed / PackingCounts.Total : 0;
-
-        public string PackingProgressText => PackingCounts.Total > 0
-            ? string.Format(CultureInfo.CurrentCulture, LocalizationResourceManager.Instance["StartPackingCount"],
-                PackingCounts.Packed, PackingCounts.Total)
-            : LocalizationResourceManager.Instance["StartPackingEmpty"];
-
-        public string PackingProgressPercent => PackingProgress.ToString("P0", CultureInfo.CurrentCulture);
-
-        private void NotifyPackingProgressChanged()
-        {
-            OnPropertyChanged(nameof(PackingProgress));
-            OnPropertyChanged(nameof(PackingProgressText));
-            OnPropertyChanged(nameof(PackingProgressPercent));
         }
 
         private bool _hasTrip;
@@ -161,24 +122,10 @@ namespace Packo.ViewModels
         {
             _tripListPreloadService = tripListPreloadService;
             EditTripCommand = new AsyncRelayCommand(EditTripAsync, () => Trip != null);
-            OpenPackingListCommand = new AsyncRelayCommand(OpenPackingListAsync);
             BackToTripsCommand = new AsyncRelayCommand(() => Shell.Current.GoToAsync("//TripList"));
             RetryLoadCommand = new AsyncRelayCommand(() => LoadSelectedTripAsync(forceRefresh: true));
             Title = LocalizationResourceManager.Instance["TripDetails"];
             LocalizationResourceManager.Instance.PropertyChanged += OnLanguageChanged;
-            WeakReferenceMessenger.Default.Register<PackingProgressChangedMessage>(this, (recipient, message) =>
-            {
-                MainThread.BeginInvokeOnMainThread(() =>
-                {
-                    var trip = Trip?.TripModel;
-                    if (trip != null && message.LocalUserId == Session.LocalUserId && message.MatchesTrip(trip))
-                    {
-                        Trip!.PackingSummary = message.PackingSummary;
-                        OnPropertyChanged(nameof(PackingSummary));
-                        NotifyPackingProgressChanged();
-                    }
-                });
-            });
         }
 
         private void OnLanguageChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -187,31 +134,19 @@ namespace Packo.ViewModels
             OnPropertyChanged(nameof(TripDatesRange));
             OnPropertyChanged(nameof(TripCountdown));
             OnPropertyChanged(nameof(TripDetailsSummary));
-            NotifyPackingProgressChanged();
         }
 
         protected override Task OnNavigatedToAsync(IDictionary<string, object> query)
         {
-            if (query.TryGetValue("selectedTrip", out var value) && value is TripViewModel selectedTrip)
+            if (query.TryGetValue("trip", out var value) && value is TripDTO trip)
             {
-                _selectedTrip = selectedTrip.TripModel;
-                Trip = selectedTrip;
+                _selectedTrip = trip;
+                Trip = new TripViewModel(trip);
                 HasTrip = true;
                 HasLoadError = false;
             }
 
             return Task.CompletedTask;
-        }
-
-        private async Task OpenPackingListAsync()
-        {
-            if (Trip == null || Session.GlobalIsBusy)
-                return;
-
-            await Shell.Current.GoToAsync(nameof(PackingListPage), new ShellNavigationQueryParameters
-            {
-                ["trip"] = Trip.TripModel
-            });
         }
 
         private async Task EditTripAsync()
@@ -247,10 +182,12 @@ namespace Packo.ViewModels
                         : x.Trip.LocalTripId == selectedTrip.LocalTripId
                             && x.Trip.LocalUserId == selectedTrip.LocalUserId));
 
-                Trip = match == null ? null : new TripViewModel(match.Trip)
-                {
-                    PackingSummary = match.PackingSummary
-                };
+                var trip = match?.Trip;
+                if (trip is null && selectedTrip is { RemoteTripId: 0, LocalTripId: > 0 }
+                    && selectedTrip.LocalUserId == Session.LocalUserId)
+                    trip = await _tripRepository.GetLocalTripAsync(selectedTrip.LocalTripId, selectedTrip.LocalUserId);
+
+                Trip = trip is { IsInTrash: false } ? new TripViewModel(trip) : null;
                 HasTrip = Trip != null;
             }
             catch (Exception ex)

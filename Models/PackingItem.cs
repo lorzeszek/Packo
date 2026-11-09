@@ -8,6 +8,7 @@ namespace Packo.Models
         public int LocalId { get; set; }
         public int LocalTripId { get; set; }
         public int? RemoteTripId { get; set; }
+        public Guid PackingListId { get; set; }
         public string LocalUserId { get; set; }
         public string RemoteUserId { get; set; }
         private string _name = string.Empty;

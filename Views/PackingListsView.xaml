@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/maui/global"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:loc="clr-namespace:Packo.Extensions"
+             xmlns:views="clr-namespace:Packo.Views"
+             x:Class="Packo.Views.PackingListsView">
+    <VerticalStackLayout Spacing="12">
+        <Button x:Name="AddListButton" Text="{loc:Translate AddNamedPackingList}" Clicked="OnAddClicked"
+                HeightRequest="48" CornerRadius="14" FontSize="14" FontAttributes="Bold"
+                BackgroundColor="{StaticResource PackoAccentLight}" TextColor="{StaticResource PackoWhite}" />
+        <ActivityIndicator x:Name="LoadingIndicator" IsVisible="False" WidthRequest="28" HeightRequest="28"
+                           HorizontalOptions="Center" Color="{StaticResource PackoAccentLight}" />
+        <Label x:Name="EmptyLabel" Text="{loc:Translate NoNamedPackingLists}" IsVisible="False"
+               FontSize="14" LineBreakMode="WordWrap"
+               TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+        <VerticalStackLayout x:Name="ListCards" Spacing="12">
+            <BindableLayout.ItemTemplate>
+                <DataTemplate x:DataType="views:PackingListCard">
+                    <Border Padding="20" StrokeThickness="0" StrokeShape="RoundRectangle 22"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource PackoAccentSoftLight}, Dark={StaticResource PackoAccentSoftDark}}">
+                        <VerticalStackLayout Spacing="12">
+                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                                <Label Text="{Binding DisplayName}" FontSize="15" FontAttributes="Bold"
+                                       VerticalOptions="Center" LineBreakMode="WordWrap"
+                                       TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+                                <Label Grid.Column="1" Text="{Binding ProgressPercent}" FontSize="15" FontAttributes="Bold"
+                                       VerticalOptions="Center"
+                                       TextColor="{AppThemeBinding Light={StaticResource PackoShellAccentLight}, Dark={StaticResource PackoAccentDark}}" />
+                                <Button Grid.Column="2" Text="⋯" Clicked="OnListOptionsClicked"
+                                        SemanticProperties.Description="{loc:Translate PackingListOptions}"
+                                        WidthRequest="44" HeightRequest="44" Padding="0" CornerRadius="12"
+                                        FontSize="21" FontAttributes="Bold" BackgroundColor="Transparent"
+                                        TextColor="{AppThemeBinding Light={StaticResource PackoShellAccentLight}, Dark={StaticResource PackoAccentDark}}" />
+                            </Grid>
+                            <ProgressBar Progress="{Binding List.Progress}" HeightRequest="6"
+                                         ProgressColor="{StaticResource PackoAccentLight}"
+                                         BackgroundColor="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoControlBorderDark}}"
+                                         SemanticProperties.Description="{Binding ProgressText}" />
+                            <Label Text="{Binding ProgressText}" FontSize="14" LineBreakMode="WordWrap"
+                                   TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextAltDark}}" />
+                            <Button Text="{loc:Translate OpenPackingList}" Clicked="OnOpenListClicked"
+                                    HeightRequest="48" Padding="16,0" CornerRadius="14"
+                                    FontSize="14" FontAttributes="Bold"
+                                    BackgroundColor="{StaticResource PackoAccentLight}" TextColor="{StaticResource PackoWhite}" />
+                        </VerticalStackLayout>
+                    </Border>
+                </DataTemplate>
+            </BindableLayout.ItemTemplate>
+        </VerticalStackLayout>
+    </VerticalStackLayout>
+</ContentView>

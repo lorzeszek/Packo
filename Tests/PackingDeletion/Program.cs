@@ -13,11 +13,12 @@ using Packo.Services;
 
 SQLitePCL.Batteries_V2.Init();
 await PackingFeatureChecks.RunAsync();
+await NamedPackingListChecks.RunAsync();
 var path = Path.Combine(Path.GetTempPath(), $"packo-deletion-{Guid.NewGuid():N}.db");
 var db = new SQLiteAsyncConnection(path);
 try
 {
-    await db.CreateTableAsync<SQLitePackingItem>();
+    await LocalPackingItemRepository.EnsureSchemaAsync(db);
     await db.CreateTableAsync<SQLitePendingPackingItemChange>();
     var local = new LocalPackingItemRepository(db);
     var remote = new Remote();
@@ -429,7 +430,7 @@ sealed class Trips : ITripRepository
     public Task<LocalTrip?> GetLocalTripAsync(int id, string user) => Task.FromResult<LocalTrip?>(new(10));
     public Task SyncPendingChangesAsync() => Task.CompletedTask;
 }
-sealed class Remote : IPackingItemRepository
+class Remote : IPackingItemRepository
 {
     private int _nextId;
     public List<PackingItemDTO> Items { get; } = [];
@@ -440,7 +441,7 @@ sealed class Remote : IPackingItemRepository
     public TaskCompletionSource? DeleteStarted { get; set; }
     public TaskCompletionSource? ReleaseDelete { get; set; }
     public event Action<PackingItemChange>? PackingItemChanged;
-    public async Task<int> AddPackingItemAsync(PackingItemDTO item)
+    public virtual async Task<int> AddPackingItemAsync(PackingItemDTO item)
     {
         if (FailAdd) throw new IOException("Simulated upload failure");
         AddStarted?.TrySetResult();
@@ -464,7 +465,7 @@ sealed class Remote : IPackingItemRepository
             await ReleaseDelete.Task;
         Items.RemoveAll(x => x.RemotePackingItemId == item.RemotePackingItemId);
     }
-    public Task<IReadOnlyList<PackingItemDTO>> GetPackingItemsForTripAsync(int local, int remote) =>
+    public virtual Task<IReadOnlyList<PackingItemDTO>> GetPackingItemsForTripAsync(int local, int remote) =>
         Task.FromResult<IReadOnlyList<PackingItemDTO>>(Items.Where(x => x.LocalTripId == local).ToList());
     public Task AddPackingItemsAsync(List<PackingItemDTO> items) => throw new NotSupportedException();
     public async Task DeletePackingItemsAsync(List<PackingItemDTO> items)

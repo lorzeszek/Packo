@@ -99,6 +99,7 @@ namespace Packo.Repositories.Interfaces
         Task DeleteTripAsync(TripDTO trip);
         Task<int> AddTripAsync(TripDTO trip) => Task.FromResult(1);
         Task<TripDTO?> GetTripAsync(TripDTO trip) => Task.FromResult<TripDTO?>(trip);
+        Task<TripDTO?> GetLocalTripAsync(int localTripId, string localUserId) => Task.FromResult<TripDTO?>(null);
         Task UpdateTripAsync(TripDTO trip) => Task.CompletedTask;
         Task<IReadOnlyList<TripWithStats>> GetActiveTripsWithStatsAsync()
             => Task.FromResult<IReadOnlyList<TripWithStats>>([]);
@@ -111,7 +112,6 @@ namespace Packo.Repositories.Interfaces
 }
 namespace Packo.Views
 {
-    public class PackingListPage { }
     public class TripSetupPage { }
 }
 namespace Packo.ViewModels

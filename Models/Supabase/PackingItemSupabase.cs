@@ -13,6 +13,9 @@ namespace Packo.Models.Supabase
         [Column("TripId")]
         public int TripId { get; set; }
 
+        [Column("PackingListId")]
+        public Guid PackingListId { get; set; }
+
         [Column("Name")]
         public string Name { get; set; } = string.Empty;
 

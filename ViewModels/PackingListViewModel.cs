@@ -23,6 +23,9 @@ namespace Packo.ViewModels
         private int _remoteTripId { get; set; }
         private int _localTripId { get; set; }
         private TripDTO? _trip;
+        private PackingListDTO? _list;
+        private readonly IPackingListRepository _packingLists;
+        public string ListName => _list?.Name ?? LocalizationResourceManager.Instance["PackingListTitle"];
         private bool _channelsInitialized;
         private bool _isLoading;
         private readonly IPackingSuggestionService _packingSuggestionService;
@@ -94,9 +97,10 @@ namespace Packo.ViewModels
         public ICommand ClearListCommand => new Command(async () => await DeleteItemsAsync(null));
         public IAsyncRelayCommand SelectSortCommand { get; }
 
-        public PackingListViewModel(ILocalUserService localUserService, ISupabaseService supabase, ISessionService sessionService, IPackingItemRepository packingItemRepository, ITripRepository tripRepository, IGoogleAuthService googleAuthService, IPackingSuggestionService packingSuggestionService) : base(localUserService, supabase, sessionService, packingItemRepository, tripRepository, googleAuthService)
+        public PackingListViewModel(ILocalUserService localUserService, ISupabaseService supabase, ISessionService sessionService, IPackingItemRepository packingItemRepository, ITripRepository tripRepository, IGoogleAuthService googleAuthService, IPackingSuggestionService packingSuggestionService, IPackingListRepository packingLists) : base(localUserService, supabase, sessionService, packingItemRepository, tripRepository, googleAuthService)
         {
             _packingSuggestionService = packingSuggestionService;
+            _packingLists = packingLists;
             Items.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasItems));
             SelectSortCommand = new AsyncRelayCommand(SelectSortAsync);
         }
@@ -208,10 +212,10 @@ namespace Packo.ViewModels
 
         private async Task AddItemAsync()
         {
-            if (!CanEditItems || string.IsNullOrWhiteSpace(NewItemName))
+            if (!CanEditItems || _list is null || string.IsNullOrWhiteSpace(NewItemName))
                 return;
 
-            var newItem = new PackingItemDTO { Name = NewItemName, RemoteTripId = _remoteTripId, LocalTripId = _localTripId, RemoteUserId = Session.UserId, LocalUserId = Session.LocalUserId, CreatedDate = DateTime.Now };
+            var newItem = new PackingItemDTO { Name = NewItemName, PackingListId = _list.Id, RemoteTripId = _remoteTripId, LocalTripId = _localTripId, RemoteUserId = Session.UserId, LocalUserId = Session.LocalUserId, CreatedDate = DateTime.Now };
 
             IsAddingItems = true;
             try
@@ -221,6 +225,12 @@ namespace Packo.ViewModels
                 var item = Mappers.MapToPackingItem(newItem);
                 Items.Add(item);
                 SortItems(item);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex);
+                await ConfirmPopup.ShowMessageAsync(LocalizationResourceManager.Instance["Error"],
+                    LocalizationResourceManager.Instance["AddPackingItemsError"]);
             }
             finally
             {
@@ -314,7 +324,7 @@ namespace Packo.ViewModels
         private async Task CopyPackingListAsync()
         {
             RefreshTripSchedule();
-            if (!CanEditItems || !CanCopyPackingList)
+            if (!CanEditItems || !CanCopyPackingList || _trip is null || _list is null)
                 return;
 
             IsAddingItems = true;
@@ -345,7 +355,35 @@ namespace Packo.ViewModels
                     return;
 
                 var source = sources[sourceIndex];
-                var sourceItems = await _packingItemRepository.GetPackingItemsForTripAsync(source.LocalTripId, source.RemoteTripId);
+                var sourceLists = await _packingLists.GetPackingListsAsync(source);
+                if (sourceLists.Count == 0)
+                {
+                    await ConfirmPopup.ShowMessageAsync(title, strings["EmptyPackingSource"]);
+                    return;
+                }
+
+                IReadOnlyCollection<Guid> sourceListIds = [sourceLists[0].Id];
+                if (sourceLists.Count > 1)
+                {
+                    string[] listOptions =
+                    [
+                        strings["CopyFromAllPackingLists"],
+                        .. sourceLists.Select((list, index) =>
+                            $"{index + 1}. {list.Name ?? strings["PackingListTitle"]} · {list.Packed}/{list.Total}")
+                    ];
+                    var listSelection = await OptionsPopup.ChooseAsync(strings["ChoosePackingSourceList"], listOptions);
+                    var listIndex = Array.IndexOf(listOptions, listSelection);
+                    if (listIndex < 0)
+                        return;
+
+                    sourceListIds = listIndex == 0
+                        ? sourceLists.Select(list => list.Id).ToArray()
+                        : [sourceLists[listIndex - 1].Id];
+                }
+                if (!_channelsInitialized)
+                    return;
+
+                var sourceItems = await _packingLists.GetPackingListItemsAsync(source, sourceListIds, refresh: false);
                 if (!_channelsInitialized)
                     return;
 
@@ -368,7 +406,7 @@ namespace Packo.ViewModels
                     if (popup.SelectedItems.Count == 0 || !_channelsInitialized)
                         return;
 
-                    var latest = await _packingItemRepository.GetPackingItemsForTripAsync(_localTripId, _remoteTripId);
+                    var latest = await _packingLists.GetPackingListItemsAsync(_trip, _list.Id);
                     RefreshTripSchedule();
                     if (!CanCopyPackingList)
                         return;
@@ -417,7 +455,7 @@ namespace Packo.ViewModels
 
         private async Task AddSelectedItemsAsync(List<PackingSuggestion> selectedItems)
         {
-            if (!_channelsInitialized || selectedItems.Count == 0)
+            if (!_channelsInitialized || _list is null || selectedItems.Count == 0)
                 return;
 
             var createdDate = DateTime.Now;
@@ -425,6 +463,7 @@ namespace Packo.ViewModels
             {
                 Name = item.Name,
                 Quantity = item.Quantity,
+                PackingListId = _list.Id,
                 RemoteTripId = _remoteTripId,
                 LocalTripId = _localTripId,
                 RemoteUserId = Session.UserId ?? string.Empty,
@@ -548,7 +587,10 @@ namespace Packo.ViewModels
                 });
                 return;
             }
-            if (change.Item.RemoteTripId != _remoteTripId)
+            var matchesTrip = _remoteTripId > 0
+                ? change.Item.RemoteTripId == _remoteTripId
+                : change.Item.LocalTripId == _localTripId && change.Item.LocalUserId == Session.LocalUserId;
+            if (change.Item.PackingListId != _list?.Id || !matchesTrip)
                 return;
 
             MainThread.BeginInvokeOnMainThread(() =>
@@ -618,24 +660,20 @@ namespace Packo.ViewModels
 
         private async Task LoadData()
         {
-            if (_isLoading)
+            if (_isLoading || _trip is null || _list is null)
                 return;
 
             _isLoading = true;
-            SetBusy(true);
+            OnPropertyChanged(nameof(CanEditItems));
 
             try
             {
-                var tripsWithStats = await _packingItemRepository.GetPackingItemsForTripAsync(_localTripId, _remoteTripId);
-
-                MainThread.BeginInvokeOnMainThread(() =>
-                {
-                    Items.ReplaceRange(PackingItemOrder.Sort(tripsWithStats.Select(Mappers.MapToPackingItem), SortMode).ToList());
-                });
+                var items = await _packingLists.GetPackingListItemsAsync(_trip, _list.Id);
+                if (_channelsInitialized)
+                    Items.ReplaceRange(PackingItemOrder.Sort(items.Select(Mappers.MapToPackingItem), SortMode).ToList());
             }
             finally
             {
-                SetBusy(false);
                 _isLoading = false;
                 OnPropertyChanged(nameof(CanEditItems));
             }
@@ -643,19 +681,25 @@ namespace Packo.ViewModels
 
         protected override async Task OnNavigatedToAsync(IDictionary<string, object> query)
         {
-            if (query.TryGetValue("trip", out var value) && value is TripDTO trip)
+            if (query.TryGetValue("trip", out var value) && value is TripDTO trip
+                && query.TryGetValue("list", out var selected) && selected is PackingListDTO list)
             {
-                if (_channelsInitialized && trip.RemoteTripId == _remoteTripId && trip.LocalTripId == _localTripId)
+                if (_channelsInitialized && trip.RemoteTripId == _remoteTripId && trip.LocalTripId == _localTripId
+                    && list.Id == _list?.Id)
                     return;
 
                 _remoteTripId = trip.RemoteTripId;
                 _localTripId = trip.LocalTripId;
+                _list = list;
+                OnPropertyChanged(nameof(ListName));
                 SetTrip(trip);
 
-                if (Session.IsAuthenticated && !await _packingItemRepository.IsChannelCreatedAsync())
+                try
                 {
-                    await _packingItemRepository.StartRealtimeAsync();
+                    if (Session.IsAuthenticated && !await _packingItemRepository.IsChannelCreatedAsync())
+                        _ = StartRealtimeAsync();
                 }
+                catch (Exception ex) { System.Diagnostics.Debug.WriteLine(ex); }
 
                 _packingItemRepository.PackingItemChanged -= OnPackingItemChanged;
                 _packingItemRepository.PackingItemChanged += OnPackingItemChanged;
@@ -665,6 +709,12 @@ namespace Packo.ViewModels
                 await LoadData();
 
             }
+        }
+
+        private async Task StartRealtimeAsync()
+        {
+            try { await _packingItemRepository.StartRealtimeAsync(); }
+            catch (Exception ex) { System.Diagnostics.Debug.WriteLine(ex); }
         }
 
         public override Task OnNavigatedFromAsync(IDictionary<string, object> query)

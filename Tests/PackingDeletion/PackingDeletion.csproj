@@ -9,6 +9,7 @@
     <PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.1" />
     <Compile Include="../../Models/DTO/PackingItemDTO.cs" Link="PackingItemDTO.cs" />
+    <Compile Include="../../Models/DTO/PackingListDTO.cs" Link="PackingListDTO.cs" />
     <Compile Include="../../Models/DTO/PackingSuggestion.cs" Link="PackingSuggestion.cs" />
     <Compile Include="../../Models/PackingItem.cs" Link="PackingItem.cs" />
     <Compile Include="../../Helpers/PackingItemOrder.cs" Link="PackingItemOrder.cs" />
@@ -17,10 +18,13 @@
     <Compile Include="../../Services/Interfaces/IPackingSuggestionService.cs" Link="IPackingSuggestionService.cs" />
     <Compile Include="../../Services/Interfaces/IAIService.cs" Link="IAIService.cs" />
     <Compile Include="../../Models/SQLite/SQLitePackingItem.cs" Link="SQLitePackingItem.cs" />
+    <Compile Include="../../Models/SQLite/SQLitePackingList.cs" Link="SQLitePackingList.cs" />
     <Compile Include="../../Repositories/Models/SQLitePendingPackingItemChange.cs" Link="SQLitePendingPackingItemChange.cs" />
     <Compile Include="../../Repositories/Interfaces/IPackingItemRepository.cs" Link="IPackingItemRepository.cs" />
+    <Compile Include="../../Repositories/Interfaces/IPackingListRepository.cs" Link="IPackingListRepository.cs" />
     <Compile Include="../../Repositories/Local/LocalPackingItemRepository.cs" Link="LocalPackingItemRepository.cs" />
     <Compile Include="../../Repositories/SyncPackingItemRepository.cs" Link="SyncPackingItemRepository.cs" />
+    <Compile Include="../../Repositories/SyncPackingItemRepository.Lists.cs" Link="SyncPackingItemRepository.Lists.cs" />
     <Compile Include="../../Repositories/Enums/PackingItemChangeType.cs" Link="PackingItemChangeType.cs" />
     <Compile Include="../../Repositories/Models/PackingStatsSnapshot.cs" Link="PackingStatsSnapshot.cs" />
     <Compile Include="../../Repositories/Models/TripWithStats.cs" Link="TripWithStats.cs" />

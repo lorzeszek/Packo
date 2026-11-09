@@ -79,9 +79,9 @@ internal static class TripScheduleChecks
             && repository.Added.EndDate == form.StartDate.AddHours(17).AddMinutes(45)
             && classification.Start == repository.Added.StartDate && classification.End == repository.Added.EndDate,
             "Creation passes the selected timestamps to storage and trip classification");
-        Check(Shell.Current.Route == "PackingListPage" && ReferenceEquals(Shell.Current.Query?["trip"], repository.Added)
+        Check(Shell.Current.Route == StartViewModel.Route && ReferenceEquals(Shell.Current.Query?["trip"], repository.Added)
             && repository.Added.LocalTripId == 1,
-            "Creation opens the saved trip's packing list with its assigned local identity");
+            "Creation opens the saved trip's details with its assigned local identity");
 
         var existing = Trip(day.AddHours(13).AddMinutes(20), day.AddHours(18).AddMinutes(50));
         var edit = Form(repository, classification);

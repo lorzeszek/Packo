@@ -13,14 +13,17 @@ public sealed class PackingStatsSnapshot
     private readonly Dictionary<int, HashSet<int>> _remoteTripIds;
     private readonly HashSet<(int Local, int Remote)> _pendingTrips;
 
-    private PackingStatsSnapshot(string localUserId, List<SQLitePackingItem> items, List<SQLitePendingPackingItemChange> pending)
+    private PackingStatsSnapshot(string localUserId, List<SQLitePackingItem> items, List<SQLitePendingPackingItemChange> pending,
+        List<SQLitePackingList> pendingListDeletes)
     {
         _localUserId = localUserId;
         _counts = items.GroupBy(x => (Local: x.LocalTripId, Remote: x.RemoteTripId ?? 0))
             .ToDictionary(g => g.Key, g => (g.Count(x => x.IsPacked), g.Count()));
-        _pendingTrips = pending.Select(x => (x.LocalTripId, PendingRemoteTripId(x))).ToHashSet();
+        _pendingTrips = pending.Select(x => (x.LocalTripId, PendingRemoteTripId(x)))
+            .Concat(pendingListDeletes.Select(x => (x.LocalTripId, x.RemoteTripId))).ToHashSet();
         _remoteTripIds = items.Select(x => (Local: x.LocalTripId, Remote: x.RemoteTripId ?? 0))
             .Concat(pending.Select(x => (Local: x.LocalTripId, Remote: x.RemoteTripId)))
+            .Concat(pendingListDeletes.Select(x => (Local: x.LocalTripId, Remote: x.RemoteTripId)))
             .Where(x => x.Remote > 0).GroupBy(x => x.Local)
             .ToDictionary(g => g.Key, g => g.Select(x => x.Remote).ToHashSet());
     }
@@ -44,7 +47,8 @@ public sealed class PackingStatsSnapshot
         {
             snapshot = new PackingStatsSnapshot(localUserId,
                 connection.Table<SQLitePackingItem>().Where(x => x.LocalUserId == localUserId && !x.IsStaleCache).ToList(),
-                connection.Table<SQLitePendingPackingItemChange>().Where(x => x.LocalUserId == localUserId).ToList());
+                connection.Table<SQLitePendingPackingItemChange>().Where(x => x.LocalUserId == localUserId).ToList(),
+                connection.Table<SQLitePackingList>().Where(x => x.LocalUserId == localUserId && x.Operation == PackingListOperation.Delete).ToList());
         });
         return snapshot!;
     }

@@ -11,7 +11,7 @@ using System.Text.Json;
 
 namespace Packo.Repositories
 {
-    public class SyncPackingItemRepository : IPackingItemRepository
+    public partial class SyncPackingItemRepository : IPackingItemRepository
     {
         private readonly IPackingItemRepository _local;
         private readonly IPackingItemRepository _remote;
@@ -121,11 +121,13 @@ namespace Packo.Repositories
 
         private async Task<int> AddPackingItemCoreAsync(PackingItemDTO item)
         {
+            await ValidateItemListAsync(item);
             int packinItemId = await _local.AddPackingItemAsync(item);
 
             item.LocalPackingItemId = packinItemId;
 
-            if (Connectivity.Current.NetworkAccess == NetworkAccess.Internet && _sessionService.IsAuthenticated)
+            if (IsOnline && item.RemoteTripId > 0
+                && (ListRemote is null || (await FindItemListAsync(item))?.Operation != PackingListOperation.Create))
             {
                 try
                 {
@@ -171,12 +173,20 @@ namespace Packo.Repositories
             await _syncGate.WaitAsync();
             try
             {
+                foreach (var group in items.GroupBy(x => (x.LocalUserId, x.LocalTripId, x.RemoteTripId, x.PackingListId)))
+                {
+                    var first = group.First();
+                    await ValidateItemListAsync(first);
+                    foreach (var item in group)
+                        item.RemoteTripId = first.RemoteTripId;
+                }
                 var rows = items.Select(item => new SQLitePackingItem
                 {
                     LocalUserId = item.LocalUserId,
                     RemoteUserId = item.RemoteUserId,
                     LocalTripId = item.LocalTripId,
                     RemoteTripId = item.RemoteTripId,
+                    PackingListId = item.PackingListId,
                     Name = item.Name,
                     CreatedDate = item.CreatedDate,
                     IsPacked = item.IsPacked,
@@ -196,6 +206,7 @@ namespace Packo.Repositories
                             RemoteUserId = item.RemoteUserId,
                             LocalTripId = item.LocalTripId,
                             RemoteTripId = item.RemoteTripId,
+                            PackingListId = item.PackingListId,
                             Name = item.Name,
                             CreatedDate = item.CreatedDate,
                             IsPacked = item.IsPacked,
@@ -316,7 +327,10 @@ namespace Packo.Repositories
             return null;
         }
 
-        public async Task<IReadOnlyList<PackingItemDTO>> GetPackingItemsForTripAsync(int localTripId, int remoteTripId)
+        public Task<IReadOnlyList<PackingItemDTO>> GetPackingItemsForTripAsync(int localTripId, int remoteTripId) =>
+            ReadPackingItemsAsync(localTripId, remoteTripId, syncPending: true);
+
+        private async Task<IReadOnlyList<PackingItemDTO>> ReadPackingItemsAsync(int localTripId, int remoteTripId, bool syncPending)
         {
             // A newly created list is already durable locally; opening it must not wait for uploads.
             var hasPendingAdds = await _pendingDb.Table<SQLitePendingPackingItemChange>().Where(x =>
@@ -328,7 +342,8 @@ namespace Packo.Repositories
             }
             if (remoteTripId > 0 && Connectivity.Current.NetworkAccess == NetworkAccess.Internet && _sessionService.IsAuthenticated)
             {
-                await SyncPendingChangesAsync();
+                if (syncPending)
+                    await SyncPendingChangesAsync();
                 await _syncGate.WaitAsync();
                 try
                 {
@@ -337,9 +352,14 @@ namespace Packo.Repositories
                         .Where(x => x.LocalUserId == _sessionService.LocalUserId && x.LocalTripId == localTripId).ToListAsync();
                     var deletedIds = pending.Where(x => x.Operation == "Delete")
                         .Select(x => JsonSerializer.Deserialize<PackingItemDTO>(x.PackingItemJson)?.RemotePackingItemId).ToHashSet();
+                    var deletedLists = ListRemote is null ? [] : (await _pendingDb.Table<SQLitePackingList>()
+                        .Where(x => x.LocalUserId == _sessionService.LocalUserId && x.LocalTripId == localTripId
+                            && (x.RemoteTripId == remoteTripId || x.RemoteTripId == 0)
+                            && x.Operation == PackingListOperation.Delete).ToListAsync()).Select(x => x.Id).ToHashSet();
                     var cached = await GetLocalItemsForCurrentUserAsync(localTripId, remoteTripId);
                     var result = new List<PackingItemDTO>();
-                    foreach (var item in packingItems.Where(x => !deletedIds.Contains(x.RemotePackingItemId)))
+                    foreach (var item in packingItems.Where(x => !deletedIds.Contains(x.RemotePackingItemId)
+                        && !deletedLists.Contains(x.PackingListId)))
                     {
                         var localItem = cached.FirstOrDefault(x => x.RemotePackingItemId == item.RemotePackingItemId);
                         if (localItem == null)
@@ -347,6 +367,7 @@ namespace Packo.Repositories
                             // Older app versions did not save the returned remote ID.
                             // Relink only an unambiguous exact match, without removing cache rows.
                             var legacyMatches = cached.Where(x => x.RemotePackingItemId is not > 0
+                                && x.PackingListId == item.PackingListId
                                 && x.Name == item.Name
                                 && (x.CreatedDate == item.CreatedDate
                                     || x.CreatedDate.ToUniversalTime() == item.CreatedDate.ToUniversalTime())).ToList();
@@ -394,6 +415,10 @@ namespace Packo.Repositories
                         localTripId, remoteTripId, _sessionService.LocalUserId ?? string.Empty, summary));
                     return result;
                 }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine(ex);
+                }
                 finally { _syncGate.Release(); }
             }
 
@@ -435,6 +460,7 @@ namespace Packo.Repositories
 
         private async Task UpdatePackingItemCoreAsync(PackingItemDTO item)
         {
+            await ValidateItemListAsync(item);
             await ResolveRemoteIdentityAsync(item);
             await _local.UpdatePackingItemAsync(item);
 
@@ -553,6 +579,7 @@ namespace Packo.Repositories
             if (Connectivity.Current.NetworkAccess != NetworkAccess.Internet || !_sessionService.IsAuthenticated)
                 return;
 
+            await SyncPendingListsAsync();
             var pendingChanges = await _pendingDb.Table<SQLitePendingPackingItemChange>().Where(x => x.LocalUserId == _sessionService.LocalUserId).ToListAsync();
             var syncingLocalUser = _sessionService.LocalUserId;
             var syncingRemoteUser = _sessionService.UserId;
@@ -591,6 +618,13 @@ namespace Packo.Repositories
                         packingItem.RemoteTripId = trip.RemoteTripId;
                     }
                     packingItem.RemoteUserId = syncingRemoteUser ?? string.Empty;
+                    if (ListRemote is not null && current.Operation != "Delete")
+                    {
+                        var list = await FindItemListAsync(packingItem);
+                        if (list is { Operation: PackingListOperation.Create or PackingListOperation.Delete }
+                            || (list is null && packingItem.PackingListId != Guid.Empty))
+                            continue;
+                    }
 
                     try
                     {

@@ -1,5 +1,8 @@
 ﻿using Packo.Helpers;
 using Packo.Models.SQLite;
+using CommunityToolkit.Mvvm.Messaging;
+using Packo.Messages;
+using Packo.Repositories.Interfaces;
 using Packo.Services;
 using Packo.Repositories.Models;
 using Packo.Services.Interfaces;
@@ -17,6 +20,8 @@ namespace Packo
         private readonly ITripListPreloadService _tripListPreloadService;
         private readonly IWeatherPreloadService _weatherPreloadService;
         private readonly IDocumentPreloadService _documentPreloadService;
+        private readonly ITripRepository _trips;
+        private readonly IPackingItemRepository _packingItems;
         private LoadingPage? _loadingPage;
         //private Task _loadingModalTask = Task.CompletedTask;
 
@@ -26,7 +31,9 @@ namespace Packo
             ILocalUserService localUserService,
             ITripListPreloadService tripListPreloadService,
             IWeatherPreloadService weatherPreloadService,
-            IDocumentPreloadService documentPreloadService)
+            IDocumentPreloadService documentPreloadService,
+            ITripRepository trips,
+            IPackingItemRepository packingItems)
         {
             InitializeComponent();
             LocalizationResourceManager.Instance.ApplySavedLanguage();
@@ -37,6 +44,8 @@ namespace Packo
             _tripListPreloadService = tripListPreloadService;
             _weatherPreloadService = weatherPreloadService;
             _documentPreloadService = documentPreloadService;
+            _trips = trips;
+            _packingItems = packingItems;
 
             if (_sessionService is INotifyPropertyChanged npc)
             {
@@ -196,6 +205,7 @@ namespace Packo
                 await MainThread.InvokeOnMainThreadAsync(() => window.Page = new AppShell());
 
                 // Only the data needed for the first screen delays app startup.
+                _ = ResumePendingChangesAsync();
                 _ = _weatherPreloadService.PrefetchAsync();
                 _ = _documentPreloadService.PrefetchAsync();
             }
@@ -207,6 +217,26 @@ namespace Packo
             finally
             {
                 _startupRunning = false;
+            }
+        }
+
+        private async Task ResumePendingChangesAsync()
+        {
+            if (!_sessionService.IsAuthenticated || Connectivity.Current.NetworkAccess != NetworkAccess.Internet)
+                return;
+
+            try
+            {
+                var hasPendingTrips = await _db.Table<SQLitePendingTripChange>()
+                    .Where(change => change.LocalUserId == _sessionService.LocalUserId).CountAsync() > 0;
+                await _trips.SyncPendingChangesAsync();
+                await _packingItems.SyncPendingChangesAsync();
+                if (hasPendingTrips)
+                    WeakReferenceMessenger.Default.Send(new TripDataChangedMessage());
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex);
             }
         }
 

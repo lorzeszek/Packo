@@ -15,6 +15,7 @@ namespace Packo.Repositories
         private readonly ITripRepository _remote;
         private readonly SQLiteAsyncConnection _pendingDb;
         private readonly ISessionService _sessionService;
+        private readonly SemaphoreSlim _pendingSyncGate = new(1, 1);
 
         public event Action<TripDTO, string>? TripChanged
         {
@@ -175,6 +176,13 @@ namespace Packo.Repositories
         }
 
         public async Task SyncPendingChangesAsync()
+        {
+            await _pendingSyncGate.WaitAsync();
+            try { await SyncPendingChangesCoreAsync(); }
+            finally { _pendingSyncGate.Release(); }
+        }
+
+        private async Task SyncPendingChangesCoreAsync()
         {
             if (Connectivity.Current.NetworkAccess != NetworkAccess.Internet || !_sessionService.IsAuthenticated)
                 return;

@@ -28,6 +28,31 @@ namespace Packo.Repositories.Local
             if (!columns.Any(column => column.Name == nameof(SQLitePackingItem.Quantity)))
                 await db.ExecuteAsync("ALTER TABLE SQLitePackingItem ADD COLUMN Quantity INTEGER NOT NULL DEFAULT 1");
             await db.ExecuteAsync("UPDATE SQLitePackingItem SET Quantity = 1 WHERE Quantity IS NULL OR Quantity < 1");
+            await db.CreateTableAsync<SQLitePackingList>();
+            await db.RunInTransactionAsync(connection =>
+            {
+                // Legacy items keep a stable list identity, including on devices without a connection.
+                connection.Execute("""
+                    INSERT INTO SQLitePackingList (Id, LocalUserId, LocalTripId, RemoteTripId, Operation)
+                    SELECT ?, i.LocalUserId, i.LocalTripId, COALESCE(i.RemoteTripId, 0),
+                           CASE WHEN COALESCE(i.RemoteTripId, 0) = 0 THEN ? ELSE 0 END
+                    FROM SQLitePackingItem i
+                    WHERE i.PackingListId IS NULL AND i.IsStaleCache = 0 AND i.LocalUserId IS NOT NULL
+                      AND (COALESCE(i.RemoteTripId, 0) > 0 OR NOT EXISTS (
+                          SELECT 1 FROM SQLitePackingItem synced
+                          WHERE synced.LocalUserId = i.LocalUserId AND synced.LocalTripId = i.LocalTripId
+                            AND synced.RemoteTripId > 0 AND synced.PackingListId IS NULL AND synced.IsStaleCache = 0
+                      ))
+                      AND NOT EXISTS (
+                          SELECT 1 FROM SQLitePackingList l WHERE l.Id = ? AND l.LocalUserId = i.LocalUserId
+                            AND l.LocalTripId = i.LocalTripId
+                            AND (l.RemoteTripId = COALESCE(i.RemoteTripId, 0)
+                                 OR l.RemoteTripId = 0 OR COALESCE(i.RemoteTripId, 0) = 0)
+                      )
+                    GROUP BY i.LocalUserId, i.LocalTripId, COALESCE(i.RemoteTripId, 0)
+                    """, Guid.Empty, (int)PackingListOperation.Create, Guid.Empty);
+                connection.Execute("UPDATE SQLitePackingItem SET PackingListId = ? WHERE PackingListId IS NULL", Guid.Empty);
+            });
         }
 
         public async Task<int> AddPackingItemAsync(PackingItemDTO item)
@@ -39,6 +64,7 @@ namespace Packo.Repositories.Local
                 LocalTripId = item.LocalTripId,
                 RemotePackingItemId = item.RemotePackingItemId,
                 RemoteTripId = item.RemoteTripId,
+                PackingListId = item.PackingListId,
                 RemoteUserId = item.RemoteUserId,
                 //ClientId = item..ToString(),
                 //SupabaseItemId = item.Id,
@@ -62,6 +88,7 @@ namespace Packo.Repositories.Local
                 LocalPackingItemId = x.LocalPackingItemId,
                 LocalUserId = x.LocalUserId.ToString(),
                 LocalTripId = x.LocalTripId,
+                PackingListId = x.PackingListId,
                 Name = x.Name,
                 CreatedDate = x.CreatedDate,
                 IsPacked = x.IsPacked,
@@ -104,6 +131,7 @@ namespace Packo.Repositories.Local
                 LocalPackingItemId = item.LocalPackingItemId,
                 RemotePackingItemId = item.RemotePackingItemId,
                 RemoteTripId = item.RemoteTripId,
+                PackingListId = item.PackingListId,
                 LocalTripId = item.LocalTripId,
                 Name = item.Name,
                 CreatedDate = item.CreatedDate,
@@ -126,6 +154,7 @@ namespace Packo.Repositories.Local
                 RemotePackingItemId = x.RemotePackingItemId,
                 RemoteTripId = x.RemoteTripId,
                 LocalTripId = x.LocalTripId,
+                PackingListId = x.PackingListId ?? Guid.Empty,
                 Name = x.Name,
                 CreatedDate = x.CreatedDate,
                 LocalUserId = x.LocalUserId,

@@ -48,9 +48,7 @@ namespace Packo.ViewModels
         public bool ShowTrips => _isLoaded && !IsLoading && !HasLoadError;
         public IAsyncRelayCommand RetryLoadCommand { get; }
 
-        //public ICommand TripTappedCommand => new Command<TripViewModel>(OnTripTapped);
-        public IAsyncRelayCommand<TripViewModel> TripTappedCommand { get; }
-        public IAsyncRelayCommand<TripViewModel> OpenPackingListCommand { get; }
+        public IAsyncRelayCommand<TripViewModel> OpenTripDetailsCommand { get; }
 
         //
         public ICommand AddTripCommand => new Command(async () => await AddTrip("wycieczka 1 test"));
@@ -82,8 +80,7 @@ namespace Packo.ViewModels
 
             //LoginWithGoogleCommand = new AsyncRelayCommand(LoginWithGoogle, () => !IsBusy);
 
-            TripTappedCommand = new AsyncRelayCommand<TripViewModel>(OnTripTapped, trip => !Session.GlobalIsBusy);
-            OpenPackingListCommand = new AsyncRelayCommand<TripViewModel>(OpenPackingListAsync, trip => !Session.GlobalIsBusy);
+            OpenTripDetailsCommand = new AsyncRelayCommand<TripViewModel>(OpenTripDetailsAsync, trip => !Session.GlobalIsBusy);
             TrashTripCommand = new AsyncRelayCommand<TripViewModel>(DeleteTripAsync, trip => !Session.GlobalIsBusy);
 
 
@@ -129,22 +126,12 @@ namespace Packo.ViewModels
             await _tripRepository.DeleteLocalTrips();
         }
 
-        private async Task OnTripTapped(TripViewModel trip)
+        private async Task OpenTripDetailsAsync(TripViewModel? trip)
         {
             if (trip == null || Session.GlobalIsBusy)
                 return;
 
-            await Shell.Current.GoToAsync("TripDetails", new ShellNavigationQueryParameters
-            {
-                ["selectedTrip"] = trip
-            });
-        }
-
-        private async Task OpenPackingListAsync(TripViewModel trip)
-        {
-            if (trip == null || Session.GlobalIsBusy)
-                return;
-            await Shell.Current.GoToAsync(nameof(PackingListPage), new ShellNavigationQueryParameters
+            await Shell.Current.GoToAsync(StartViewModel.Route, new ShellNavigationQueryParameters
             {
                 ["trip"] = trip.TripModel
             });
@@ -483,8 +470,7 @@ namespace Packo.ViewModels
 
         private void RefreshTripCommands()
         {
-            TripTappedCommand.NotifyCanExecuteChanged();
-            OpenPackingListCommand.NotifyCanExecuteChanged();
+            OpenTripDetailsCommand.NotifyCanExecuteChanged();
             TrashTripCommand.NotifyCanExecuteChanged();
         }
     }

@@ -55,8 +55,8 @@ internal static class CompletedTripChecks
         WeakReferenceMessenger.Default.Send(new TripDataChangedMessage());
         await details.OnAppearingAsync();
         Check(details.HasTrip && !details.ShowTripUnavailable && details.Trip!.IsCompleted
-            && details.Trip.StatusLabel == "PastTrip" && details.PackingSummary == "2 / 5",
-            "Returning after Save keeps the selected trip details, completed badge and packing progress");
+            && details.Trip.StatusLabel == "PastTrip",
+            "Returning after Save keeps the selected trip details and completed badge");
 
         var session = new Session();
         var list = new TripListViewModel(null!, null!, session, null!, remote, null!, preload, new Weather());
@@ -67,10 +67,10 @@ internal static class CompletedTripChecks
             "Upcoming trips remain above completed trips after the list reloads");
 
         var tile = list.Trips.Single(trip => trip.TripModel.RemoteTripId == 1);
-        var packingCommand = list.OpenPackingListCommand;
-        await packingCommand.ExecuteAsync(tile);
-        Check(Shell.Current.Route == "PackingListPage" && ReferenceEquals(Shell.Current.Query?["trip"], tile.TripModel),
-            "The suitcase opens the selected tile's packing list");
+        var detailsCommand = list.OpenTripDetailsCommand;
+        await detailsCommand.ExecuteAsync(tile);
+        Check(Shell.Current.Route == StartViewModel.Route && ReferenceEquals(Shell.Current.Query?["trip"], tile.TripModel),
+            "The shared tile and suitcase command opens the selected trip details");
 
         var propertiesChanged = new List<string?>();
         tile.PropertyChanged += (_, args) => propertiesChanged.Add(args.PropertyName);
@@ -82,14 +82,14 @@ internal static class CompletedTripChecks
         await Shell.Current.GoToAsync("//TripList");
         await list.OnAppearingAsync();
         var otherTile = list.Trips[0];
-        var suitcaseEnabled = packingCommand.CanExecute(otherTile);
-        packingCommand.CanExecuteChanged += (_, _) => suitcaseEnabled = packingCommand.CanExecute(otherTile);
+        var suitcaseEnabled = detailsCommand.CanExecute(otherTile);
+        detailsCommand.CanExecuteChanged += (_, _) => suitcaseEnabled = detailsCommand.CanExecute(otherTile);
         Check(!suitcaseEnabled, "The suitcase is disabled while packing is still loading");
         session.GlobalIsBusy = false;
         Check(suitcaseEnabled, "Finishing the load after returning to Trips re-enables the suitcase buttons");
-        await packingCommand.ExecuteAsync(otherTile);
-        Check(Shell.Current.Route == "PackingListPage" && ReferenceEquals(Shell.Current.Query?["trip"], otherTile.TripModel),
-            "A different packing list can be opened after returning to Trips");
+        await detailsCommand.ExecuteAsync(otherTile);
+        Check(Shell.Current.Route == StartViewModel.Route && ReferenceEquals(Shell.Current.Query?["trip"], otherTile.TripModel),
+            "A different trip's details can be opened after returning to Trips");
 
         Check(list.ShowTrips && !loadingStarted && list.Trips.Contains(tile) && tile.PackingSummary == "3 / 5"
             && propertiesChanged.SequenceEqual([nameof(TripViewModel.PackingSummary)]),
@@ -102,12 +102,9 @@ internal static class CompletedTripChecks
         await Shell.Current.GoToAsync("//TripList");
         await list.OnAppearingAsync();
         Check(suitcaseEnabled, "Returning to Trips also refreshes the buttons when the load finished offscreen");
-        await packingCommand.ExecuteAsync(otherTile);
-        Check(Shell.Current.Route == "PackingListPage" && ReferenceEquals(Shell.Current.Query?["trip"], otherTile.TripModel),
-            "The same packing list can be reopened after returning to Trips");
-
-        await details.OnAppearingAsync();
-        Check(details.PackingSummary == "3 / 5", "Reopening details uses the updated counter from the trip cache");
+        await detailsCommand.ExecuteAsync(otherTile);
+        Check(Shell.Current.Route == StartViewModel.Route && ReferenceEquals(Shell.Current.Query?["trip"], otherTile.TripModel),
+            "The same trip's details can be reopened after returning to Trips");
 
         WeakReferenceMessenger.Default.Send(new TripDataChangedMessage());
         await list.OnAppearingAsync();
@@ -155,7 +152,7 @@ internal static class CompletedTripChecks
     {
         public Task SelectAsync(TripDTO trip) => OnNavigatedToAsync(new Dictionary<string, object>
         {
-            ["selectedTrip"] = new TripViewModel(trip)
+            ["trip"] = trip
         });
     }
 }

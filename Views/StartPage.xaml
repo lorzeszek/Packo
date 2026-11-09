@@ -2,6 +2,7 @@
 <ContentPage xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns="http://schemas.microsoft.com/dotnet/maui/global"
              xmlns:loc="clr-namespace:Packo.Extensions"
+             xmlns:views="clr-namespace:Packo.Views"
              x:DataType="StartViewModel"
              x:Name="StartView"
              x:Class="Packo.Views.StartPage"
@@ -85,35 +86,17 @@
                     </VerticalStackLayout>
                 </Border>
 
-                <Border Padding="20" StrokeThickness="0" StrokeShape="RoundRectangle 22"
-                        BackgroundColor="{AppThemeBinding Light={StaticResource PackoAccentSoftLight}, Dark={StaticResource PackoAccentSoftDark}}">
-                    <VerticalStackLayout Spacing="12">
-                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
-                            <Label Text="{loc:Translate PackingProgress}" FontSize="15" FontAttributes="Bold"
-                                   VerticalOptions="Center"
-                                   TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
-                            <Label Grid.Column="1" Text="{Binding PackingProgressPercent}" FontSize="15" FontAttributes="Bold"
-                                   VerticalOptions="Center"
-                                   TextColor="{AppThemeBinding Light={StaticResource PackoShellAccentLight}, Dark={StaticResource PackoAccentDark}}" />
-                        </Grid>
-                        <ProgressBar Progress="{Binding PackingProgress}" HeightRequest="6"
-                                     ProgressColor="{StaticResource PackoAccentLight}"
-                                     BackgroundColor="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoControlBorderDark}}"
-                                     SemanticProperties.Description="{Binding PackingProgressText}" />
-                        <Label Text="{Binding PackingProgressText}" FontSize="14" LineBreakMode="WordWrap"
-                               TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextAltDark}}" />
-                        <Button Text="{loc:Translate OpenPackingList}" Command="{Binding OpenPackingListCommand}"
-                                HeightRequest="48" Padding="16,0" CornerRadius="14"
-                                FontSize="14" FontAttributes="Bold"
-                                BackgroundColor="{StaticResource PackoAccentLight}" TextColor="{StaticResource PackoWhite}" />
-                    </VerticalStackLayout>
-                </Border>
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="{loc:Translate NamedPackingLists}" FontSize="18" FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+                    <views:PackingListsView x:Name="PackingLists" />
+                </VerticalStackLayout>
             </VerticalStackLayout>
 
             <VerticalStackLayout IsVisible="{Binding HasLoadError}" Spacing="16" Padding="32">
                 <Label Text="{loc:Translate StartupLoadError}" HorizontalTextAlignment="Center"
                        TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
-                <Button Text="{loc:Translate Retry}" Command="{Binding RetryLoadCommand}"
+                <Button Text="{loc:Translate Retry}" Clicked="OnRetryClicked"
                         BackgroundColor="{StaticResource PackoAccentLight}" TextColor="{StaticResource PackoWhite}"
                         CornerRadius="18" Padding="24,12" HorizontalOptions="Center" />
             </VerticalStackLayout>

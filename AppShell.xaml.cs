@@ -1,5 +1,6 @@
 using Packo.Views;
 using Packo.Services;
+using Packo.ViewModels;
 
 namespace Packo
 {
@@ -12,8 +13,8 @@ namespace Packo
             LocalizationResourceManager.Instance.PropertyChanged += OnLanguageChanged;
 
             Routing.RegisterRoute(nameof(TripSetupPage), typeof(TripSetupPage));
-            Routing.RegisterRoute(nameof(PackingListPage), typeof(PackingListPage));
-            Routing.RegisterRoute("TripDetails", typeof(StartPage));
+            Routing.RegisterRoute(PackingListPage.EditorRoute, typeof(PackingListPage));
+            Routing.RegisterRoute(StartViewModel.Route, typeof(StartPage));
 
             Navigating += OnShellNavigating;
         }

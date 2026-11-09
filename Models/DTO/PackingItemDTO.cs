@@ -8,6 +8,7 @@ namespace Packo.Models.DTO
         public int LocalPackingItemId { get; set; }
         public int LocalTripId { get; set; }
         public int? RemoteTripId { get; set; }
+        public Guid PackingListId { get; set; }
         public string Name { get; set; } = string.Empty;
         public int Quantity { get; set; } = 1;
         public string LocalUserId { get; set; }

@@ -100,7 +100,7 @@
   <data name="CopyPackingList" xml:space="preserve"><value>Dodaj z innego wyjazdu</value></data>
   <data name="ChoosePackingSource" xml:space="preserve"><value>Wybierz wyjazd, z którego chcesz skopiować rzeczy</value></data>
   <data name="NoPackingSource" xml:space="preserve"><value>Nie masz jeszcze innych wyjazdów, z których można skopiować rzeczy.</value></data>
-  <data name="EmptyPackingSource" xml:space="preserve"><value>Lista pakowania wybranego wyjazdu jest pusta.</value></data>
+  <data name="EmptyPackingSource" xml:space="preserve"><value>Na wybranych listach nie ma przedmiotów.</value></data>
   <data name="CopyPackingDone" xml:space="preserve"><value>Gotowe!</value></data>
   <data name="CopyPackingAddedOne" xml:space="preserve"><value>Dodano jedną rzecz do listy pakowania.</value></data>
   <data name="CopyPackingAddedMany" xml:space="preserve"><value>Dodano {0} rzeczy do listy pakowania.</value></data>
@@ -109,4 +109,15 @@
   <data name="CopyPackingAlreadyOnList" xml:space="preserve"><value>Wszystko już na liście</value></data>
   <data name="CopyPackingAlreadyOnListMessage" xml:space="preserve"><value>Te rzeczy są już na Twojej liście pakowania.</value></data>
   <data name="CopyPackingError" xml:space="preserve"><value>Nie udało się skopiować rzeczy. Spróbuj ponownie.</value></data>
+  <data name="NamedPackingLists" xml:space="preserve"><value>Listy pakowania</value></data>
+  <data name="AddNamedPackingList" xml:space="preserve"><value>Dodaj listę pakowania</value></data>
+  <data name="NoNamedPackingLists" xml:space="preserve"><value>Ten wyjazd nie ma jeszcze list pakowania.</value></data>
+  <data name="PackingListName" xml:space="preserve"><value>Nazwa listy</value></data>
+  <data name="PackingListOptions" xml:space="preserve"><value>Opcje listy pakowania</value></data>
+  <data name="RenamePackingList" xml:space="preserve"><value>Zmień nazwę listy</value></data>
+  <data name="DeleteNamedPackingList" xml:space="preserve"><value>Usuń listę</value></data>
+  <data name="DeleteNamedPackingListConfirm" xml:space="preserve"><value>Usunąć listę „{0}” i wszystkie jej przedmioty?</value></data>
+  <data name="ManagePackingListsError" xml:space="preserve"><value>Nie udało się wykonać operacji na liście pakowania. Spróbuj ponownie.</value></data>
+  <data name="ChoosePackingSourceList" xml:space="preserve"><value>Z której listy skopiować przedmioty?</value></data>
+  <data name="CopyFromAllPackingLists" xml:space="preserve"><value>Ze wszystkich list</value></data>
 </root>

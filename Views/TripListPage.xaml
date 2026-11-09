@@ -104,8 +104,8 @@
                                     <Button Text="&#xe8f9;" FontFamily="MaterialIcons" FontSize="22"
                                             WidthRequest="46" HeightRequest="46" Padding="6" CornerRadius="16"
                                             BackgroundColor="#FFFFFFE8" TextColor="#5D514B"
-                                            SemanticProperties.Description="{loc:Translate OpenPackingList}"
-                                            Command="{Binding BindingContext.OpenPackingListCommand, Source={x:Reference TripListView}}"
+                                            SemanticProperties.Description="{loc:Translate TripDetails}"
+                                            Command="{Binding BindingContext.OpenTripDetailsCommand, Source={x:Reference TripListView}}"
                                             CommandParameter="{Binding .}" />
                                     <Button Text="&#xe3c9;" FontFamily="MaterialIcons" FontSize="22"
                                             WidthRequest="46" HeightRequest="46" Padding="6" CornerRadius="16"
@@ -122,7 +122,7 @@
 
                         <Border.GestureRecognizers>
                             <TapGestureRecognizer
-                                Command="{Binding BindingContext.TripTappedCommand, Source={x:Reference TripListView}}"
+                                Command="{Binding BindingContext.OpenTripDetailsCommand, Source={x:Reference TripListView}}"
                                 CommandParameter="{Binding .}" />
                         </Border.GestureRecognizers>
                     </Border>

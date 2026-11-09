@@ -125,7 +125,7 @@ namespace Packo
             builder.Services.AddSingleton<ITripListPreloadService, TripListPreloadService>();
             builder.Services.AddSingleton<IDocumentPreloadService, DocumentPreloadService>();
 
-            builder.Services.AddSingleton<IPackingItemRepository>(sp =>
+            builder.Services.AddSingleton(sp =>
             {
                 var local = sp.GetRequiredService<LocalPackingItemRepository>();
                 var remote = sp.GetRequiredService<SupabasePackingItemRepository>();
@@ -134,6 +134,8 @@ namespace Packo
                 var tripRepo = sp.GetRequiredService<ITripRepository>();
                 return new SyncPackingItemRepository(local, remote, session, pendingDb, tripRepo);
             });
+            builder.Services.AddSingleton<IPackingItemRepository>(sp => sp.GetRequiredService<SyncPackingItemRepository>());
+            builder.Services.AddSingleton<IPackingListRepository>(sp => sp.GetRequiredService<SyncPackingItemRepository>());
 
             // === UI ===
             builder.Services.AddTransient<StartPage>();

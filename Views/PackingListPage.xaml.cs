@@ -6,6 +6,7 @@ namespace Packo.Views;
 
 public partial class PackingListPage : BasePage//ContentPage//, IQueryAttributable
 {
+    public const string EditorRoute = "PackingListEditor";
     private readonly PackingListViewModel _viewModel;
     private readonly IDispatcherTimer _scheduleTimer;
 

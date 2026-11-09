@@ -349,7 +349,7 @@ namespace Packo.ViewModels
 
             await Shell.Current.Navigation.PopAsync(false);
             await Shell.Current.GoToAsync("//TripList");
-            await Shell.Current.GoToAsync(nameof(PackingListPage), new ShellNavigationQueryParameters
+            await Shell.Current.GoToAsync(StartViewModel.Route, new ShellNavigationQueryParameters
             {
                 ["trip"] = trip
             });

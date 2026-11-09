@@ -5,11 +5,13 @@ using Packo.Repositories.Enums;
 using Packo.Repositories.Interfaces;
 using Packo.Services.Interfaces;
 using Supabase.Realtime;
+using Supabase.Postgrest;
+using static Supabase.Postgrest.Constants;
 using System.Reactive.Linq;
 
 namespace Packo.Repositories.Supabase
 {
-    public class SupabasePackingItemRepository : IPackingItemRepository
+    public class SupabasePackingItemRepository : IPackingItemRepository, IPackingListRemote
     {
         public readonly ISupabaseService _supabase;
         private readonly ISessionService _sessionService;
@@ -83,20 +85,63 @@ namespace Packo.Repositories.Supabase
 
         public async Task<IReadOnlyList<PackingItemDTO>> GetPackingItemsForTripAsync(int localTripId, int remoteTripId)
         {
-            try
+            const int pageSize = 250;
+            var items = new List<PackingItemDTO>();
+            while (true)
             {
                 var result = await _supabase.Client
                     .From<PackingItemSupabase>()
                     .Where(x => x.TripId == remoteTripId)
+                    .Order(x => x.Id, Ordering.Ascending)
+                    .Range(items.Count, items.Count + pageSize - 1)
                     .Get();
 
-                return result.Models.Any() ? result.Models.Select(x => Mappers.MapToPackingItemDTO(x)).ToList() : new List<PackingItemDTO>();
-            }
-            catch (Exception)
-            {
-                throw;
+                items.AddRange(result.Models.Select(Mappers.MapToPackingItemDTO));
+                if (result.Models.Count < pageSize)
+                    return items;
             }
         }
+
+        public async Task<IReadOnlyList<PackingListDTO>> GetPackingListsAsync(int remoteTripId)
+        {
+            const int pageSize = 250;
+            var lists = new List<PackingListDTO>();
+            while (true)
+            {
+                var page = await _supabase.Client.From<PackingListSupabase>()
+                    .Where(x => x.TripId == remoteTripId)
+                    .Order(x => x.Id, Ordering.Ascending)
+                    .Range(lists.Count, lists.Count + pageSize - 1)
+                    .Get();
+                lists.AddRange(page.Models.Select(row => new PackingListDTO(row.Id, row.Name)));
+                if (page.Models.Count < pageSize)
+                    return lists;
+            }
+        }
+
+        public async Task SavePackingListAsync(int remoteTripId, PackingListDTO list, bool create)
+        {
+            if (create)
+            {
+                var result = await _supabase.Client.From<PackingListSupabase>().Upsert(
+                    new PackingListSupabase { TripId = remoteTripId, Id = list.Id, Name = list.Name },
+                    new QueryOptions { DuplicateResolution = QueryOptions.DuplicateResolutionType.IgnoreDuplicates });
+                if (result.Models.Count > 0 || list.Name is null)
+                    return;
+            }
+
+            await _supabase.Client.From<PackingListSupabase>()
+                .Where(x => x.TripId == remoteTripId)
+                .Where(x => x.Id == list.Id)
+                .Set(x => x.Name!, list.Name!)
+                .Update();
+        }
+
+        public Task DeletePackingListAsync(int remoteTripId, Guid listId) =>
+            _supabase.Client.From<PackingListSupabase>()
+                .Where(x => x.TripId == remoteTripId)
+                .Where(x => x.Id == listId)
+                .Delete();
 
         public async Task StartRealtimeAsync()
         {
