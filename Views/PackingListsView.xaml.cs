@@ -104,7 +104,7 @@ public partial class PackingListsView : ContentView
         var strings = LocalizationResourceManager.Instance;
         await RunAsync(async () =>
         {
-            var name = await PromptForNameAsync(strings["AddNamedPackingList"]);
+            var name = await PackingListNamePopup.ShowAsync(strings["AddNamedPackingList"]);
             if (name is null)
                 return;
             await Repository.CreatePackingListAsync(trip, name);
@@ -141,7 +141,7 @@ public partial class PackingListsView : ContentView
             var selection = await OptionsPopup.ChooseAsync(card.DisplayName, [rename, delete]);
             if (selection == rename)
             {
-                var name = await PromptForNameAsync(rename, card.DisplayName);
+                var name = await PackingListNamePopup.ShowAsync(rename, card.DisplayName);
                 if (name is null)
                     return;
                 await Repository.RenamePackingListAsync(trip, card.List.Id, name);
@@ -160,14 +160,6 @@ public partial class PackingListsView : ContentView
 
             await LoadAsync(trip);
         });
-    }
-
-    private static async Task<string?> PromptForNameAsync(string title, string initialValue = "")
-    {
-        var strings = LocalizationResourceManager.Instance;
-        var name = await Shell.Current.DisplayPromptAsync(title, strings["PackingListName"],
-            strings["SaveChanges"], strings["Cancel"], maxLength: PackingListDTO.MaxNameLength, initialValue: initialValue);
-        return string.IsNullOrWhiteSpace(name) ? null : name.Trim();
     }
 
     private async Task RunAsync(Func<Task> action)

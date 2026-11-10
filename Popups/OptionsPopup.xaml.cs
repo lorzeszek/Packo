@@ -5,9 +5,10 @@ namespace Packo.Popups;
 
 public partial class OptionsPopup : Popup<string?>
 {
-    private OptionsPopup(string title, IReadOnlyList<string> options)
+    private OptionsPopup(string title, IReadOnlyList<string> options, double width)
     {
         InitializeComponent();
+        PopupCard.WidthRequest = width;
         TitleLabel.Text = title;
         BindableLayout.SetItemsSource(OptionsList, options);
         if (options.Count > 2)
@@ -19,7 +20,8 @@ public partial class OptionsPopup : Popup<string?>
 
     public static async Task<string?> ChooseAsync(string title, IReadOnlyList<string> options)
     {
-        var result = await Application.Current!.MainPage!.ShowPopupAsync<string>(new OptionsPopup(title, options));
+        var page = Application.Current!.MainPage!;
+        var result = await page.ShowPopupAsync<string>(new OptionsPopup(title, options, PopupCardSizing.GetWidth(page)));
         return result.Result;
     }
 
