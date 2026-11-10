@@ -126,6 +126,8 @@
   <data name="JoinTrip" xml:space="preserve"><value>Dołącz do wyjazdu</value></data>
   <data name="JoinTripLogin" xml:space="preserve"><value>Zaloguj się przez Google, aby przyjąć zaproszenie. Po zalogowaniu aplikacja wróci do zaproszenia.</value></data>
   <data name="JoinTripPrompt" xml:space="preserve"><value>Czy chcesz dołączyć do tego wyjazdu i edytować jego listy pakowania?</value></data>
+  <data name="OpeningTripInvite" xml:space="preserve"><value>Otwieramy zaproszenie…</value></data>
+  <data name="JoiningTrip" xml:space="preserve"><value>Dołączamy do wyjazdu…</value></data>
   <data name="InviteInvalid" xml:space="preserve"><value>Zaproszenie wygasło, zostało wyłączone lub już go użyto.</value></data>
   <data name="SharingRequestFailed" xml:space="preserve"><value>Nie udało się wykonać operacji. Spróbuj ponownie po połączeniu z internetem.</value></data>
   <data name="SharingRequiresSignIn" xml:space="preserve"><value>Połącz się z internetem i zaloguj przez Google, aby zarządzać dostępem.</value></data>

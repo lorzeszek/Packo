@@ -13,8 +13,8 @@ public partial class StartPage : ContentPage
     private readonly StartViewModel _viewModel;
     private readonly IDispatcherTimer _scheduleTimer;
     private readonly TripInvitationService _invitations;
-    private DateTime _nextRefresh;
     private DateTime _nextAccessCheck;
+    private bool _refreshRequested;
     private bool _refreshing;
     private bool _sharing;
     private static LocalizationResourceManager Strings => LocalizationResourceManager.Instance;
@@ -31,14 +31,14 @@ public partial class StartPage : ContentPage
         _scheduleTimer.Tick += async (_, _) =>
         {
             _viewModel.RefreshTripSchedule();
-            if (DateTime.UtcNow >= _nextAccessCheck && _viewModel.Trip?.IsShared == true)
+            if (_refreshRequested || (DateTime.UtcNow >= _nextAccessCheck && _viewModel.Trip?.IsShared == true))
                 await RefreshSharingAsync();
         };
         WeakReferenceMessenger.Default.Register<StartPage, PackingSyncMessage>(this, (page, change) =>
-            MainThread.BeginInvokeOnMainThread(async () =>
+            MainThread.BeginInvokeOnMainThread(() =>
             {
                 if (change.RemoteTripId == 0 || change.RemoteTripId == page._viewModel.Trip?.TripModel.RemoteTripId)
-                    await page.RefreshSharingAsync(force: change.AccessRevoked || change.RemoteTripId == 0);
+                    page._refreshRequested = true;
             }));
     }
 
@@ -82,19 +82,19 @@ public partial class StartPage : ContentPage
         ManageSharingButton.IsVisible = owner && _invitations.IsConfigured && _viewModel.Trip!.TripModel.RemoteTripId > 0;
     }
 
-    private async Task RefreshSharingAsync(bool force = false)
+    private async Task RefreshSharingAsync()
     {
-        if (_refreshing || _sharing || Shell.Current?.CurrentPage != this
-            || (!force && DateTime.UtcNow < _nextRefresh) || _viewModel.Trip?.TripModel.RemoteTripId is not > 0
+        if (_refreshing || _sharing || PackingLists.IsWorking || Shell.Current?.CurrentPage != this
+            || _viewModel.Trip?.TripModel.RemoteTripId is not > 0
             || Connectivity.Current.NetworkAccess != NetworkAccess.Internet || !_viewModel.Session.IsAuthenticated)
             return;
         _refreshing = true;
-        _nextRefresh = DateTime.UtcNow.AddSeconds(5);
+        _refreshRequested = false;
         _nextAccessCheck = DateTime.UtcNow.AddSeconds(20);
         try
         {
             await _viewModel.RetryLoadCommand.ExecuteAsync(null);
-            await PackingLists.ShowAsync(_viewModel.Trip?.TripModel);
+            await PackingLists.ShowAsync(_viewModel.Trip?.TripModel, forceRefresh: true);
             UpdateShareButtons();
         }
         finally { _refreshing = false; }
@@ -114,7 +114,7 @@ public partial class StartPage : ContentPage
         {
             var members = trip.TripModel.Participants.Where(x => !x.IsOwner)
                 .Select((member, i) => (member.UserId, Label: $"{i + 1}. {member.Name}")).ToList();
-            var action = await DisplayActionSheetAsync(Strings["ManageTripSharing"], Strings["Cancel"], null,
+            var action = await OptionsPopup.ChooseAsync(Strings["ManageTripSharing"],
                 [Strings["DisableInviteLinks"], .. members.Select(x => x.Label)]);
             if (action == Strings["DisableInviteLinks"])
             {
@@ -125,7 +125,8 @@ public partial class StartPage : ContentPage
                 && await ConfirmPopup.AskAsync(Strings["RemoveTripMember"], member.Label, Strings["RemoveTripMember"], Strings["Cancel"]))
                 await _invitations.RevokeAsync(trip.TripModel.RemoteTripId, userId);
         });
-        await RefreshSharingAsync(force: true);
+        _refreshRequested = true;
+        await RefreshSharingAsync();
     }
 
     private async Task RunSharingActionAsync(Func<Task> action)

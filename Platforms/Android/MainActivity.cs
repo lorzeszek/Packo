@@ -6,7 +6,7 @@ using Packo.Services;
 
 namespace Packo
 {
-    [Activity(Theme = "@style/Maui.SplashTheme", MainLauncher = true, LaunchMode = LaunchMode.SingleTop, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.Density)]
+    [Activity(Theme = "@style/Maui.SplashTheme", MainLauncher = true, LaunchMode = LaunchMode.SingleTask, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.Density)]
     [IntentFilter([Intent.ActionView], AutoVerify = true, Categories = [Intent.CategoryDefault, Intent.CategoryBrowsable],
         DataScheme = "https", DataHost = "${packoInviteHost}", DataPathPrefix = "/join")]
     public class MainActivity : MauiAppCompatActivity

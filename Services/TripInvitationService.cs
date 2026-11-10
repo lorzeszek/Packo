@@ -7,6 +7,7 @@ using Packo.Popups;
 using Packo.Repositories.Interfaces;
 using Packo.Services.Interfaces;
 using Packo.ViewModels;
+using Packo.Views;
 
 namespace Packo.Services;
 
@@ -17,10 +18,59 @@ public sealed class TripInvitationService(
     private static readonly string Host = typeof(TripInvitationService).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
         .Single(x => x.Key == "PackoInviteHost").Value!;
     private readonly SemaphoreSlim _handling = new(1, 1);
-    private string? _lastLoginPrompt;
+    private Shell? _shell;
+    private Page? _waitingPage;
+    private bool _windowActive;
+    private bool _readStoredInvite;
+    private Guid? _pendingToken;
+    private Guid? _storedToken;
+    private Guid? _lastLoginPrompt;
     private static LocalizationResourceManager Strings => LocalizationResourceManager.Instance;
 
     public bool IsConfigured => Uri.CheckHostName(Host) == UriHostNameType.Dns && !Host.EndsWith(".invalid", StringComparison.OrdinalIgnoreCase);
+    public bool HasPendingInvite => _pendingToken.HasValue;
+    public event EventHandler? InviteReceived;
+
+    public void AttachShell(Shell shell)
+    {
+        if (_shell is not null)
+        {
+            _shell.Loaded -= OnShellLoaded;
+            _shell.Navigated -= OnShellNavigated;
+        }
+        _shell = shell;
+        shell.Loaded += OnShellLoaded;
+        shell.Navigated += OnShellNavigated;
+    }
+
+    public void SetWindowActive(bool active)
+    {
+        _windowActive = active;
+        if (active)
+            ScheduleProcessing();
+    }
+
+    private void ScheduleProcessing() => _shell?.Dispatcher.Dispatch(() => _ = ProcessPendingAsync());
+
+    private void OnShellLoaded(object? sender, EventArgs e) => ScheduleProcessing();
+    private void OnShellNavigated(object? sender, ShellNavigatedEventArgs e) => ScheduleProcessing();
+
+    private void WaitForPage(Page? page)
+    {
+        if (_waitingPage == page)
+            return;
+        if (_waitingPage is not null)
+            _waitingPage.Loaded -= OnPageLoaded;
+        _waitingPage = page;
+        if (page is not null)
+            page.Loaded += OnPageLoaded;
+    }
+
+    private void OnPageLoaded(object? sender, EventArgs e)
+    {
+        WaitForPage(null);
+        ScheduleProcessing();
+    }
 
     public void Receive(Uri link)
     {
@@ -28,34 +78,65 @@ public sealed class TripInvitationService(
             || !link.Host.Equals(Host, StringComparison.OrdinalIgnoreCase) || link.AbsolutePath.TrimEnd('/') != "/join"
             || !Guid.TryParseExact(link.Fragment.TrimStart('#'), "N", out var token))
             return;
-        MainThread.BeginInvokeOnMainThread(async () =>
+        MainThread.BeginInvokeOnMainThread(() =>
         {
-            try
-            {
-                _lastLoginPrompt = null;
-                await SecureStorage.SetAsync(PendingKey, token.ToString("N"));
-                await ProcessPendingAsync();
-            }
-            catch (Exception ex) { System.Diagnostics.Debug.WriteLine(ex.GetType().Name); }
+            _lastLoginPrompt = null;
+            _pendingToken = token;
+            InviteReceived?.Invoke(this, EventArgs.Empty);
+            ScheduleProcessing();
         });
     }
 
     public async Task ProcessPendingAsync()
     {
-        if (!IsConfigured || Shell.Current?.CurrentPage is not { } page || session.GlobalIsBusy || !await _handling.WaitAsync(0))
+        if (!IsConfigured || !_windowActive || _shell is not { IsLoaded: true } shell || session.GlobalIsBusy
+            || (_readStoredInvite && _pendingToken is null))
             return;
+        if (shell.CurrentPage is not { IsLoaded: true } page)
+        {
+            WaitForPage(shell.CurrentPage);
+            return;
+        }
+        if (!await _handling.WaitAsync(0))
+            return;
+
+        Guid? processing = null;
         try
         {
-            var pending = await SecureStorage.GetAsync(PendingKey);
-            if (!Guid.TryParseExact(pending, "N", out var token))
+            if (!_readStoredInvite)
+            {
+                if (_pendingToken is null && Guid.TryParseExact(await SecureStorage.GetAsync(PendingKey), "N", out var stored))
+                {
+                    _storedToken = stored;
+                    _pendingToken ??= stored;
+                }
+                _readStoredInvite = true;
+            }
+            if (_pendingToken is not { } token)
                 return;
+            processing = token;
+
+            if (_storedToken != token)
+            {
+                await WithLoadingAsync(shell, "OpeningTripInvite", async () =>
+                {
+                    await SecureStorage.SetAsync(PendingKey, token.ToString("N"));
+                    _storedToken = token;
+                    return true;
+                });
+            }
             if (Connectivity.Current.NetworkAccess != NetworkAccess.Internet)
                 return;
+            if (!session.IsAuthenticated && session.UserId is not null)
+                await WithLoadingAsync(shell, "OpeningTripInvite", () => session.TryRecoverSessionAsync());
+            if (!_windowActive || shell.CurrentPage != page || session.GlobalIsBusy || _pendingToken != token)
+                return;
+
             if (!session.IsAuthenticated)
             {
-                if (_lastLoginPrompt == pending)
+                if (_lastLoginPrompt == token)
                     return;
-                _lastLoginPrompt = pending;
+                _lastLoginPrompt = token;
                 if (await ConfirmPopup.AskAsync(Strings["JoinTrip"], Strings["JoinTripLogin"], Strings["Login"], Strings["Cancel"]))
                     MainThread.BeginInvokeOnMainThread(async () =>
                     {
@@ -68,39 +149,64 @@ public sealed class TripInvitationService(
             var account = session.UserId;
             if (!await ConfirmPopup.AskAsync(Strings["JoinTrip"], Strings["JoinTripPrompt"], Strings["JoinTrip"], Strings["Cancel"]))
             {
-                await ClearPendingAsync(pending!);
+                ClearPending(token);
                 return;
             }
-            if (!session.IsAuthenticated || session.UserId != account || Shell.Current?.CurrentPage != page)
+            if (!session.IsAuthenticated || session.UserId != account || shell.CurrentPage != page)
                 return;
 
-            var response = await supabase.Client.Rpc("accept_trip_invite", new { p_token = token });
+            var response = await WithLoadingAsync(shell, "JoiningTrip",
+                () => supabase.Client.Rpc("accept_trip_invite", new { p_token = token }).WaitAsync(TimeSpan.FromSeconds(20)));
             var status = JsonSerializer.Deserialize<string>(response.Content!);
             if (status == "invalid")
             {
-                await ClearPendingAsync(pending!);
+                ClearPending(token);
                 await ConfirmPopup.ShowMessageAsync(Strings["JoinTrip"], Strings["InviteInvalid"]);
             }
             else if (status == "joined")
             {
-                await ClearPendingAsync(pending!);
+                ClearPending(token);
                 WeakReferenceMessenger.Default.Send(new TripDataChangedMessage());
-                await Shell.Current.GoToAsync("//TripList");
+                await shell.GoToAsync("//TripList");
                 WeakReferenceMessenger.Default.Send(new PackingSyncMessage(0));
             }
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine(ex.GetType().Name);
-            await ConfirmPopup.ShowMessageAsync(Strings["JoinTrip"], Strings["SharingRequestFailed"]);
+            if (processing.HasValue && _windowActive)
+                await ConfirmPopup.ShowMessageAsync(Strings["JoinTrip"], Strings["SharingRequestFailed"]);
         }
-        finally { _handling.Release(); }
+        finally
+        {
+            _handling.Release();
+            if (_pendingToken is { } next && next != processing)
+                ScheduleProcessing();
+        }
     }
 
-    private static async Task ClearPendingAsync(string pending)
+    private void ClearPending(Guid token)
     {
-        if (await SecureStorage.GetAsync(PendingKey) == pending)
+        if (_pendingToken == token)
+            _pendingToken = null;
+        if (_storedToken == token)
+        {
             SecureStorage.Remove(PendingKey);
+            _storedToken = null;
+        }
+    }
+
+    private static async Task<T> WithLoadingAsync<T>(Shell shell, string statusKey, Func<Task<T>> action)
+    {
+        var navigation = shell.Navigation;
+        var loading = new LoadingPage(statusKey);
+        await navigation.PushModalAsync(loading, animated: false);
+        try { return await action(); }
+        finally
+        {
+            if (navigation.ModalStack.LastOrDefault() == loading)
+                await navigation.PopModalAsync(animated: false);
+        }
     }
 
     public async Task ShareAsync(TripDTO trip)

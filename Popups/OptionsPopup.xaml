@@ -8,10 +8,10 @@
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit">
 
     <Border Style="{StaticResource PackoPopupCardStyle}">
-        <Grid RowDefinitions="Auto,*,Auto" RowSpacing="16">
+        <VerticalStackLayout Spacing="16">
             <Label x:Name="TitleLabel" Style="{StaticResource PackoPopupTitleStyle}" />
 
-            <ScrollView Grid.Row="1" MaximumHeightRequest="264">
+            <ContentView x:Name="OptionsHost">
                 <VerticalStackLayout x:Name="OptionsList" Spacing="6">
                     <BindableLayout.ItemTemplate>
                         <DataTemplate x:DataType="x:String">
@@ -22,10 +22,10 @@
                         </DataTemplate>
                     </BindableLayout.ItemTemplate>
                 </VerticalStackLayout>
-            </ScrollView>
+            </ContentView>
 
-            <Button Grid.Row="2" Text="{loc:Translate Cancel}" Clicked="OnCancelClicked"
+            <Button Text="{loc:Translate Cancel}" Clicked="OnCancelClicked"
                     Style="{StaticResource PackoPopupSecondaryButtonStyle}" />
-        </Grid>
+        </VerticalStackLayout>
     </Border>
 </toolkit:Popup>

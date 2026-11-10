@@ -10,6 +10,11 @@ public partial class OptionsPopup : Popup<string?>
         InitializeComponent();
         TitleLabel.Text = title;
         BindableLayout.SetItemsSource(OptionsList, options);
+        if (options.Count > 2)
+        {
+            OptionsHost.Content = null;
+            OptionsHost.Content = new ScrollView { MaximumHeightRequest = 264, Content = OptionsList };
+        }
     }
 
     public static async Task<string?> ChooseAsync(string title, IReadOnlyList<string> options)

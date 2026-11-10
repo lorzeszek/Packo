@@ -196,6 +196,8 @@
   <data name="JoinTrip" xml:space="preserve"><value>Join trip</value></data>
   <data name="JoinTripLogin" xml:space="preserve"><value>Sign in with Google to accept this invitation. The app will return to the invitation after you sign in.</value></data>
   <data name="JoinTripPrompt" xml:space="preserve"><value>Do you want to join this trip and edit its packing lists?</value></data>
+  <data name="OpeningTripInvite" xml:space="preserve"><value>Opening trip invitation…</value></data>
+  <data name="JoiningTrip" xml:space="preserve"><value>Joining trip…</value></data>
   <data name="InviteInvalid" xml:space="preserve"><value>This invitation has expired, was turned off, or has already been used.</value></data>
   <data name="SharingRequestFailed" xml:space="preserve"><value>The request could not be completed. Try again when you are connected.</value></data>
   <data name="SharingRequiresSignIn" xml:space="preserve"><value>Connect to the internet and sign in with Google to manage sharing.</value></data>

@@ -17,26 +17,36 @@
                     <Border Padding="20" StrokeThickness="0" StrokeShape="RoundRectangle 22"
                             BackgroundColor="{AppThemeBinding Light={StaticResource PackoAccentSoftLight}, Dark={StaticResource PackoAccentSoftDark}}">
                         <VerticalStackLayout Spacing="12">
-                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
-                                <Label Text="{Binding DisplayName}" FontSize="15" FontAttributes="Bold"
-                                       VerticalOptions="Center" LineBreakMode="WordWrap"
-                                       TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
-                                <Label Grid.Column="1" Text="{Binding ProgressPercent}" FontSize="15" FontAttributes="Bold"
-                                       VerticalOptions="Center"
-                                       TextColor="{AppThemeBinding Light={StaticResource PackoShellAccentLight}, Dark={StaticResource PackoAccentDark}}" />
-                                <Button Grid.Column="2" Text="⋯" Clicked="OnListOptionsClicked"
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                    <Grid.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnOpenList" />
+                                    </Grid.GestureRecognizers>
+                                    <Label Text="{Binding DisplayName}" FontSize="15" FontAttributes="Bold"
+                                           VerticalOptions="Center" LineBreakMode="WordWrap"
+                                           TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+                                    <Label Grid.Column="1" Text="{Binding ProgressPercent}" FontSize="15" FontAttributes="Bold"
+                                           VerticalOptions="Center"
+                                           TextColor="{AppThemeBinding Light={StaticResource PackoShellAccentLight}, Dark={StaticResource PackoAccentDark}}" />
+                                </Grid>
+                                <Button Grid.Column="1" Text="⋯" Clicked="OnListOptionsClicked"
                                         SemanticProperties.Description="{loc:Translate PackingListOptions}"
                                         WidthRequest="44" HeightRequest="44" Padding="0" CornerRadius="12"
                                         FontSize="21" FontAttributes="Bold" BackgroundColor="Transparent"
                                         TextColor="{AppThemeBinding Light={StaticResource PackoShellAccentLight}, Dark={StaticResource PackoAccentDark}}" />
                             </Grid>
-                            <ProgressBar Progress="{Binding List.Progress}" HeightRequest="6"
-                                         ProgressColor="{StaticResource PackoAccentLight}"
-                                         BackgroundColor="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoControlBorderDark}}"
-                                         SemanticProperties.Description="{Binding ProgressText}" />
-                            <Label Text="{Binding ProgressText}" FontSize="14" LineBreakMode="WordWrap"
-                                   TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextAltDark}}" />
-                            <Button Text="{loc:Translate OpenPackingList}" Clicked="OnOpenListClicked"
+                            <VerticalStackLayout Spacing="12">
+                                <VerticalStackLayout.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnOpenList" />
+                                </VerticalStackLayout.GestureRecognizers>
+                                <ProgressBar Progress="{Binding List.Progress}" HeightRequest="6"
+                                             ProgressColor="{StaticResource PackoAccentLight}"
+                                             BackgroundColor="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoControlBorderDark}}"
+                                             SemanticProperties.Description="{Binding ProgressText}" />
+                                <Label Text="{Binding ProgressText}" FontSize="14" LineBreakMode="WordWrap"
+                                       TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextAltDark}}" />
+                            </VerticalStackLayout>
+                            <Button Text="{loc:Translate OpenPackingList}" Clicked="OnOpenList"
                                     HeightRequest="48" Padding="16,0" CornerRadius="14"
                                     FontSize="14" FontAttributes="Bold"
                                     BackgroundColor="{StaticResource PackoAccentLight}" TextColor="{StaticResource PackoWhite}" />

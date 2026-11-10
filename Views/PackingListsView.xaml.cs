@@ -24,10 +24,11 @@ public partial class PackingListsView : ContentView
     private IReadOnlyList<PackingListDTO>? _shownLists;
 
     public IPackingListRepository Repository { private get; set; } = null!;
+    public bool IsWorking => _working;
 
     public PackingListsView() => InitializeComponent();
 
-    public async Task ShowAsync(TripDTO? trip)
+    public async Task ShowAsync(TripDTO? trip, bool forceRefresh = false)
     {
         _trip = trip;
         if (_working)
@@ -43,7 +44,9 @@ public partial class PackingListsView : ContentView
                 return;
             if (cached.Count > 0 || _shownLists is not null)
                 DisplayLists(cached);
-            _ = RefreshAsync(trip, version);
+            var refresh = RefreshAsync(trip, version, forceRefresh);
+            if (forceRefresh)
+                await refresh;
         }
         catch (Exception ex)
         {
@@ -60,11 +63,11 @@ public partial class PackingListsView : ContentView
         return Task.CompletedTask;
     }
 
-    private async Task RefreshAsync(TripDTO trip, int version)
+    private async Task RefreshAsync(TripDTO trip, int version, bool forceRefresh)
     {
         try
         {
-            await Repository.RefreshPackingTripAsync(trip);
+            await Repository.RefreshPackingTripAsync(trip, forceRefresh);
             if (version != _loadVersion || _working)
                 return;
             var refreshed = await Repository.GetPackingListsAsync(trip, refresh: false);
@@ -109,9 +112,9 @@ public partial class PackingListsView : ContentView
         });
     }
 
-    private async void OnOpenListClicked(object? sender, EventArgs e)
+    private async void OnOpenList(object? sender, EventArgs e)
     {
-        if (_trip is not { } trip || sender is not Button { BindingContext: PackingListCard card })
+        if (_trip is not { } trip || sender is not View { BindingContext: PackingListCard card })
             return;
         await RunAsync(async () =>
         {

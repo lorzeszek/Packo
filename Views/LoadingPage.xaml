@@ -13,7 +13,7 @@
             <ActivityIndicator IsRunning="True"
                                WidthRequest="40"
                                HeightRequest="40" />
-            <Label Text="{loc:Translate Loading}"
+            <Label x:Name="StatusLabel" Text="{loc:Translate Loading}"
                    TextColor="White"
                    HorizontalOptions="Center" />
         </VerticalStackLayout>

@@ -96,6 +96,13 @@ static class NamedPackingListChecks
             Check(remote.ListRequestCount == 1,
                 "Opening details and the editor together and quickly reopening reuse one cloud refresh");
 
+            remote.Items.First(item => item.PackingListId == lists[0].Id && !item.IsPacked).IsPacked = true;
+            await restarted.RefreshPackingTripAsync(trip, force: true);
+            var packedOnAnotherDevice = (await restarted.GetPackingListsAsync(trip, refresh: false))
+                .Single(list => list.Id == lists[0].Id);
+            Check(packedOnAnotherDevice is { Packed: 2, Total: 10 },
+                "A realtime refresh bypasses the screen cache and updates packed progress with the same item count");
+
             var openOfflineEditor = new PackingItemDTO
             {
                 PackingListId = lists[0].Id, Name = "New after reconnect", LocalUserId = "local", LocalTripId = 1

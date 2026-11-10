@@ -49,6 +49,11 @@ namespace Packo
             _trips = trips;
             _packingItems = packingItems;
             _invitations = invitations;
+            _invitations.InviteReceived += (_, _) =>
+            {
+                if (_startupRunning && Windows.FirstOrDefault()?.Page is StartupPage startupPage)
+                    startupPage.ShowLoading("OpeningTripInvite");
+            };
             WeakReferenceMessenger.Default.Register<App, LoginCompletedMessage>(this, (app, _) =>
                 MainThread.BeginInvokeOnMainThread(async () =>
                 {
@@ -183,6 +188,8 @@ namespace Packo
         {
             var bootstrapPage = new StartupPage();
             var window = new Window(bootstrapPage);
+            window.Activated += (_, _) => _invitations.SetWindowActive(true);
+            window.Deactivated += (_, _) => _invitations.SetWindowActive(false);
             window.Resumed += async (_, _) =>
             {
                 if (!_startupInitialized)
@@ -219,7 +226,7 @@ namespace Packo
             _startupRunning = true;
             try
             {
-                startupPage.ShowLoading("StartupPreparing");
+                ShowStartupLoading(startupPage, "StartupPreparing");
                 if (!_startupInitialized)
                 {
                     await InitializeStorageAndSessionAsync(startupPage);
@@ -230,13 +237,20 @@ namespace Packo
                     await _sessionService.TryRecoverSessionAsync(forceRefresh: true);
                 }
 
-                startupPage.ShowLoading("StartupLoadingTrips");
-                // Trips and trip details consume this same cached result. Await the real
-                // request here: optional PrefetchAsync deliberately swallows errors.
-                await _tripListPreloadService.GetTripsAsync().WaitAsync(TimeSpan.FromSeconds(20));
+                if (!_invitations.HasPendingInvite)
+                {
+                    ShowStartupLoading(startupPage, "StartupLoadingTrips");
+                    // The normal launch awaits the Trips request. Opening an invite can
+                    // let the Trips page load that data while the prompt is already available.
+                    await _tripListPreloadService.GetTripsAsync().WaitAsync(TimeSpan.FromSeconds(20));
+                }
 
-                await MainThread.InvokeOnMainThreadAsync(() => window.Page = new AppShell());
-                _ = _invitations.ProcessPendingAsync();
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    var shell = new AppShell();
+                    _invitations.AttachShell(shell);
+                    window.Page = shell;
+                });
 
                 // Only the data needed for the first screen delays app startup.
                 _ = ResumePendingChangesAsync();
@@ -311,9 +325,12 @@ namespace Packo
                 _sessionService.SetLocalUser(localUser.LocalUserId);
             }
 
-            startupPage.ShowLoading("StartupRestoringSession");
+            ShowStartupLoading(startupPage, "StartupRestoringSession");
             await _sessionService.InitializeAsync();
         }
+
+        private void ShowStartupLoading(StartupPage page, string statusKey) =>
+            page.ShowLoading(_invitations.HasPendingInvite ? "OpeningTripInvite" : statusKey);
 
         private async Task EnsureTripColumnAsync(string columnName, string columnDefinition)
         {
