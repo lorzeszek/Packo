@@ -80,6 +80,9 @@ namespace Packo.Helpers
                 CreatedDate = item.CreatedDate,
                 RemoteUserId = item.User_id,
                 IsPacked = item.IsPacked,
+                NameVersion = item.NameVersion,
+                QuantityVersion = item.QuantityVersion,
+                IsPackedVersion = item.IsPackedVersion,
                 Quantity = Math.Max(1, item.Quantity)
             };
         }

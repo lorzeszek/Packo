@@ -1,4 +1,4 @@
-﻿using Packo.Models.DTO;
+using Packo.Models.DTO;
 using Packo.Models.SQLite;
 using Packo.Models.Supabase;
 using Packo.Repositories.Interfaces;
@@ -27,23 +27,7 @@ namespace Packo.Repositories.Local
 
         public async Task<int> AddTripAsync(TripDTO trip)
         {
-            var localTrip = new SQLiteTrip()
-            {
-                RemoteTripId = trip.RemoteTripId == 0 ? null : trip.RemoteTripId,
-                LocalUserId = trip.LocalUserId.ToString(),
-                CreatedDate = trip.CreatedDate,
-                StartDate = trip.StartDate,
-                EndDate = trip.EndDate,
-                Destination = trip.Destination,
-                AdultsCount = trip.AdultsCount,
-                ChildrenAgesJson = JsonSerializer.Serialize(trip.ChildrenAges),
-                SelectedTransportTypesJson = JsonSerializer.Serialize(trip.SelectedTransportTypes),
-                TripType = trip.TripType.ToString(),
-                IsActive = trip.IsActive,
-                IsInTrash = trip.IsInTrash,
-                CoverTheme = trip.CoverTheme,
-                //CoverImagePath = trip.CoverImagePath,  we do not save this path on DB
-            };
+            var localTrip = ToRow(trip);
 
             await _db.InsertAsync(localTrip);
 
@@ -52,24 +36,7 @@ namespace Packo.Repositories.Local
 
         public async Task DeleteTripAsync(TripDTO trip)
         {
-            var localTrip = new SQLiteTrip()
-            {
-                LocalTripId = trip.LocalTripId,
-                RemoteTripId = trip.RemoteTripId == 0 ? null : trip.RemoteTripId,
-                LocalUserId = trip.LocalUserId.ToString(),
-                CreatedDate = trip.CreatedDate,
-                StartDate = trip.StartDate,
-                EndDate = trip.EndDate,
-                Destination = trip.Destination,
-                AdultsCount = trip.AdultsCount,
-                ChildrenAgesJson = JsonSerializer.Serialize(trip.ChildrenAges),
-                SelectedTransportTypesJson = JsonSerializer.Serialize(trip.SelectedTransportTypes),
-                TripType = trip.TripType.ToString(),
-                IsActive = trip.IsActive,
-                IsInTrash = trip.IsInTrash,
-                CoverTheme = trip.CoverTheme,
-                //CoverImagePath = trip.CoverImagePath,  we do not save this path on DB
-            };
+            var localTrip = ToRow(trip);
 
             await _db.DeleteAsync(localTrip);
         }
@@ -81,24 +48,7 @@ namespace Packo.Repositories.Local
                 .ToListAsync();
             var sqlitePackingItems = await _db.Table<SQLitePackingItem>().Where(x => x.LocalUserId == _sessionService.LocalUserId && !x.IsStaleCache).ToListAsync();
 
-            var trips = sqliteTrips.Select(x => new TripDTO
-            {
-                RemoteTripId = x.RemoteTripId ?? 0,
-                LocalTripId = x.LocalTripId,
-                LocalUserId = x.LocalUserId,
-                CreatedDate = x.CreatedDate,
-                StartDate = x.StartDate,
-                EndDate = x.EndDate,
-                Destination = x.Destination,
-                AdultsCount = x.AdultsCount,
-                ChildrenAges = DeserializeOrEmpty<int>(x.ChildrenAgesJson),
-                SelectedTransportTypes = DeserializeOrEmpty<string>(x.SelectedTransportTypesJson),
-                TripType = ParseTripType(x.TripType),
-                IsActive = x.IsActive,
-                IsInTrash = x.IsInTrash,
-                CoverTheme = x.CoverTheme,
-                //CoverImagePath = x.CoverImagePath,  we do not save this path on DB
-            });
+            var trips = sqliteTrips.Select(ToTrip);
 
             return trips.Select(tripDTO =>
             {
@@ -141,49 +91,57 @@ namespace Packo.Repositories.Local
             if (sqliteTrip is null)
                 return null;
 
-            return new TripDTO
-            {
-                LocalUserId = sqliteTrip.LocalUserId,
-                RemoteTripId = sqliteTrip.RemoteTripId ?? 0,
-                LocalTripId = sqliteTrip.LocalTripId,
-                CreatedDate = sqliteTrip.CreatedDate,
-                StartDate = sqliteTrip.StartDate,
-                EndDate = sqliteTrip.EndDate,
-                Destination = sqliteTrip.Destination,
-                AdultsCount = sqliteTrip.AdultsCount,
-                ChildrenAges = DeserializeOrEmpty<int>(sqliteTrip.ChildrenAgesJson),
-                SelectedTransportTypes = DeserializeOrEmpty<string>(sqliteTrip.SelectedTransportTypesJson),
-                TripType = ParseTripType(sqliteTrip.TripType),
-                IsActive = sqliteTrip.IsActive,
-                IsInTrash = sqliteTrip.IsInTrash,
-                CoverTheme = sqliteTrip.CoverTheme,
-                //CoverImagePath = sqliteTrip.CoverImagePath,  we do not save this path on DB
-            };
+            return ToTrip(sqliteTrip);
         }
 
         public async Task UpdateTripAsync(TripDTO trip)
         {
-            var localTrip = new SQLiteTrip()
-            {
-                LocalTripId = trip.LocalTripId,
-                LocalUserId = trip.LocalUserId,
-                RemoteTripId = trip.RemoteTripId == 0 ? null : trip.RemoteTripId,
-                CreatedDate = trip.CreatedDate,
-                StartDate = trip.StartDate,
-                EndDate = trip.EndDate,
-                Destination = trip.Destination,
-                AdultsCount = trip.AdultsCount,
-                ChildrenAgesJson = JsonSerializer.Serialize(trip.ChildrenAges),
-                SelectedTransportTypesJson = JsonSerializer.Serialize(trip.SelectedTransportTypes),
-                TripType = trip.TripType.ToString(),
-                IsActive = trip.IsActive,
-                IsInTrash = trip.IsInTrash,
-                CoverTheme = trip.CoverTheme,
-                //CoverImagePath = trip.CoverImagePath,  we do not save this path on DB
-            };
+            var localTrip = ToRow(trip);
 
             await _db.UpdateAsync(localTrip);
         }
+
+        internal static SQLiteTrip ToRow(TripDTO trip) => new()
+        {
+            LocalTripId = trip.LocalTripId,
+            RemoteTripId = trip.RemoteTripId == 0 ? null : trip.RemoteTripId,
+            LocalUserId = trip.LocalUserId,
+            RemoteUserId = trip.RemoteUserId,
+            IsJoinedTrip = trip.IsJoinedTrip,
+            ParticipantsJson = JsonSerializer.Serialize(trip.Participants),
+            CreatedDate = trip.CreatedDate,
+            StartDate = trip.StartDate,
+            EndDate = trip.EndDate,
+            Destination = trip.Destination,
+            AdultsCount = trip.AdultsCount,
+            ChildrenAgesJson = JsonSerializer.Serialize(trip.ChildrenAges),
+            SelectedTransportTypesJson = JsonSerializer.Serialize(trip.SelectedTransportTypes),
+            TripType = trip.TripType.ToString(),
+            IsActive = trip.IsActive,
+            IsInTrash = trip.IsInTrash,
+            CoverTheme = trip.CoverTheme
+        };
+
+        private static TripDTO ToTrip(SQLiteTrip row) => new()
+        {
+            LocalTripId = row.LocalTripId,
+            RemoteTripId = row.RemoteTripId ?? 0,
+            LocalUserId = row.LocalUserId,
+            RemoteUserId = row.RemoteUserId ?? string.Empty,
+            IsJoinedTrip = row.IsJoinedTrip,
+            Participants = DeserializeOrEmpty<TripParticipant>(row.ParticipantsJson ?? "[]"),
+            CreatedDate = row.CreatedDate,
+            StartDate = row.StartDate,
+            EndDate = row.EndDate,
+            Destination = row.Destination,
+            AdultsCount = row.AdultsCount,
+            ChildrenAges = DeserializeOrEmpty<int>(row.ChildrenAgesJson),
+            SelectedTransportTypes = DeserializeOrEmpty<string>(row.SelectedTransportTypesJson),
+            TripType = ParseTripType(row.TripType),
+            IsActive = row.IsActive,
+            IsInTrash = row.IsInTrash,
+            CoverTheme = row.CoverTheme
+        };
 
         public Task SyncPendingChangesAsync()
         {
@@ -208,24 +166,7 @@ namespace Packo.Repositories.Local
             if (sqliteTrip is null)
                 return null;
 
-            return new TripDTO
-            {
-                LocalUserId = sqliteTrip.LocalUserId,
-                RemoteTripId = sqliteTrip.RemoteTripId ?? 0,
-                LocalTripId = sqliteTrip.LocalTripId,
-                CreatedDate = sqliteTrip.CreatedDate,
-                StartDate = sqliteTrip.StartDate,
-                EndDate = sqliteTrip.EndDate,
-                Destination = sqliteTrip.Destination,
-                AdultsCount = sqliteTrip.AdultsCount,
-                ChildrenAges = DeserializeOrEmpty<int>(sqliteTrip.ChildrenAgesJson),
-                SelectedTransportTypes = DeserializeOrEmpty<string>(sqliteTrip.SelectedTransportTypesJson),
-                TripType = ParseTripType(sqliteTrip.TripType),
-                IsActive = sqliteTrip.IsActive,
-                IsInTrash = sqliteTrip.IsInTrash,
-                CoverTheme = sqliteTrip.CoverTheme,
-                //CoverImagePath = sqliteTrip.CoverImagePath,  we do not save this path on DB
-            };
+            return ToTrip(sqliteTrip);
         }
 
         public async Task DeleteLocalTrips()

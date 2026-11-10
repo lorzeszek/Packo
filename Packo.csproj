@@ -24,6 +24,7 @@
     <ApplicationTitle>TravelSet</ApplicationTitle>
     <!-- App Identifier -->
     <ApplicationId>com.companyname.packo</ApplicationId>
+    <ApplicationId Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">com.travelset.app</ApplicationId>
     <!-- Versions -->
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <ApplicationVersion>1</ApplicationVersion>
@@ -38,6 +39,13 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Tests\**\*.cs" />
+  </ItemGroup>
+  <PropertyGroup>
+    <PackoInviteHost Condition="'$(PackoInviteHost)' == ''">travelset-invites.pages.dev</PackoInviteHost>
+    <AndroidManifestPlaceholders Condition="'$(TargetFramework)' == 'net10.0-android36.0'">$(AndroidManifestPlaceholders);packoInviteHost=$(PackoInviteHost)</AndroidManifestPlaceholders>
+  </PropertyGroup>
+  <ItemGroup>
+    <AssemblyMetadata Include="PackoInviteHost" Value="$(PackoInviteHost)" />
   </ItemGroup>
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net10.0-android36.0|AnyCPU'">
     <AndroidKeyStore>True</AndroidKeyStore>

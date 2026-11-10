@@ -1,0 +1,10 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.travelset.app",
+      "sha256_cert_fingerprints": "FC:23:94:EF:DE:97:C0:BB:E5:E9:16:BE:E4:9F:29:6E:4A:AF:CD:8B:CB:7F:0D:9F:AE:B0:44:5B:5F:1F:1F:EF"
+    }
+  }
+]

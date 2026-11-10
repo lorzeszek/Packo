@@ -22,6 +22,7 @@ namespace Packo
         private readonly IDocumentPreloadService _documentPreloadService;
         private readonly ITripRepository _trips;
         private readonly IPackingItemRepository _packingItems;
+        private readonly TripInvitationService _invitations;
         private LoadingPage? _loadingPage;
         //private Task _loadingModalTask = Task.CompletedTask;
 
@@ -33,7 +34,8 @@ namespace Packo
             IWeatherPreloadService weatherPreloadService,
             IDocumentPreloadService documentPreloadService,
             ITripRepository trips,
-            IPackingItemRepository packingItems)
+            IPackingItemRepository packingItems,
+            TripInvitationService invitations)
         {
             InitializeComponent();
             LocalizationResourceManager.Instance.ApplySavedLanguage();
@@ -46,6 +48,18 @@ namespace Packo
             _documentPreloadService = documentPreloadService;
             _trips = trips;
             _packingItems = packingItems;
+            _invitations = invitations;
+            WeakReferenceMessenger.Default.Register<App, LoginCompletedMessage>(this, (app, _) =>
+                MainThread.BeginInvokeOnMainThread(async () =>
+                {
+                    await app.ResumePendingChangesAsync();
+                    await app._invitations.ProcessPendingAsync();
+                }));
+            Connectivity.Current.ConnectivityChanged += (_, args) =>
+            {
+                if (args.NetworkAccess == NetworkAccess.Internet)
+                    MainThread.BeginInvokeOnMainThread(async () => await _invitations.ProcessPendingAsync());
+            };
 
             if (_sessionService is INotifyPropertyChanged npc)
             {
@@ -71,6 +85,8 @@ namespace Packo
             MainThread.BeginInvokeOnMainThread(async () =>
             {
                 await UpdateLoadingModalAsync(isBusy);
+                if (!isBusy)
+                    await _invitations.ProcessPendingAsync();
             });
         }
 
@@ -167,6 +183,12 @@ namespace Packo
         {
             var bootstrapPage = new StartupPage();
             var window = new Window(bootstrapPage);
+            window.Resumed += (_, _) =>
+            {
+                WeakReferenceMessenger.Default.Send(new PackingSyncMessage(0));
+                _ = ResumePendingChangesAsync();
+                _ = _invitations.ProcessPendingAsync();
+            };
             var started = false;
             bootstrapPage.Loaded += async (_, _) =>
             {
@@ -203,6 +225,7 @@ namespace Packo
                 await _tripListPreloadService.GetTripsAsync().WaitAsync(TimeSpan.FromSeconds(20));
 
                 await MainThread.InvokeOnMainThreadAsync(() => window.Page = new AppShell());
+                _ = _invitations.ProcessPendingAsync();
 
                 // Only the data needed for the first screen delays app startup.
                 _ = ResumePendingChangesAsync();
@@ -233,6 +256,7 @@ namespace Packo
                 await _packingItems.SyncPendingChangesAsync();
                 if (hasPendingTrips)
                     WeakReferenceMessenger.Default.Send(new TripDataChangedMessage());
+                await _packingItems.StartRealtimeAsync();
             }
             catch (Exception ex)
             {

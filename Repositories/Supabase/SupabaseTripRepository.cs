@@ -7,6 +7,7 @@ using Packo.Repositories.Models;
 using Packo.Services.Interfaces;
 using Supabase.Realtime;
 using System.Text.Json;
+using static Supabase.Postgrest.Constants;
 
 namespace Packo.Repositories.Supabase
 {
@@ -125,7 +126,16 @@ namespace Packo.Repositories.Supabase
             try
             {
                 TripSupabase mappedTrip = Mappers.MapToTripSupabase(trip);
-
+                if (trip.RemoteTripId > 0)
+                {
+                    var current = (await _supabase.Client.From<TripSupabase>()
+                        .Where(x => x.Id == trip.RemoteTripId).Get()).Models.SingleOrDefault();
+                    if (current is null)
+                        return;
+                    mappedTrip.ClientId = current.ClientId;
+                    mappedTrip.LocalTripId = current.LocalTripId;
+                    mappedTrip.User_id = current.User_id;
+                }
                 await _supabase.Client
                         .From<TripSupabase>()
                         .Update(mappedTrip);
@@ -163,21 +173,29 @@ namespace Packo.Repositories.Supabase
         {
             // The Trips list and details include completed trips as well as active ones.
             // Only trashed trips are hidden; IsActive describes the schedule, not visibility.
-            var tripsResponse = await _supabase.Client
-                    .From<TripSupabase>()
-                    .Select("*")
-                    .Where(x => x.IsInTrash == false)
-                    .Get();
-
-            var trips = tripsResponse.Models ?? new List<TripSupabase>();
+            const int pageSize = 250;
+            var trips = new List<TripSupabase>();
+            var lastId = 0;
+            while (true)
+            {
+                var response = await _supabase.Client.From<TripSupabase>()
+                    .Where(x => x.IsInTrash == false).Where(x => x.Id > lastId)
+                    .Order(x => x.Id, Ordering.Ascending).Limit(pageSize).Get();
+                trips.AddRange(response.Models);
+                if (response.Models.Count < pageSize)
+                    break;
+                lastId = response.Models[^1].Id;
+            }
 
             // 2. Wywołanie RPC do pobrania statystyk
-            var statsResponse = await _supabase.Client.Rpc("count_items_stats_for_all_trips", new { });
+            var statsResponse = await _supabase.Client.Rpc("packing_trip_stats", new { });
 
             var stats = statsResponse?.Content == null
-                ? new List<TripItemsStatsSupabase>()
-                : JsonSerializer.Deserialize<List<TripItemsStatsSupabase>>(statsResponse.Content)
-                  ?? new List<TripItemsStatsSupabase>();
+                ? []
+                : JsonSerializer.Deserialize<List<PackingTripStats>>(statsResponse.Content) ?? [];
+            var participantResponse = await _supabase.Client.Rpc("trip_participants", new { });
+            var participants = (JsonSerializer.Deserialize<List<TripParticipant>>(participantResponse.Content ?? "[]") ?? [])
+                .ToLookup(x => x.TripId);
 
             // 3. Połączenie tripów ze statystykami
             var result = trips.Select(trip =>
@@ -185,13 +203,16 @@ namespace Packo.Repositories.Supabase
                 var stat = stats.FirstOrDefault(s => s.TripId == trip.Id);
                 var summary = stat == null
                     ? "0 / 0"
-                    : $"{stat.IsPackedCount} / {stat.IsPackedCount + stat.IsNotPackedCount}";
+                    : $"{stat.Packed} / {stat.Total}";
                 var tripDTO = Mappers.MapToTripDTO(trip);
+                tripDTO.Participants = participants[trip.Id].ToList();
                 return new TripWithStats(tripDTO, summary);
             }).ToList();
 
             return result;
         }
+
+        private sealed record PackingTripStats(int TripId, int Packed, int Total);
 
         public async Task<IReadOnlyList<string>> GetActiveDestinationsAsync()
         {

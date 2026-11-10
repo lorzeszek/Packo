@@ -1,4 +1,6 @@
 ﻿using Packo.Helpers;
+using CommunityToolkit.Mvvm.Messaging;
+using Packo.Messages;
 using Packo.Models.DTO;
 using Packo.Models.Supabase;
 using Packo.Repositories.Enums;
@@ -11,14 +13,14 @@ using System.Reactive.Linq;
 
 namespace Packo.Repositories.Supabase
 {
-    public class SupabasePackingItemRepository : IPackingItemRepository, IPackingListRemote
+    public class SupabasePackingItemRepository : IPackingItemRepository, IPackingListRemote, IPackingOperationRemote
     {
         public readonly ISupabaseService _supabase;
         private readonly ISessionService _sessionService;
 
         public readonly List<RealtimeChannel> _channels = new();
         private bool _isSubscribed;
-        public event Action<PackingItemChange>? PackingItemChanged;
+        public event Action<PackingItemChange>? PackingItemChanged { add { } remove { } }
 
         public SupabasePackingItemRepository(ISupabaseService supabase, ISessionService sessionService)
         {
@@ -40,6 +42,13 @@ namespace Packo.Repositories.Supabase
 
                 throw;
             }
+        }
+
+        public async Task<PackingOperationResult> ApplyOperationAsync(object parameters)
+        {
+            var response = await _supabase.Client.Rpc("apply_packing_operation", parameters);
+            return System.Text.Json.JsonSerializer.Deserialize<PackingOperationResult>(response.Content!)
+                ?? throw new InvalidOperationException("The packing operation returned no result.");
         }
 
         public async Task AddPackingItemsAsync(List<PackingItemDTO> items)
@@ -150,23 +159,21 @@ namespace Packo.Repositories.Supabase
 
             _isSubscribed = true;
 
-            await _supabase.EnsureRealtimeConnectedAsync();
-
-            _channels.AddRange(
-                await RealtimeSubscriptionHelper.SubscribeTableChanges<PackingItemSupabase>(
-                    _supabase.Client,
-
-                    onInsert: item =>
-                        PackingItemChanged?.Invoke(new PackingItemChange(PackingItemChangeType.Insert, Mappers.MapToPackingItemDTO(item))),
-
-                    onUpdate: item =>
-                        PackingItemChanged?.Invoke(new PackingItemChange(PackingItemChangeType.Update, Mappers.MapToPackingItemDTO(item))),
-
-                    onDelete: item =>
-                        PackingItemChanged?.Invoke(new PackingItemChange(PackingItemChangeType.Delete, Mappers.MapToPackingItemDTO(item)))
-                )
-            );
+            try
+            {
+                await _supabase.EnsureRealtimeConnectedAsync();
+                _channels.AddRange(await RealtimeSubscriptionHelper.SubscribeTableChanges<TripPackingRevision>(
+                    _supabase.Client, NotifyTripChanged, NotifyTripChanged, _ => { }));
+            }
+            catch
+            {
+                _isSubscribed = false;
+                throw;
+            }
         }
+
+        private static void NotifyTripChanged(TripPackingRevision revision) =>
+            WeakReferenceMessenger.Default.Send(new PackingSyncMessage(revision.TripId));
 
         public Task SyncPendingChangesAsync()
         {

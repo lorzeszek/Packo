@@ -58,6 +58,8 @@ namespace Packo.ViewModels
         [RelayCommand]
         private async Task EditTripAsync(TripViewModel trip)
         {
+            if (trip.TripModel.IsJoinedTrip)
+                return;
             if (trip == null || Session.GlobalIsBusy)
                 return;
             await Shell.Current.GoToAsync(nameof(TripSetupPage), new ShellNavigationQueryParameters
@@ -123,7 +125,7 @@ namespace Packo.ViewModels
             OnPropertyChanged(nameof(ShowTrips));
             _tripListPreloadService.Invalidate();
             _weatherPreloadService.Invalidate();
-            await _tripRepository.DeleteLocalTrips();
+            await LoadData(forceRefresh: true);
         }
 
         private async Task OpenTripDetailsAsync(TripViewModel? trip)
@@ -139,7 +141,7 @@ namespace Packo.ViewModels
 
         private async Task DeleteTripAsync(TripViewModel? trip)
         {
-            if (trip == null || Session.GlobalIsBusy)
+            if (trip == null || trip.TripModel.IsJoinedTrip || Session.GlobalIsBusy)
                 return;
 
             var strings = LocalizationResourceManager.Instance;
@@ -194,6 +196,8 @@ namespace Packo.ViewModels
                 await _tripRepository.UnsubscribeFromTripChangesAsync();
                 await _packingItemRepository.UnsubscribeFromPackingItemChangesAsync();
                 await _supabase.Client.Auth.SignOut();
+                await Session.SwitchToGuestAsync();
+                WeakReferenceMessenger.Default.Send(new LogoutCompletedMessage());
                 await Shell.Current.GoToAsync("//TripList");
             }
         }
@@ -342,7 +346,10 @@ namespace Packo.ViewModels
                 IsLoading = true;
                 HasLoadError = false;
 
+                var account = Session.UserId;
                 var tripsWithStats = await _tripListPreloadService.GetTripsAsync(forceRefresh);
+                if (Session.UserId != account)
+                    return;
 
                 var tripViewModels = new List<TripViewModel>();
 
@@ -389,6 +396,38 @@ namespace Packo.ViewModels
         private bool _isAppearing;
         private bool _isLoaded;
         private bool _isDirty;
+        private bool _refreshingCollaboration;
+
+        public async Task RefreshCollaborationAsync()
+        {
+            if (IsLoading || !_isLoaded || _refreshingCollaboration || !Session.IsAuthenticated)
+                return;
+            _refreshingCollaboration = true;
+            var account = Session.UserId;
+            try
+            {
+                var rows = await _tripListPreloadService.GetTripsAsync(forceRefresh: true);
+                if (Session.UserId != account)
+                    return;
+                var remoteIds = rows.Select(x => x.Trip.RemoteTripId).ToHashSet();
+                foreach (var gone in Trips.Where(x => x.TripModel.IsJoinedTrip && !remoteIds.Contains(x.TripModel.RemoteTripId)).ToList())
+                    Trips.Remove(gone);
+                foreach (var entry in rows)
+                {
+                    var existing = Trips.FirstOrDefault(x => x.TripModel.RemoteTripId == entry.Trip.RemoteTripId);
+                    if (existing is null)
+                        Trips.Add(new TripViewModel(entry.Trip) { PackingSummary = entry.PackingSummary });
+                    else
+                    {
+                        existing.UpdateParticipants(entry.Trip);
+                        existing.PackingSummary = entry.PackingSummary;
+                    }
+                }
+                RefreshTripSchedules(forceSort: true);
+            }
+            catch (Exception ex) { System.Diagnostics.Debug.WriteLine(ex.GetType().Name); }
+            finally { _refreshingCollaboration = false; }
+        }
 
         public bool IsLoadingModalActive => Session.GlobalIsBusy;
 

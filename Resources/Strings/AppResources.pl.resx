@@ -120,4 +120,20 @@
   <data name="ManagePackingListsError" xml:space="preserve"><value>Nie udało się wykonać operacji na liście pakowania. Spróbuj ponownie.</value></data>
   <data name="ChoosePackingSourceList" xml:space="preserve"><value>Z której listy skopiować przedmioty?</value></data>
   <data name="CopyFromAllPackingLists" xml:space="preserve"><value>Ze wszystkich list</value></data>
+  <data name="TripShared" xml:space="preserve"><value>Współdzielony</value></data>
+  <data name="ShareTrip" xml:space="preserve"><value>Udostępnij</value></data>
+  <data name="ManageTripSharing" xml:space="preserve"><value>Zarządzaj dostępem</value></data>
+  <data name="JoinTrip" xml:space="preserve"><value>Dołącz do wyjazdu</value></data>
+  <data name="JoinTripLogin" xml:space="preserve"><value>Zaloguj się przez Google, aby przyjąć zaproszenie. Po zalogowaniu aplikacja wróci do zaproszenia.</value></data>
+  <data name="JoinTripPrompt" xml:space="preserve"><value>Czy chcesz dołączyć do tego wyjazdu i edytować jego listy pakowania?</value></data>
+  <data name="InviteInvalid" xml:space="preserve"><value>Zaproszenie wygasło, zostało wyłączone lub już go użyto.</value></data>
+  <data name="SharingRequestFailed" xml:space="preserve"><value>Nie udało się wykonać operacji. Spróbuj ponownie po połączeniu z internetem.</value></data>
+  <data name="SharingRequiresSignIn" xml:space="preserve"><value>Połącz się z internetem i zaloguj przez Google, aby zarządzać dostępem.</value></data>
+  <data name="DisableInviteLinks" xml:space="preserve"><value>Wyłącz nieużyte linki</value></data>
+  <data name="DisableInviteLinksPrompt" xml:space="preserve"><value>Wyłączyć wszystkie nieużyte zaproszenia do tego wyjazdu?</value></data>
+  <data name="RemoveTripMember" xml:space="preserve"><value>Usuń uczestnika</value></data>
+  <data name="TripAccessRevoked" xml:space="preserve"><value>Nie masz już dostępu do tego wyjazdu. Oczekujących zmian nie można wysłać.</value></data>
+  <data name="PackingSyncPending" xml:space="preserve"><value>Zmiany do synchronizacji: {0}</value></data>
+  <data name="PackingSyncConflict" xml:space="preserve"><value>Część zmian pominięto, ponieważ lista się zmieniła. Sprawdź aktualny stan przed kolejną edycją.</value></data>
+  <data name="Offline" xml:space="preserve"><value>Offline</value></data>
 </root>

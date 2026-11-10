@@ -23,7 +23,7 @@ namespace Packo.Platforms.Android
 
             var googleIdOption = new GetGoogleIdOption.Builder()
                 .SetFilterByAuthorizedAccounts(false)
-                .SetServerClientId("614067653772-tj5840g54s599va8a04jh6a82fbb2q15.apps.googleusercontent.com")
+                .SetServerClientId("582002118390-sgjttehmfqkj3g6opif9fkfgmpmmi90d.apps.googleusercontent.com")
                 .Build();
 
             var request = new GetCredentialRequest.Builder()

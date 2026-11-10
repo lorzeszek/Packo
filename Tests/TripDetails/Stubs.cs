@@ -65,6 +65,7 @@ namespace Packo.Services.Interfaces
         string? LocalUserId { get; }
         bool GlobalIsBusy { get; set; }
         string? UserId => "remote";
+        Task SwitchToGuestAsync() => Task.CompletedTask;
         void SetLocalUser(string id) { }
         bool IsAuthenticated => false;
     }

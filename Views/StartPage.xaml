@@ -78,10 +78,19 @@
                                FontSize="14" LineBreakMode="WordWrap"
                                TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
                         <Button Text="{loc:Translate EditTrip}" Command="{Binding EditTripCommand}"
+                                IsVisible="{Binding Trip.CanManageTrip}"
                                 HorizontalOptions="Start" HeightRequest="44" Padding="14,0"
                                 FontSize="13" FontAttributes="Bold" CornerRadius="13"
                                 BackgroundColor="{AppThemeBinding Light={StaticResource PackoAccentSoftLight}, Dark={StaticResource PackoAccentSoftDark}}"
                                 TextColor="{AppThemeBinding Light={StaticResource PackoShellAccentLight}, Dark={StaticResource PackoAccentDark}}" />
+                        <Label Text="{loc:Translate TripShared}" IsVisible="{Binding Trip.IsShared}"
+                               FontSize="13" FontAttributes="Bold" />
+                        <HorizontalStackLayout Spacing="8">
+                            <Button x:Name="ShareTripButton" IsVisible="False" Text="{loc:Translate ShareTrip}"
+                                    Clicked="OnShareTripClicked" />
+                            <Button x:Name="ManageSharingButton" IsVisible="False" Text="{loc:Translate ManageTripSharing}"
+                                    Clicked="OnManageSharingClicked" />
+                        </HorizontalStackLayout>
                     </VerticalStackLayout>
                 </Border>
 

@@ -61,7 +61,7 @@ namespace Packo.ViewModels
                 if (authSession is null)
                     return;
 
-                Session.SetUser(authSession.User);
+                await Session.SetAuthenticatedUserAsync(authSession.User, attachGuestDrafts: true);
 
                 await _tripRepository.StartRealtimeAsync();
                 await _packingItemRepository.StartRealtimeAsync();
@@ -104,7 +104,7 @@ namespace Packo.ViewModels
                     await _tripRepository.UnsubscribeFromTripChangesAsync();
                     await _packingItemRepository.UnsubscribeFromPackingItemChangesAsync();
                     await _supabase.Client.Auth.SignOut();
-                    await _tripRepository.DeleteLocalTrips();
+                    await Session.SwitchToGuestAsync();
 
                     WeakReferenceMessenger.Default.Send(new LogoutCompletedMessage());
                     await Shell.Current.GoToAsync("//TripList");

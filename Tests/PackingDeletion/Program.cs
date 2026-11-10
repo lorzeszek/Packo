@@ -14,6 +14,7 @@ using Packo.Services;
 SQLitePCL.Batteries_V2.Init();
 await PackingFeatureChecks.RunAsync();
 await NamedPackingListChecks.RunAsync();
+await PackingCollaborationChecks.RunAsync();
 var path = Path.Combine(Path.GetTempPath(), $"packo-deletion-{Guid.NewGuid():N}.db");
 var db = new SQLiteAsyncConnection(path);
 try

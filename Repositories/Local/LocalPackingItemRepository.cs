@@ -1,4 +1,4 @@
-﻿using Packo.Models.DTO;
+using Packo.Models.DTO;
 using Packo.Models.SQLite;
 using Packo.Repositories.Enums;
 using Packo.Repositories.Interfaces;
@@ -74,6 +74,9 @@ namespace Packo.Repositories.Local
                 //User_id = item.User_id,
                 IsPacked = item.IsPacked,
                 Quantity = Math.Max(1, item.Quantity),
+                NameVersion = item.NameVersion,
+                QuantityVersion = item.QuantityVersion,
+                IsPackedVersion = item.IsPackedVersion,
             };
 
             await _db.InsertAsync(localPackingItem);
@@ -93,6 +96,9 @@ namespace Packo.Repositories.Local
                 CreatedDate = x.CreatedDate,
                 IsPacked = x.IsPacked,
                 Quantity = Math.Max(1, x.Quantity),
+                NameVersion = x.NameVersion,
+                QuantityVersion = x.QuantityVersion,
+                IsPackedVersion = x.IsPackedVersion,
             }).ToList();
 
             await _db.InsertAllAsync(localPackingItems);
@@ -111,6 +117,9 @@ namespace Packo.Repositories.Local
                 //User_id = item.User_id,
                 IsPacked = item.IsPacked,
                 Quantity = Math.Max(1, item.Quantity),
+                NameVersion = item.NameVersion,
+                QuantityVersion = item.QuantityVersion,
+                IsPackedVersion = item.IsPackedVersion,
             };
 
             await _db.DeleteAsync(localPackingItem);
@@ -138,6 +147,9 @@ namespace Packo.Repositories.Local
                 RemoteUserId = item.RemoteUserId,
                 IsPacked = item.IsPacked,
                 Quantity = Math.Max(1, item.Quantity),
+                NameVersion = item.NameVersion,
+                QuantityVersion = item.QuantityVersion,
+                IsPackedVersion = item.IsPackedVersion,
             };
 
             await _db.UpdateAsync(localPackingItem);
@@ -161,6 +173,9 @@ namespace Packo.Repositories.Local
                 RemoteUserId = x.RemoteUserId,
                 IsPacked = x.IsPacked,
                 Quantity = Math.Max(1, x.Quantity),
+                NameVersion = x.NameVersion,
+                QuantityVersion = x.QuantityVersion,
+                IsPackedVersion = x.IsPackedVersion,
             }).ToList();
         }
 

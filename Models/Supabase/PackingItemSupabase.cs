@@ -22,6 +22,15 @@ namespace Packo.Models.Supabase
         [Column("Quantity")]
         public int Quantity { get; set; } = 1;
 
+        [Column("NameVersion")]
+        public long NameVersion { get; set; }
+
+        [Column("QuantityVersion")]
+        public long QuantityVersion { get; set; }
+
+        [Column("IsPackedVersion")]
+        public long IsPackedVersion { get; set; }
+
         [Column("CreatedDate")]
         public DateTime CreatedDate { get; set; }
 

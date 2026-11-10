@@ -27,7 +27,16 @@ namespace Packo.Services
 
         public async Task<SQLiteUser> GetOrCreateLocalUserAsync()
         {
-            return await _db.Table<SQLiteUser>().FirstOrDefaultAsync() ?? await CreateLocalUserAsync();
+            SQLiteUser? user = null;
+            await _db.RunInTransactionAsync(db =>
+            {
+                user = db.Table<SQLiteUser>().FirstOrDefault(x => x.SupabaseUserId == null);
+                if (user is not null)
+                    return;
+                user = new SQLiteUser { LocalUserId = Guid.NewGuid().ToString(), CreatedDate = DateTime.Now };
+                db.Insert(user);
+            });
+            return user!;
         }
 
         //public async Task<SQLiteUser> GetOrCreateAsync()
@@ -47,11 +56,42 @@ namespace Packo.Services
         //    return user;
         //}
 
-        public async Task LinkSupabaseUserAsync(string supabaseUserId)
+        public async Task<SQLiteUser> GetOrCreateAccountAsync(string supabaseUserId, bool attachGuestDrafts = false)
         {
-            var user = await _db.Table<SQLiteUser>().FirstAsync();
-            user.SupabaseUserId = supabaseUserId;
-            await _db.UpdateAsync(user);
+            SQLiteUser? user = null;
+            await _db.RunInTransactionAsync(db =>
+            {
+                user = db.Table<SQLiteUser>().FirstOrDefault(x => x.SupabaseUserId == supabaseUserId);
+                if (user is not null)
+                {
+                    var guest = attachGuestDrafts ? db.Table<SQLiteUser>().FirstOrDefault(x => x.SupabaseUserId == null) : null;
+                    if (guest is not null)
+                    {
+                        const string draftTrips = "SELECT LocalTripId FROM SQLiteTrip WHERE LocalUserId = ? AND coalesce(RemoteTripId, 0) = 0";
+                        foreach (var table in new[] { "SQLitePackingItem", "SQLitePackingList", "SQLitePendingPackingItemChange" })
+                            db.Execute($"UPDATE {table} SET LocalUserId = ? WHERE LocalUserId = ? AND LocalTripId IN ({draftTrips})",
+                                user.LocalUserId, guest.LocalUserId, guest.LocalUserId);
+                        db.Execute("UPDATE SQLitePendingTripChange SET LocalUserId = ? WHERE LocalUserId = ?",
+                            user.LocalUserId, guest.LocalUserId);
+                        db.Execute("UPDATE SQLiteTrip SET LocalUserId = ? WHERE LocalUserId = ? AND coalesce(RemoteTripId, 0) = 0",
+                            user.LocalUserId, guest.LocalUserId);
+                    }
+                    return;
+                }
+                user = db.Table<SQLiteUser>().FirstOrDefault(x => x.SupabaseUserId == null);
+                if (user is not null)
+                {
+                    user.SupabaseUserId = supabaseUserId;
+                    db.Update(user);
+                }
+                else
+                {
+                    user = new SQLiteUser { LocalUserId = Guid.NewGuid().ToString(),
+                        SupabaseUserId = supabaseUserId, CreatedDate = DateTime.Now };
+                    db.Insert(user);
+                }
+            });
+            return user!;
         }
     }
 }

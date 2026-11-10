@@ -10,6 +10,9 @@ namespace Packo.Models.SQLite
         public int LocalTripId { get; set; }
         public int? RemoteTripId { get; set; }
         public string LocalUserId { get; set; }
+        public string? RemoteUserId { get; set; }
+        public bool IsJoinedTrip { get; set; }
+        public string? ParticipantsJson { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }

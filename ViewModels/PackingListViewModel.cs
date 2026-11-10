@@ -33,11 +33,13 @@ namespace Packo.ViewModels
         private bool _isDeleting;
         private bool _isEditingItem;
         private bool _isAddingItems;
+        private bool _accessRevoked;
         private List<PackingItemDTO>? _itemsBeingAdded;
         private PackingItemSortMode _sortMode;
         public PackingItemSortMode SortMode => _sortMode;
         private bool IsSortingByQuantity => SortMode is PackingItemSortMode.QuantityAscending or PackingItemSortMode.QuantityDescending;
-        public bool CanEditItems => _channelsInitialized && !_isLoading && !_isDeleting && !_isEditingItem && !IsAddingItems;
+        public bool CanEditItems => _channelsInitialized && !_accessRevoked && !_isLoading && !_isDeleting && !_isEditingItem && !IsAddingItems;
+        public TripDTO? CurrentTrip => _trip;
         public bool HasItems => Items.Count > 0;
         public string TripDestination => _trip?.Destination ?? string.Empty;
         public string TripDatesRange => TripSchedule.FormatRange(_trip?.StartDate, _trip?.EndDate);
@@ -500,7 +502,9 @@ namespace Packo.ViewModels
                     await Task.Yield();
                     // Move the changed row without resetting the collection or scroll position.
                     SortItems(packingItem);
-                    await _packingItemRepository.UpdatePackingItemAsync(Mappers.MapToPackingItemDTO(packingItem));
+                    var change = Mappers.MapToPackingItemDTO(packingItem);
+                    change.PreviousIsPacked = original;
+                    await _packingItemRepository.UpdatePackingItemAsync(change);
                 }
                 catch (Exception ex)
                 {
@@ -528,11 +532,12 @@ namespace Packo.ViewModels
                 // The popup edits a local draft; persist only its confirmed final value.
                 var quantity = await PackingQuantityPrompt.ShowAsync(item.Name, item.Quantity);
                 if (!quantity.HasValue || quantity.Value == item.Quantity || !Items.Contains(item)) return;
-                original = item.Quantity;
                 item.Quantity = quantity.Value;
                 if (IsSortingByQuantity)
                     SortItems(item);
-                await _packingItemRepository.UpdatePackingItemAsync(Mappers.MapToPackingItemDTO(item));
+                var change = Mappers.MapToPackingItemDTO(item);
+                change.PreviousQuantity = original;
+                await _packingItemRepository.UpdatePackingItemAsync(change);
             }
             catch (Exception ex)
             {
@@ -687,12 +692,12 @@ namespace Packo.ViewModels
             && current.Name == updated.Name && current.IsPacked == updated.IsPacked
             && current.Quantity == updated.Quantity && current.CreatedDate == updated.CreatedDate;
 
-        private async Task RefreshItemsAsync(TripDTO trip, Guid listId)
+        private async Task RefreshItemsAsync(TripDTO trip, Guid listId, bool force = false)
         {
             var version = _itemsVersion;
             try
             {
-                await _packingLists.RefreshPackingTripAsync(trip);
+                await _packingLists.RefreshPackingTripAsync(trip, force);
                 if (version != _itemsVersion || !CanEditItems)
                     return;
 
@@ -703,6 +708,33 @@ namespace Packo.ViewModels
             }
             catch (Exception ex) { System.Diagnostics.Debug.WriteLine(ex); }
         }
+
+        public async Task<bool> RefreshCollaborationAsync()
+        {
+            if (_trip is not { RemoteTripId: > 0 } trip || _list is not { } list
+                || !Session.IsAuthenticated || Connectivity.Current.NetworkAccess != NetworkAccess.Internet)
+                return true;
+            if (trip.IsJoinedTrip && await _tripRepository.GetTripAsync(trip) is null)
+            {
+                RevokeAccess();
+                await _tripRepository.GetActiveTripsWithStatsAsync();
+                return false;
+            }
+            await RefreshItemsAsync(trip, list.Id, force: true);
+            return true;
+        }
+
+        public void RevokeAccess()
+        {
+            _accessRevoked = true;
+            _itemsVersion++;
+            Items.Clear();
+            NotifyItemStateChanged();
+        }
+
+        public Task<(int Pending, bool Conflict)> GetPackingSyncStatusAsync() => _trip is { } trip
+            ? _packingLists.GetPackingSyncStatusAsync(trip)
+            : Task.FromResult((0, false));
 
         protected override async Task OnNavigatedToAsync(IDictionary<string, object> query)
         {
@@ -721,6 +753,7 @@ namespace Packo.ViewModels
                 SetTrip(trip);
 
                 _channelsInitialized = true;
+                _accessRevoked = false;
                 _isLoading = true;
                 NotifyItemStateChanged();
                 var version = _itemsVersion;

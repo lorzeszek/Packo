@@ -4,7 +4,7 @@ namespace Packo.Helpers
 {
     public static class RealtimeSubscriptionHelper
     {
-        public static async Task<Supabase.Realtime.RealtimeChannel> SubscribeTableChanges<T>(
+        public static async Task<IReadOnlyList<Supabase.Realtime.RealtimeChannel>> SubscribeTableChanges<T>(
             Supabase.Client client,
             Action<T> onInsert,
             Action<T> onUpdate,
@@ -38,7 +38,7 @@ namespace Packo.Helpers
                             break;
                     }
                 });
-            return channel;
+            return [channel];
         }
     }
 }

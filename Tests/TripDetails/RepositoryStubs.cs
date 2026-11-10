@@ -13,7 +13,7 @@ namespace Packo.Services.Interfaces
         public string StatsJson { get; set; } = "[]";
         public RepositoryTable<T> From<T>() where T : BaseModel, new() => new(this);
         public Task<RpcResponse> Rpc(string name, object? args)
-            => Task.FromResult(new RpcResponse(StatsJson));
+            => Task.FromResult(new RpcResponse(name == "trip_participants" ? "[]" : StatsJson));
     }
 
     public record RpcResponse(string Content);
@@ -21,14 +21,26 @@ namespace Packo.Services.Interfaces
     public sealed class RepositoryTable<T>(AuthClient client) where T : BaseModel, new()
     {
         private readonly List<Func<T, bool>> _predicates = [];
+        private int _limit = int.MaxValue;
+        private Func<T, object>? _order;
         public RepositoryTable<T> Select(string columns) => this;
+        public RepositoryTable<T> Order<TValue>(Expression<Func<T, TValue>> column, Supabase.Postgrest.Constants.Ordering ordering)
+        {
+            var getValue = column.Compile();
+            _order = row => getValue(row)!;
+            return this;
+        }
+        public RepositoryTable<T> Limit(int limit) { _limit = limit; return this; }
         public RepositoryTable<T> Where(Expression<Func<T, bool>> predicate)
         {
             _predicates.Add(predicate.Compile());
             return this;
         }
-        public Task<ModelResponse<T>> Get() => Task.FromResult(new ModelResponse<T>(
-            client.TripRows.OfType<T>().Where(row => _predicates.All(predicate => predicate(row))).ToList()));
+        public Task<ModelResponse<T>> Get()
+        {
+            var rows = client.TripRows.OfType<T>().Where(row => _predicates.All(predicate => predicate(row)));
+            return Task.FromResult(new ModelResponse<T>((_order is null ? rows : rows.OrderBy(_order)).Take(_limit).ToList()));
+        }
         public Task Update(T model)
         {
             if (model is not TripSupabase trip) throw new NotSupportedException();

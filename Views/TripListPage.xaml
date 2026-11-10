@@ -4,6 +4,7 @@
                 xmlns:loc="clr-namespace:Packo.Extensions"
                 xmlns:local="clr-namespace:Packo.Models.Pages"
                 xmlns:views="clr-namespace:Packo.Views"
+                xmlns:dto="clr-namespace:Packo.Models.DTO"
                 x:DataType="TripListViewModel"
                 x:Class="Packo.Views.TripListPage"
                 x:Name="TripListView"
@@ -89,6 +90,25 @@
                                     </Grid>
                                     <Label Text="{Binding TripDatesRange}" FontSize="12" TextColor="#F5FFFFFF"
                                            LineBreakMode="WordWrap" MaxLines="2" />
+                                    <HorizontalStackLayout IsVisible="{Binding IsShared}" Spacing="6">
+                                        <Label Text="{loc:Translate TripShared}" TextColor="White" FontSize="11"
+                                               VerticalOptions="Center" />
+                                        <HorizontalStackLayout BindableLayout.ItemsSource="{Binding ParticipantAvatars}" Spacing="3">
+                                            <BindableLayout.ItemTemplate>
+                                                <DataTemplate x:DataType="dto:TripParticipant">
+                                                    <Border StrokeThickness="0" StrokeShape="RoundRectangle 11"
+                                                            WidthRequest="22" HeightRequest="22" BackgroundColor="#F0E4DA">
+                                                        <Grid>
+                                                            <Label Text="{Binding Initial}" TextColor="#40312A" FontSize="10"
+                                                                   HorizontalOptions="Center" VerticalOptions="Center" />
+                                                            <Image Source="{Binding Avatar}" IsVisible="{Binding HasAvatar}"
+                                                                   Aspect="AspectFill" SemanticProperties.Description="{Binding Name}" />
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </BindableLayout.ItemTemplate>
+                                        </HorizontalStackLayout>
+                                    </HorizontalStackLayout>
                                 </VerticalStackLayout>
                             </Border>
 
@@ -108,12 +128,14 @@
                                             Command="{Binding BindingContext.OpenTripDetailsCommand, Source={x:Reference TripListView}}"
                                             CommandParameter="{Binding .}" />
                                     <Button Text="&#xe3c9;" FontFamily="MaterialIcons" FontSize="22"
+                                            IsVisible="{Binding CanManageTrip}"
                                             WidthRequest="46" HeightRequest="46" Padding="6" CornerRadius="16"
                                             BackgroundColor="#FFFFFFE8" TextColor="#5D514B"
                                             SemanticProperties.Description="{loc:Translate EditTrip}"
                                             Command="{Binding BindingContext.EditTripCommand, Source={x:Reference TripListView}}"
                                             CommandParameter="{Binding .}" />
                                     <views:DeleteIconButton ActionDescription="{loc:Translate DeleteTrip}"
+                                                            IsVisible="{Binding CanManageTrip}"
                                                             Command="{Binding BindingContext.TrashTripCommand, Source={x:Reference TripListView}}"
                                                             CommandParameter="{Binding .}" />
                                 </HorizontalStackLayout>

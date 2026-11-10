@@ -15,6 +15,13 @@ namespace Packo.Models.DTO
         public string RemoteUserId { get; set; }
         public DateTime CreatedDate { get; set; }
         public bool IsPacked { get; set; }
+        public long NameVersion { get; set; }
+        public long QuantityVersion { get; set; }
+        public long IsPackedVersion { get; set; }
+        [System.Text.Json.Serialization.JsonIgnore]
+        public int? PreviousQuantity { get; set; }
+        [System.Text.Json.Serialization.JsonIgnore]
+        public bool? PreviousIsPacked { get; set; }
         string PackingItemJson { get; set; }
     }
 }

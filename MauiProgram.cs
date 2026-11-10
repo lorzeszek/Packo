@@ -123,6 +123,7 @@ namespace Packo
                 return new SyncTripRepository(local, remote, session, pendingDb);
             });
             builder.Services.AddSingleton<ITripListPreloadService, TripListPreloadService>();
+            builder.Services.AddSingleton<TripInvitationService>();
             builder.Services.AddSingleton<IDocumentPreloadService, DocumentPreloadService>();
 
             builder.Services.AddSingleton(sp =>

@@ -124,7 +124,7 @@ namespace Packo.ViewModels
         public StartViewModel(ILocalUserService localUserService, ISupabaseService supabase, ISessionService sessionService, IPackingItemRepository packingItemRepository, ITripRepository tripRepository, IGoogleAuthService googleAuthService, ITripListPreloadService tripListPreloadService) : base(localUserService, supabase, sessionService, packingItemRepository, tripRepository, googleAuthService)
         {
             _tripListPreloadService = tripListPreloadService;
-            EditTripCommand = new AsyncRelayCommand(EditTripAsync, () => Trip != null);
+            EditTripCommand = new AsyncRelayCommand(EditTripAsync, () => Trip is { TripModel.IsJoinedTrip: false });
             BackToTripsCommand = new AsyncRelayCommand(() => Shell.Current.GoToAsync("//TripList"));
             RetryLoadCommand = new AsyncRelayCommand(() => LoadSelectedTripAsync(forceRefresh: true));
             Title = LocalizationResourceManager.Instance["TripDetails"];
@@ -154,7 +154,7 @@ namespace Packo.ViewModels
 
         private async Task EditTripAsync()
         {
-            if (Trip == null || Session.GlobalIsBusy)
+            if (Trip == null || Trip.TripModel.IsJoinedTrip || Session.GlobalIsBusy)
                 return;
 
             await Shell.Current.GoToAsync(nameof(TripSetupPage), new ShellNavigationQueryParameters

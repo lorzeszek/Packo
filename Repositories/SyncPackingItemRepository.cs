@@ -20,6 +20,7 @@ namespace Packo.Repositories
         private readonly ISessionService _sessionService;
         private readonly SemaphoreSlim _syncGate = new(1, 1);
         private readonly SemaphoreSlim _pendingSyncGate = new(1, 1);
+        private IPackingOperationRemote? OperationRemote => _remote as IPackingOperationRemote;
         // Bounded fallback for an INSERT echo arriving after the user already deleted its local row.
         private readonly Dictionary<int, (int ItemId, int TripId, string UserId)> _recentUploads = new();
 
@@ -99,7 +100,9 @@ namespace Packo.Repositories
             {
                 await _tripRepository.SyncPendingChangesAsync();
                 await SyncPendingChangesAsync();
+                await StartRealtimeAsync();
                 WeakReferenceMessenger.Default.Send(new TripDataChangedMessage());
+                WeakReferenceMessenger.Default.Send(new PackingSyncMessage(0));
             }
             catch (Exception ex)
             {
@@ -109,6 +112,12 @@ namespace Packo.Repositories
 
         public async Task<int> AddPackingItemAsync(PackingItemDTO item)
         {
+            if (OperationRemote is not null)
+            {
+                await AddPackingItemsAsync([item]);
+                return item.LocalPackingItemId;
+            }
+
             await _syncGate.WaitAsync();
             try
             {
@@ -212,15 +221,7 @@ namespace Packo.Repositories
                             IsPacked = item.IsPacked,
                             Quantity = Math.Max(1, item.Quantity)
                         };
-                        db.Insert(new SQLitePendingPackingItemChange
-                        {
-                            LocalUserId = item.LocalUserId,
-                            LocalTripId = item.LocalTripId,
-                            RemoteTripId = item.RemoteTripId ?? 0,
-                            LocalPackingItemId = rows[i].LocalPackingItemId,
-                            Operation = "Add",
-                            PackingItemJson = JsonSerializer.Serialize(queuedItem)
-                        });
+                        db.Insert(CreateOperation("Add", queuedItem));
                     }
                 });
                 for (var i = 0; i < items.Count; i++)
@@ -236,6 +237,12 @@ namespace Packo.Repositories
 
         public async Task DeletePackingItemAsync(PackingItemDTO item)
         {
+            if (OperationRemote is not null)
+            {
+                await DeletePackingItemsAsync([item]);
+                return;
+            }
+
             await _syncGate.WaitAsync();
             try
             {
@@ -299,28 +306,26 @@ namespace Packo.Repositories
             }
             var pending = db.Table<SQLitePendingPackingItemChange>()
                 .Where(x => x.LocalUserId == item.LocalUserId && x.LocalTripId == item.LocalTripId).ToList();
+            var attemptedAdd = false;
             foreach (var change in pending)
             {
                 var queued = JsonSerializer.Deserialize<PackingItemDTO>(change.PackingItemJson);
                 if (queued != null && ((item.RemotePackingItemId > 0 && queued.RemotePackingItemId == item.RemotePackingItemId)
                     || (item.LocalPackingItemId > 0 && queued.LocalPackingItemId == item.LocalPackingItemId)))
-                    db.Delete(change);
+                {
+                    if (change.Operation == "Add" && change.Attempted)
+                        attemptedAdd = true;
+                    else
+                        db.Delete(change);
+                }
             }
             db.Table<SQLitePackingItem>().Where(x => x.LocalUserId == item.LocalUserId
                 && x.LocalTripId == item.LocalTripId
                 && ((item.LocalPackingItemId > 0 && x.LocalPackingItemId == item.LocalPackingItemId)
                     || (item.RemotePackingItemId > 0 && x.RemotePackingItemId == item.RemotePackingItemId))).Delete();
-            if (item.RemotePackingItemId > 0)
+            if (item.RemotePackingItemId > 0 || attemptedAdd)
             {
-                var deletion = new SQLitePendingPackingItemChange
-                {
-                    LocalUserId = item.LocalUserId,
-                    LocalTripId = item.LocalTripId,
-                    RemoteTripId = item.RemoteTripId ?? 0,
-                    LocalPackingItemId = item.LocalPackingItemId,
-                    Operation = "Delete",
-                    PackingItemJson = JsonSerializer.Serialize(item)
-                };
+                var deletion = CreateOperation("Delete", item);
                 db.Insert(deletion);
                 return deletion;
             }
@@ -342,12 +347,16 @@ namespace Packo.Repositories
             }
             if (remoteTripId > 0 && Connectivity.Current.NetworkAccess == NetworkAccess.Internet && _sessionService.IsAuthenticated)
             {
+                var account = _sessionService.UserId;
+                var localUser = _sessionService.LocalUserId;
                 if (syncPending)
                     await SyncPendingChangesAsync();
                 await _syncGate.WaitAsync();
                 try
                 {
                     var packingItems = await _remote.GetPackingItemsForTripAsync(localTripId, remoteTripId);
+                    if (_sessionService.UserId != account || _sessionService.LocalUserId != localUser)
+                        return [];
                     var pending = await _pendingDb.Table<SQLitePendingPackingItemChange>()
                         .Where(x => x.LocalUserId == _sessionService.LocalUserId && x.LocalTripId == localTripId).ToListAsync();
                     var deletedIds = pending.Where(x => x.Operation == "Delete")
@@ -445,10 +454,15 @@ namespace Packo.Repositories
             await _syncGate.WaitAsync();
             try
             {
-                await UpdatePackingItemCoreAsync(item);
+                if (OperationRemote is null)
+                    await UpdatePackingItemCoreAsync(item);
+                else
+                    await QueueItemUpdateAsync(item);
                 await PublishPackingProgressAsync(item.LocalTripId, item.RemoteTripId, item.LocalUserId);
             }
             finally { _syncGate.Release(); }
+            if (OperationRemote is not null)
+                SchedulePendingSync();
         }
 
         private async Task PublishPackingProgressAsync(int localTripId, int? remoteTripId, string localUserId)
@@ -580,7 +594,8 @@ namespace Packo.Repositories
                 return;
 
             await SyncPendingListsAsync();
-            var pendingChanges = await _pendingDb.Table<SQLitePendingPackingItemChange>().Where(x => x.LocalUserId == _sessionService.LocalUserId).ToListAsync();
+            var pendingChanges = await _pendingDb.Table<SQLitePendingPackingItemChange>()
+                .Where(x => x.LocalUserId == _sessionService.LocalUserId && x.Operation != "Conflict").OrderBy(x => x.Id).ToListAsync();
             var syncingLocalUser = _sessionService.LocalUserId;
             var syncingRemoteUser = _sessionService.UserId;
 
@@ -604,7 +619,7 @@ namespace Packo.Repositories
                         continue;
                     }
 
-                    if (current.Operation != "Delete" && packingItem.RemoteTripId is not > 0)
+                    if (packingItem.RemoteTripId is not > 0)
                     {
                         var trip = await _tripRepository.GetLocalTripAsync(current.LocalTripId, syncingLocalUser!);
                         if (trip is null)
@@ -617,6 +632,7 @@ namespace Packo.Repositories
                             continue; // Wait until the parent trip has a remote ID.
                         packingItem.RemoteTripId = trip.RemoteTripId;
                     }
+                    packingItem.LocalUserId = current.LocalUserId;
                     packingItem.RemoteUserId = syncingRemoteUser ?? string.Empty;
                     if (ListRemote is not null && current.Operation != "Delete")
                     {
@@ -628,6 +644,12 @@ namespace Packo.Repositories
 
                     try
                     {
+                        if (OperationRemote is { } operations)
+                        {
+                            await ApplyQueuedOperationAsync(operations, current, packingItem, syncingRemoteUser);
+                            continue;
+                        }
+
                         switch (current.Operation)
                         {
                             case "Add":

@@ -86,6 +86,8 @@ namespace Packo.Repositories
 
         public async Task DeleteTripAsync(TripDTO trip)
         {
+            if (trip.IsJoinedTrip)
+                throw new InvalidOperationException("Only the trip owner can delete a trip.");
             await DeleteTripCoreAsync(trip);
             CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger.Default.Send(new Packo.Messages.TripDataChangedMessage());
         }
@@ -104,6 +106,7 @@ namespace Packo.Repositories
                 {
                     var pending = new SQLitePendingTripChange
                     {
+                        LocalUserId = trip.LocalUserId,
                         Operation = "Delete",
                         TripJson = JsonSerializer.Serialize(trip)
                     };
@@ -114,6 +117,7 @@ namespace Packo.Repositories
             {
                 var pending = new SQLitePendingTripChange
                 {
+                    LocalUserId = trip.LocalUserId,
                     Operation = "Delete",
                     TripJson = JsonSerializer.Serialize(trip)
                 };
@@ -126,10 +130,13 @@ namespace Packo.Repositories
             if (Connectivity.Current.NetworkAccess == NetworkAccess.Internet && _sessionService.IsAuthenticated)
             {
                 var remoteTrip = await _remote.GetTripAsync(trip);
-                //if (remoteTrip != null)
-                //{
-                //    await _local.UpdateTripAsync(remoteTrip); // synchronizacja lokalna
-                //}
+                if (remoteTrip is not null)
+                {
+                    remoteTrip.LocalTripId = trip.LocalTripId;
+                    remoteTrip.LocalUserId = trip.LocalUserId;
+                    remoteTrip.IsJoinedTrip = trip.IsJoinedTrip;
+                    remoteTrip.Participants = trip.Participants;
+                }
                 return remoteTrip;
             }
 
@@ -140,6 +147,8 @@ namespace Packo.Repositories
 
         public async Task UpdateTripAsync(TripDTO trip)
         {
+            if (trip.IsJoinedTrip)
+                throw new InvalidOperationException("Only the trip owner can edit a trip.");
             await UpdateTripCoreAsync(trip);
             CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger.Default.Send(new Packo.Messages.TripDataChangedMessage());
         }
@@ -158,6 +167,7 @@ namespace Packo.Repositories
                 {
                     var pending = new SQLitePendingTripChange
                     {
+                        LocalUserId = trip.LocalUserId,
                         Operation = "Update",
                         TripJson = JsonSerializer.Serialize(trip)
                     };
@@ -168,6 +178,7 @@ namespace Packo.Repositories
             {
                 var pending = new SQLitePendingTripChange
                 {
+                    LocalUserId = trip.LocalUserId,
                     Operation = "Update",
                     TripJson = JsonSerializer.Serialize(trip)
                 };
@@ -197,6 +208,7 @@ namespace Packo.Repositories
                     return;
 
                 tripDeserialized.RemoteUserId = _sessionService.UserId;
+                tripDeserialized.LocalUserId = change.LocalUserId;
 
                 try
                 {
@@ -236,8 +248,69 @@ namespace Packo.Repositories
             }
 
             var localUserId = _sessionService.LocalUserId ?? string.Empty;
+            var account = _sessionService.UserId;
             var beforeRequest = await PackingStatsSnapshot.ReadAsync(_pendingDb, localUserId);
-            var remoteTrips = await _remote.GetActiveTripsWithStatsAsync();
+            IReadOnlyList<TripWithStats> remoteTrips;
+            try
+            {
+                remoteTrips = await _remote.GetActiveTripsWithStatsAsync();
+            }
+            catch when (Connectivity.Current.NetworkAccess != NetworkAccess.Internet)
+            {
+                return await _local.GetActiveTripsWithStatsAsync();
+            }
+            if (_sessionService.LocalUserId != localUserId || _sessionService.UserId != account)
+                return await _local.GetActiveTripsWithStatsAsync();
+
+            var removed = new List<int>();
+            await _pendingDb.RunInTransactionAsync(db =>
+            {
+                var cached = db.Table<SQLiteTrip>().Where(x => x.LocalUserId == localUserId).ToList();
+                foreach (var entry in remoteTrips)
+                {
+                    var trip = entry.Trip;
+                    var row = cached.FirstOrDefault(x => x.RemoteTripId == trip.RemoteTripId)
+                        ?? cached.FirstOrDefault(x => trip.LocalUserId == localUserId && x.LocalTripId == trip.LocalTripId);
+                    trip.LocalTripId = row?.LocalTripId ?? 0;
+                    trip.LocalUserId = localUserId;
+                    trip.IsJoinedTrip = trip.RemoteUserId != account;
+                    var updated = Local.LocalTripRepository.ToRow(trip);
+                    if (row is null)
+                        db.Insert(updated);
+                    else
+                        db.Update(updated);
+                    trip.LocalTripId = updated.LocalTripId;
+                }
+
+                var visible = remoteTrips.ToDictionary(x => x.Trip.RemoteTripId, x => x.Trip.LocalTripId);
+                foreach (var pair in visible)
+                {
+                    db.Execute("UPDATE SQLitePackingItem SET LocalTripId = ? WHERE LocalUserId = ? AND RemoteTripId = ? AND LocalTripId <> ?",
+                        pair.Value, localUserId, pair.Key, pair.Value);
+                    db.Execute("UPDATE SQLitePackingList SET LocalTripId = ? WHERE LocalUserId = ? AND RemoteTripId = ? AND LocalTripId <> ?",
+                        pair.Value, localUserId, pair.Key, pair.Value);
+                }
+                foreach (var change in db.Table<SQLitePendingPackingItemChange>().Where(x => x.LocalUserId == localUserId))
+                {
+                    var item = JsonSerializer.Deserialize<PackingItemDTO>(change.PackingItemJson);
+                    var remoteId = item?.RemoteTripId ?? change.RemoteTripId;
+                    if (item is null || !visible.TryGetValue(remoteId, out var localId) || localId == change.LocalTripId)
+                        continue;
+                    item.LocalTripId = change.LocalTripId = localId;
+                    change.PackingItemJson = JsonSerializer.Serialize(item);
+                    db.Update(change);
+                }
+                foreach (var row in cached.Where(x => x.IsJoinedTrip && x.RemoteTripId.HasValue && !visible.ContainsKey(x.RemoteTripId.Value)))
+                {
+                    db.Table<SQLitePackingItem>().Where(x => x.LocalUserId == localUserId && x.LocalTripId == row.LocalTripId).Delete();
+                    db.Table<SQLitePackingList>().Where(x => x.LocalUserId == localUserId && x.LocalTripId == row.LocalTripId).Delete();
+                    db.Table<SQLitePendingPackingItemChange>().Where(x => x.LocalUserId == localUserId && x.LocalTripId == row.LocalTripId).Delete();
+                    db.Delete(row);
+                    removed.Add(row.RemoteTripId!.Value);
+                }
+            });
+            foreach (var id in removed)
+                WeakReferenceMessenger.Default.Send(new Packo.Messages.PackingSyncMessage(id, AccessRevoked: true));
             var latest = await PackingStatsSnapshot.ReadAsync(_pendingDb, localUserId);
             return latest.ApplyTo(remoteTrips, beforeRequest);
         }

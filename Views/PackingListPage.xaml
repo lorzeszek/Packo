@@ -30,6 +30,9 @@
             <Label Text="{Binding TripDatesRange}" IsVisible="{Binding HasTripDates}"
                    FontSize="13" LineBreakMode="WordWrap"
                    TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+            <Label x:Name="PackingSyncStatus" IsVisible="False" FontSize="12" />
+            <Label x:Name="PackingSyncNotice" IsVisible="False" FontSize="12"
+                   Text="{loc:Translate PackingSyncConflict}" />
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" IsVisible="{Binding HasItems}">
                 <Button Text="{loc:Translate ClearPackingList}" Command="{Binding ClearListCommand}"
                         IsEnabled="{Binding CanEditItems}" HorizontalOptions="Start"

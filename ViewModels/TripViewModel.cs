@@ -25,6 +25,10 @@ namespace Packo.ViewModels
         };
 
         public string Destination => TripModel.Destination;
+        public bool CanManageTrip => !TripModel.IsJoinedTrip;
+        public bool IsShared => TripModel.IsJoinedTrip || TripModel.Participants.Any(x => !x.IsOwner);
+        public IEnumerable<TripParticipant> ParticipantAvatars => TripModel.Participants
+            .Where(x => TripModel.IsJoinedTrip || !x.IsOwner).OrderByDescending(x => x.IsOwner).Take(4);
         public string CoverImageSource => TripModel.CoverTheme switch
         {
             CoverThemeType.mountains_winter => "mountains_winter.png",
@@ -167,6 +171,17 @@ namespace Packo.ViewModels
             OnPropertyChanged(nameof(CoverImageSource));
             _now = _timeProvider.GetLocalNow().DateTime;
             NotifyScheduleChanged();
+        }
+
+        public void UpdateParticipants(TripDTO trip)
+        {
+            if (TripModel.IsJoinedTrip == trip.IsJoinedTrip && TripModel.Participants.SequenceEqual(trip.Participants))
+                return;
+            TripModel.IsJoinedTrip = trip.IsJoinedTrip;
+            TripModel.Participants = trip.Participants;
+            OnPropertyChanged(nameof(CanManageTrip));
+            OnPropertyChanged(nameof(IsShared));
+            OnPropertyChanged(nameof(ParticipantAvatars));
         }
 
         //public event PropertyChangedEventHandler? PropertyChanged;

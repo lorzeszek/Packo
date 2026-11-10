@@ -16,6 +16,23 @@ public partial class SyncPackingItemRepository : IPackingListRepository
     private IPackingListRemote? ListRemote => _remote as IPackingListRemote;
     private bool IsOnline => _sessionService.IsAuthenticated && Connectivity.Current.NetworkAccess == NetworkAccess.Internet;
 
+    public async Task<(int Pending, bool Conflict)> GetPackingSyncStatusAsync(TripDTO trip)
+    {
+        var user = _sessionService.LocalUserId;
+        if (trip.LocalUserId != user)
+            return (0, false);
+        var status = (Pending: 0, Conflict: false);
+        await _pendingDb.RunInTransactionAsync(db =>
+        {
+            var items = db.Table<SQLitePendingPackingItemChange>().Where(x => x.LocalTripId == trip.LocalTripId && x.LocalUserId == user);
+            var lists = db.Table<SQLitePackingList>()
+                .Where(x => x.LocalTripId == trip.LocalTripId && x.LocalUserId == user && x.Operation != PackingListOperation.None);
+            status = (items.Where(x => x.Operation != "Conflict").Count() + lists.Count(),
+                items.Where(x => x.Operation == "Conflict").Delete() > 0);
+        });
+        return status;
+    }
+
     public Task<IReadOnlyList<PackingItemDTO>> GetPackingListItemsAsync(TripDTO trip, Guid listId, bool refresh = true) =>
         GetPackingListItemsAsync(trip, [listId], refresh);
 
@@ -29,7 +46,7 @@ public partial class SyncPackingItemRepository : IPackingListRepository
         return items.Where(item => selectedIds.Contains(item.PackingListId)).ToList();
     }
 
-    public async Task RefreshPackingTripAsync(TripDTO trip)
+    public async Task RefreshPackingTripAsync(TripDTO trip, bool force = false)
     {
         if (!IsOnline || ListRemote is not { } remote)
             return;
@@ -46,7 +63,7 @@ public partial class SyncPackingItemRepository : IPackingListRepository
             if (!IsOnline || _sessionService.LocalUserId != userId || _sessionService.UserId != remoteUserId)
                 return;
             // Details and the editor share the same refresh when opened back-to-back.
-            if (_lastScreenRefreshTrip == key && System.Diagnostics.Stopwatch.GetElapsedTime(_lastScreenRefreshAt) < ScreenRefreshInterval)
+            if (!force && _lastScreenRefreshTrip == key && System.Diagnostics.Stopwatch.GetElapsedTime(_lastScreenRefreshAt) < ScreenRefreshInterval)
                 return;
 
             if (await RefreshPackingTripCoreAsync(trip.LocalTripId, remoteTripId, userId, remoteUserId, remote))

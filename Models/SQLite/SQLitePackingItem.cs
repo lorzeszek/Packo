@@ -17,6 +17,9 @@ namespace Packo.Models.SQLite
         public string RemoteUserId { get; set; }
         public DateTime CreatedDate { get; set; }
         public bool IsPacked { get; set; }
+        public long NameVersion { get; set; }
+        public long QuantityVersion { get; set; }
+        public long IsPackedVersion { get; set; }
         // Preserve obsolete cache rows for recovery without counting them as current items.
         public bool IsStaleCache { get; set; }
     }

@@ -47,7 +47,7 @@ public sealed class PackingStatsSnapshot
         {
             snapshot = new PackingStatsSnapshot(localUserId,
                 connection.Table<SQLitePackingItem>().Where(x => x.LocalUserId == localUserId && !x.IsStaleCache).ToList(),
-                connection.Table<SQLitePendingPackingItemChange>().Where(x => x.LocalUserId == localUserId).ToList(),
+                connection.Table<SQLitePendingPackingItemChange>().Where(x => x.LocalUserId == localUserId && x.Operation != "Conflict").ToList(),
                 connection.Table<SQLitePackingList>().Where(x => x.LocalUserId == localUserId && x.Operation == PackingListOperation.Delete).ToList());
         });
         return snapshot!;

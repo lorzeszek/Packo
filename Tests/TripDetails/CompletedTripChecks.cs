@@ -24,7 +24,7 @@ internal static class CompletedTripChecks
         var staleFlag = Trip(4, "Upcoming with stale flag", DateTime.Today.AddDays(5), active: false);
         service.Client.TripRows.AddRange([Mappers.MapToTripSupabase(selected), Mappers.MapToTripSupabase(completed),
             Mappers.MapToTripSupabase(trash), Mappers.MapToTripSupabase(staleFlag)]);
-        service.Client.StatsJson = "[{\"tripid\":1,\"ispackedcount\":2,\"isnotpackedcount\":3}]";
+        service.Client.StatsJson = "[{\"TripId\":1,\"Packed\":2,\"Total\":5}]";
 
         var loaded = await remote.GetActiveTripsWithStatsAsync();
         Check(loaded.Any(row => row.Trip.RemoteTripId == 2) && loaded.Any(row => row.Trip.RemoteTripId == 4),

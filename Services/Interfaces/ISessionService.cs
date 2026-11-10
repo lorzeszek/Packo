@@ -14,8 +14,8 @@ namespace Packo.Services.Interfaces
         bool HasLocalUser { get; }
         string? LocalUserId { get; }
         Task InitializeAsync();
-        void SetUser(User? user);
-        void ClearUser();
+        Task SetAuthenticatedUserAsync(User user, bool attachGuestDrafts = false);
+        Task SwitchToGuestAsync();
         void SetLocalUser(string localUserId);
     }
 }

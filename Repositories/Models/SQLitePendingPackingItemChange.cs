@@ -12,6 +12,10 @@ namespace Packo.Repositories.Models
         public string LocalUserId { get; set; } = string.Empty;
         public string Operation { get; set; } = string.Empty;  // "Add", "Update", "Delete"
         public string PackingItemJson { get; set; } = string.Empty;   // serializacja Trip do JSON
+        public string OperationId { get; set; } = string.Empty;
+        public string? ChangesJson { get; set; }
+        public string? BeforeJson { get; set; }
+        public bool Attempted { get; set; }
         //public DateTime CreatedDate { get; set; } = DateTime.Now;
     }
 }

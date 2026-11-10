@@ -26,8 +26,10 @@ namespace Packo.Services
         public event EventHandler<bool>? GlobalIsBusyChanged;
         public readonly ISupabaseService _supabase;
         public readonly ILocalUserService _localUserService;
+        private const string CachedAccountKey = "cached_account_id";
+        private bool _restoring;
 
-        public bool IsAuthenticated => User != null;
+        public bool IsAuthenticated => UserId is not null && _supabase.Client.Auth.CurrentSession?.User?.Id == UserId;
         public bool HasLocalUser => !string.IsNullOrEmpty(LocalUserId); // SQLite
 
         /// <summary>
@@ -93,12 +95,13 @@ namespace Packo.Services
         public async Task InitializeAsync()
         {
             await TryRestoreSessionAsync();
+            Connectivity.Current.ConnectivityChanged += OnConnectivityChanged;
 
             _supabase.Client.Auth.AddStateChangedListener(async (sender, e) =>
             {
                 var currentSession = _supabase.Client.Auth.CurrentSession;
 
-                if (currentSession != null)
+                if (currentSession?.User?.Id is { } id && id == UserId)
                 {
                     if (!string.IsNullOrEmpty(currentSession.AccessToken))
                         await SecureStorage.SetAsync("access_token", currentSession.AccessToken);
@@ -106,24 +109,14 @@ namespace Packo.Services
                     if (!string.IsNullOrEmpty(currentSession.RefreshToken))
                         await SecureStorage.SetAsync("refresh_token", currentSession.RefreshToken);
 
-                    await MainThread.InvokeOnMainThreadAsync(() =>
-                    {
-                        SetUser(currentSession.User);
-
-                        _localUserService.LinkSupabaseUserAsync(currentSession.User.Id);
-                    });
-                }
-                else
-                {
-                    SecureStorage.Remove("access_token");
-                    SecureStorage.Remove("refresh_token");
-
-                    await MainThread.InvokeOnMainThreadAsync(() =>
-                    {
-                        ClearUser();
-                    });
                 }
             });
+        }
+
+        private async void OnConnectivityChanged(object? sender, ConnectivityChangedEventArgs e)
+        {
+            if (e.NetworkAccess == NetworkAccess.Internet && !IsAuthenticated)
+                await TryRestoreSessionAsync();
         }
 
         public void SetLocalUser(string localUserId)
@@ -131,16 +124,41 @@ namespace Packo.Services
             LocalUserId = localUserId;
         }
 
-        public void SetUser(User? user)
+        public async Task SetAuthenticatedUserAsync(User user, bool attachGuestDrafts = false)
         {
-            User = user;
-            UserId = user?.Id;
+            if (_supabase.Client.Auth.CurrentSession is not { } session || session.User?.Id != user.Id)
+                return;
+            var local = await _localUserService.GetOrCreateAccountAsync(user.Id, attachGuestDrafts);
+            if (!string.IsNullOrEmpty(session.AccessToken))
+                await SecureStorage.SetAsync("access_token", session.AccessToken);
+            if (!string.IsNullOrEmpty(session.RefreshToken))
+                await SecureStorage.SetAsync("refresh_token", session.RefreshToken);
+            await SecureStorage.SetAsync(CachedAccountKey, user.Id);
+            await MainThread.InvokeOnMainThreadAsync(() => SetLocalAccount(user, local.LocalUserId));
         }
 
-        public void ClearUser()
+        private void SetLocalAccount(User user, string localId)
         {
-            User = null;
-            UserId = null;
+            SetLocalUser(localId);
+            UserId = user.Id;
+            User = user;
+            OnPropertyChanged(nameof(IsAuthenticated));
+        }
+
+        public async Task SwitchToGuestAsync()
+        {
+            SecureStorage.Remove("access_token");
+            SecureStorage.Remove("refresh_token");
+            SecureStorage.Remove(CachedAccountKey);
+            var guest = await _localUserService.GetOrCreateLocalUserAsync();
+            await MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                if (_supabase.Client.Auth.CurrentSession is not null)
+                    return;
+                SetLocalUser(guest.LocalUserId);
+                UserId = null;
+                User = null;
+            });
         }
 
         private string? GetProfileValue(params string[] keys)
@@ -171,10 +189,14 @@ namespace Packo.Services
 
         private async Task TryRestoreSessionAsync()
         {
+            if (_restoring)
+                return;
+            _restoring = true;
+            string? accessToken = null;
             try
             {
                 var refreshToken = await SecureStorage.GetAsync("refresh_token");
-                var accessToken = await SecureStorage.GetAsync("access_token");
+                accessToken = await SecureStorage.GetAsync("access_token");
 
                 if (string.IsNullOrWhiteSpace(accessToken) || string.IsNullOrWhiteSpace(refreshToken))
                     return;
@@ -182,27 +204,46 @@ namespace Packo.Services
                 // Must be awaited: this is what actually refreshes an expired access_token
                 // using the refresh_token. Previously it was fire-and-forget, which raced
                 // against GetUser(accessToken) below using the (possibly expired) stale token.
-                var session = await _supabase.Client.Auth.SetSession(accessToken, refreshToken, true);
-
-                //var user = await _supabase.Client.Auth.GetUser(accessToken);
-
-                var user = session?.User ?? _supabase.Client.Auth.CurrentSession?.User;
-
-                if (user == null)
-                    throw new Exception("User returned null");
-
-                SetUser(user);
-
-                // Notify listeners (e.g. TripListViewModel) that a session was restored,
-                // so data gets loaded even when no explicit interactive login occurred.
-                WeakReferenceMessenger.Default.Send(new LoginCompletedMessage());
+                if (Connectivity.Current.NetworkAccess == NetworkAccess.Internet)
+                {
+                    var session = await _supabase.Client.Auth.SetSession(accessToken, refreshToken, true);
+                    var user = session?.User ?? _supabase.Client.Auth.CurrentSession?.User;
+                    if (user is not null)
+                    {
+                        await SetAuthenticatedUserAsync(user);
+                        await MainThread.InvokeOnMainThreadAsync(() => WeakReferenceMessenger.Default.Send(new LoginCompletedMessage()));
+                        return;
+                    }
+                }
             }
-            catch (Exception ex)
+            catch (Exception ex) { System.Diagnostics.Debug.WriteLine(ex.GetType().Name); }
+            finally
             {
-                // Refresh się nie udał → usuwamy stary token
-                SecureStorage.Remove("access_token");
-                SecureStorage.Remove("refresh_token");
+                try
+                {
+                    var cachedId = await SecureStorage.GetAsync(CachedAccountKey) ?? ReadCachedSubject(accessToken);
+                    if (User is null && cachedId is { } account)
+                    {
+                        var local = await _localUserService.GetOrCreateAccountAsync(account);
+                        await MainThread.InvokeOnMainThreadAsync(() => SetLocalAccount(new User { Id = account }, local.LocalUserId));
+                    }
+                }
+                catch (Exception ex) { System.Diagnostics.Debug.WriteLine(ex.GetType().Name); }
+                finally { _restoring = false; }
             }
+        }
+
+        // Previous app versions saved tokens without a separate offline account ID.
+        private static string? ReadCachedSubject(string? token)
+        {
+            var segments = token?.Split('.');
+            if (segments?.Length != 3)
+                return null;
+            var payload = segments[1].Replace('-', '+').Replace('_', '/');
+            payload = payload.PadRight((payload.Length + 3) / 4 * 4, '=');
+            using var json = System.Text.Json.JsonDocument.Parse(Convert.FromBase64String(payload));
+            return json.RootElement.TryGetProperty("sub", out var subject) && Guid.TryParse(subject.GetString(), out var id)
+                ? id.ToString() : null;
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

@@ -25,6 +25,9 @@
     <Compile Include="../../Repositories/Local/LocalPackingItemRepository.cs" Link="LocalPackingItemRepository.cs" />
     <Compile Include="../../Repositories/SyncPackingItemRepository.cs" Link="SyncPackingItemRepository.cs" />
     <Compile Include="../../Repositories/SyncPackingItemRepository.Lists.cs" Link="SyncPackingItemRepository.Lists.cs" />
+    <Compile Include="../../Repositories/SyncPackingItemRepository.Operations.cs" Link="SyncPackingItemRepository.Operations.cs" />
+    <Compile Include="../../Repositories/Interfaces/IPackingOperationRemote.cs" Link="IPackingOperationRemote.cs" />
+    <Compile Include="../../Messages/PackingSyncMessage.cs" Link="PackingSyncMessage.cs" />
     <Compile Include="../../Repositories/Enums/PackingItemChangeType.cs" Link="PackingItemChangeType.cs" />
     <Compile Include="../../Repositories/Models/PackingStatsSnapshot.cs" Link="PackingStatsSnapshot.cs" />
     <Compile Include="../../Repositories/Models/TripWithStats.cs" Link="TripWithStats.cs" />
