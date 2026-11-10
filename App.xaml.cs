@@ -183,11 +183,18 @@ namespace Packo
         {
             var bootstrapPage = new StartupPage();
             var window = new Window(bootstrapPage);
-            window.Resumed += (_, _) =>
+            window.Resumed += async (_, _) =>
             {
+                if (!_startupInitialized)
+                    return;
+
+                var recovered = await _sessionService.TryRecoverSessionAsync();
                 WeakReferenceMessenger.Default.Send(new PackingSyncMessage(0));
-                _ = ResumePendingChangesAsync();
-                _ = _invitations.ProcessPendingAsync();
+                if (!recovered)
+                {
+                    _ = ResumePendingChangesAsync();
+                    _ = _invitations.ProcessPendingAsync();
+                }
             };
             var started = false;
             bootstrapPage.Loaded += async (_, _) =>
@@ -217,6 +224,10 @@ namespace Packo
                 {
                     await InitializeStorageAndSessionAsync(startupPage);
                     _startupInitialized = true;
+                }
+                else
+                {
+                    await _sessionService.TryRecoverSessionAsync(forceRefresh: true);
                 }
 
                 startupPage.ShowLoading("StartupLoadingTrips");

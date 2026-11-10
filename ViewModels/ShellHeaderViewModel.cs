@@ -103,7 +103,6 @@ namespace Packo.ViewModels
 
                     await _tripRepository.UnsubscribeFromTripChangesAsync();
                     await _packingItemRepository.UnsubscribeFromPackingItemChangesAsync();
-                    await _supabase.Client.Auth.SignOut();
                     await Session.SwitchToGuestAsync();
 
                     WeakReferenceMessenger.Default.Send(new LogoutCompletedMessage());

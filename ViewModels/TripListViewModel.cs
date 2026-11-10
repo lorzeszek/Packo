@@ -75,7 +75,7 @@ namespace Packo.ViewModels
         {
             _tripListPreloadService = tripListPreloadService;
             _weatherPreloadService = weatherPreloadService;
-            RetryLoadCommand = new AsyncRelayCommand(() => LoadData(forceRefresh: true));
+            RetryLoadCommand = new AsyncRelayCommand(() => LoadData(forceRefresh: true, retry: true));
 
             Title = LocalizationResourceManager.Instance["TabTrips"];
             LocalizationResourceManager.Instance.PropertyChanged += (_, _) => Title = LocalizationResourceManager.Instance["TabTrips"];
@@ -113,6 +113,7 @@ namespace Packo.ViewModels
 
         private async Task OnLoginCompleted()
         {
+            _tripRepository.TripChanged -= OnTripChanged;
             _tripRepository.TripChanged += OnTripChanged;
             _tripListPreloadService.Invalidate();
             await LoadData(forceRefresh: true);
@@ -195,7 +196,6 @@ namespace Packo.ViewModels
                 //_tripRepository.TripChanged -= OnTripChanged;
                 await _tripRepository.UnsubscribeFromTripChangesAsync();
                 await _packingItemRepository.UnsubscribeFromPackingItemChangesAsync();
-                await _supabase.Client.Auth.SignOut();
                 await Session.SwitchToGuestAsync();
                 WeakReferenceMessenger.Default.Send(new LogoutCompletedMessage());
                 await Shell.Current.GoToAsync("//TripList");
@@ -336,7 +336,7 @@ namespace Packo.ViewModels
                 .ThenByDescending(x => x.IsCompleted ? x.TripModel.StartDate : null)
                 .ThenBy(x => x.Destination, StringComparer.CurrentCultureIgnoreCase);
 
-        private async Task LoadData(bool forceRefresh = false)
+        private async Task LoadData(bool forceRefresh = false, bool retry = false)
         {
             if (IsLoading)
                 return;
@@ -345,6 +345,8 @@ namespace Packo.ViewModels
             {
                 IsLoading = true;
                 HasLoadError = false;
+
+                await Session.TryRecoverSessionAsync(forceRefresh: retry);
 
                 var account = Session.UserId;
                 var tripsWithStats = await _tripListPreloadService.GetTripsAsync(forceRefresh);

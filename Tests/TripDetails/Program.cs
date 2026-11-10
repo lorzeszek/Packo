@@ -70,6 +70,22 @@ Check(withoutSelection.ShowTripUnavailable && withoutSelection.Trip == null,
     "Details without a selection never choose an unrelated trip");
 await vm.BackToTripsCommand.ExecuteAsync(null);
 Check(Shell.Current.Route == "//TripList", "The unavailable view returns to Trips");
+
+var tripListPreload = new Preload { Fail = true, Trips = [new(later, "2 / 8")] };
+var sessionRecovered = new TaskCompletionSource<bool>();
+var tripListSession = new Session { RecoverSession = force => force ? sessionRecovered.Task : Task.FromResult(false) };
+var tripList = new TripListViewModel(null!, null!, tripListSession, null!, localTrips, null!, tripListPreload, null!);
+await tripList.OnAppearingAsync();
+Check(tripList.HasLoadError, "The Trips list offers retry after a failed request");
+var retryTrips = tripList.RetryLoadCommand.ExecuteAsync(null);
+Check(!retryTrips.IsCompleted && !tripListPreload.ForceRefresh,
+    "Retry on the Trips list waits for session recovery before making a new request");
+tripListPreload.Fail = false;
+sessionRecovered.SetResult(true);
+await retryTrips;
+Check(tripListPreload.ForceRefresh && tripList.ShowTrips && tripList.Trips.Single().TripModel == later,
+    "After session recovery, retry reloads and displays the Trips list");
+
 await TripDeletionChecks.RunAsync();
 await TripScheduleChecks.RunAsync();
 await CompletedTripChecks.RunAsync();
@@ -105,6 +121,9 @@ sealed class LocalTripLookup : ITripRepository
 sealed class Session : ISessionService, INotifyPropertyChanged
 {
     public string LocalUserId => "local";
+    public Func<bool, Task<bool>>? RecoverSession { get; init; }
+    public Task<bool> TryRecoverSessionAsync(bool forceRefresh = false) =>
+        RecoverSession?.Invoke(forceRefresh) ?? Task.FromResult(false);
     public event PropertyChangedEventHandler? PropertyChanged;
 
     private bool _globalIsBusy;
