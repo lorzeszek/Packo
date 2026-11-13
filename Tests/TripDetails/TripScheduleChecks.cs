@@ -14,6 +14,15 @@ internal static class TripScheduleChecks
     public static async Task RunAsync()
     {
         var day = new DateTime(2026, 11, 4);
+        var tokyoTrip = Trip(day.AddHours(16), day.AddHours(20));
+        tokyoTrip.TimeZoneId = "Asia/Tokyo";
+        var tokyoVm = new TripViewModel(tokyoTrip, new Clock(day.AddHours(8)));
+        Check(tokyoVm.Status == TripStatus.Current, "Trip status respects its zone while the device is in another zone");
+        var changedZone = Trip(day.AddHours(16), day.AddHours(20));
+        changedZone.TimeZoneId = "Europe/Warsaw";
+        tokyoVm.UpdateFromTrip(changedZone);
+        Check(tokyoVm.TripModel.TimeZoneId == "Europe/Warsaw" && tokyoVm.Status == TripStatus.Upcoming,
+            "Editing a trip zone updates its existing tile and clock");
         var clock = new Clock(day.AddHours(8));
         var morning = new TripViewModel(Trip(day.AddHours(9), day.AddHours(11)), clock);
         var afternoon = new TripViewModel(Trip(day.AddHours(16), day.AddHours(19)), clock);

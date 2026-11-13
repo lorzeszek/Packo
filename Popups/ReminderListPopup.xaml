@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<toolkit:Popup x:TypeArguments="local:ReminderAction" x:Class="Packo.Popups.ReminderListPopup"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:loc="clr-namespace:Packo.Extensions"
+    xmlns:local="clr-namespace:Packo.Popups"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    Padding="0" CanBeDismissedByTappingOutsideOfPopup="False">
+    <Border x:Name="PopupCard" Style="{StaticResource PackoPopupCardStyle}">
+        <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="12">
+            <Label Text="{loc:Translate Reminders}" Style="{StaticResource PackoPopupTitleStyle}" />
+            <Label x:Name="TripLabel" Grid.Row="1" HorizontalTextAlignment="Center" Style="{StaticResource PackoFieldCaptionStyle}" />
+            <ScrollView x:Name="ListScroll" Grid.Row="2">
+                <VerticalStackLayout Spacing="12">
+                    <Label x:Name="StatusLabel" FontSize="12" LineBreakMode="WordWrap" />
+                    <Button x:Name="PermissionButton" Clicked="OnPermissionClicked" Text="{loc:Translate ReminderAllowNotifications}"
+                            Style="{StaticResource PackoPopupSecondaryButtonStyle}" />
+                    <Button x:Name="TimingButton" Clicked="OnTimingClicked" Text="{loc:Translate ReminderAllowExact}"
+                            Style="{StaticResource PackoPopupSecondaryButtonStyle}" />
+                    <Button x:Name="MuteTripButton" Clicked="OnMuteTripClicked" Style="{StaticResource PackoPopupSecondaryButtonStyle}" />
+                    <Label x:Name="EmptyLabel" Text="{loc:Translate ReminderEmpty}" IsVisible="False"
+                           Style="{StaticResource PackoFieldCaptionStyle}" />
+                    <VerticalStackLayout x:Name="ReminderRows" Spacing="12" BindableLayout.ItemsSource="{Binding}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="local:ReminderListItem">
+                                <Border Padding="12" StrokeShape="RoundRectangle 16"
+                                        BackgroundColor="{AppThemeBinding Light={StaticResource PackoRaisedSurfaceLight}, Dark={StaticResource PackoRaisedSurfaceDark}}"
+                                        Stroke="{AppThemeBinding Light={StaticResource PackoControlBorderLight}, Dark={StaticResource PackoControlBorderDark}}">
+                                    <VerticalStackLayout Spacing="7">
+                                        <Label Text="{Binding Title}" FontSize="15" FontAttributes="Bold" LineBreakMode="WordWrap" />
+                                        <Label Text="{Binding Body}" FontSize="13" LineBreakMode="WordWrap" />
+                                        <Label Text="{Binding Details}" Style="{StaticResource PackoFieldCaptionStyle}" LineBreakMode="WordWrap" />
+                                        <Label Text="{Binding State}" Style="{StaticResource PackoFieldCaptionStyle}" LineBreakMode="WordWrap" />
+                                        <Grid ColumnDefinitions="*,*" ColumnSpacing="6" IsVisible="{Binding CanEdit}">
+                                            <Button Text="{loc:Translate ReminderEdit}" Clicked="OnEditClicked" FontSize="12" Padding="4,0"
+                                                    Style="{StaticResource PackoPopupSecondaryButtonStyle}" />
+                                            <Button Grid.Column="1" Text="{Binding ToggleText}" Clicked="OnToggleClicked" FontSize="12" Padding="4,0"
+                                                    Style="{StaticResource PackoPopupSecondaryButtonStyle}" />
+                                        </Grid>
+                                        <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
+                                            <Button Text="{Binding MuteText}" Clicked="OnMuteClicked" IsEnabled="{Binding CanMute}" FontSize="12" Padding="4,0"
+                                                    Style="{StaticResource PackoPopupSecondaryButtonStyle}" />
+                                            <Button Grid.Column="1" Text="{loc:Translate Delete}" Clicked="OnDeleteClicked" IsVisible="{Binding CanEdit}"
+                                                    FontSize="12" Padding="4,0" Style="{StaticResource PackoPopupSecondaryButtonStyle}" />
+                                        </Grid>
+                                    </VerticalStackLayout>
+                                </Border>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </ScrollView>
+            <Grid Grid.Row="3" ColumnDefinitions="*,*" ColumnSpacing="10">
+                <Button Text="{loc:Translate ReminderClose}" Clicked="OnCloseClicked" Style="{StaticResource PackoPopupSecondaryButtonStyle}" />
+                <Button x:Name="AddButton" Grid.Column="1" Text="{loc:Translate ReminderAdd}" Clicked="OnAddClicked"
+                        Style="{StaticResource PackoPopupPrimaryButtonStyle}" />
+            </Grid>
+        </Grid>
+    </Border>
+</toolkit:Popup>

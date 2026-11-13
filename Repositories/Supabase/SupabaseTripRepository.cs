@@ -135,6 +135,7 @@ namespace Packo.Repositories.Supabase
                     mappedTrip.ClientId = current.ClientId;
                     mappedTrip.LocalTripId = current.LocalTripId;
                     mappedTrip.User_id = current.User_id;
+                    mappedTrip.TimeZoneId ??= current.TimeZoneId;
                 }
                 await _supabase.Client
                         .From<TripSupabase>()

@@ -73,6 +73,30 @@ namespace Packo.Services
                                 user.LocalUserId, guest.LocalUserId, guest.LocalUserId);
                         db.Execute("UPDATE SQLitePendingTripChange SET LocalUserId = ? WHERE LocalUserId = ?",
                             user.LocalUserId, guest.LocalUserId);
+                        if (db.ExecuteScalar<int>("SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = 'SQLiteTripReminder'") > 0)
+                        {
+                            var draftIds = db.Query<Packo.Models.SQLite.SQLiteTrip>(
+                                "SELECT * FROM SQLiteTrip WHERE LocalUserId = ? AND coalesce(RemoteTripId, 0) = 0", guest.LocalUserId)
+                                .Select(x => x.LocalTripId).ToHashSet();
+                            foreach (var reminder in db.Table<Packo.Models.SQLite.SQLiteTripReminder>()
+                                .Where(x => x.LocalUserId == guest.LocalUserId).ToList().Where(x => draftIds.Contains(x.LocalTripId)))
+                            {
+                                var oldKey = reminder.Key;
+                                reminder.LocalUserId = user.LocalUserId;
+                                reminder.Key = user.LocalUserId + ":" + reminder.ReminderId;
+                                db.InsertOrReplace(reminder);
+                                db.Delete<Packo.Models.SQLite.SQLiteTripReminder>(oldKey);
+                            }
+                            foreach (var pref in db.Table<Packo.Models.SQLite.SQLiteReminderPreference>()
+                                .Where(x => x.LocalUserId == guest.LocalUserId).ToList().Where(x => draftIds.Contains(x.LocalTripId)))
+                            {
+                                var oldKey = pref.Key;
+                                pref.Key = user.LocalUserId + oldKey[guest.LocalUserId.Length..];
+                                pref.LocalUserId = user.LocalUserId;
+                                db.InsertOrReplace(pref);
+                                db.Delete<Packo.Models.SQLite.SQLiteReminderPreference>(oldKey);
+                            }
+                        }
                         db.Execute("UPDATE SQLiteTrip SET LocalUserId = ? WHERE LocalUserId = ? AND coalesce(RemoteTripId, 0) = 0",
                             user.LocalUserId, guest.LocalUserId);
                     }

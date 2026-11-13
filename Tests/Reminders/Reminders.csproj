@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.1" />
+    <PackageReference Include="Supabase.Postgrest" Version="4.1.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
+    <Compile Include="../../Services/TripReminderService.cs" Link="TripReminderService.cs" />
+    <Compile Include="../../Services/Interfaces/IReminderScheduler.cs" Link="IReminderScheduler.cs" />
+    <Compile Include="../../Models/SQLite/SQLiteTripReminder.cs" Link="SQLiteTripReminder.cs" />
+    <Compile Include="../../Models/SQLite/SQLiteTrip.cs" Link="SQLiteTrip.cs" />
+    <Compile Include="../../Models/SQLite/SQLiteUser.cs" Link="SQLiteUser.cs" />
+    <Compile Include="../../Repositories/Models/SQLitePendingTripChange.cs" Link="SQLitePendingTripChange.cs" />
+    <Compile Include="../../Messages/TripDataChangedMessage.cs" Link="TripDataChangedMessage.cs" />
+    <Compile Include="../../Messages/PackingSyncMessage.cs" Link="PackingSyncMessage.cs" />
+    <Compile Include="../../Messages/LogoutCompletedMessage.cs" Link="LogoutCompletedMessage.cs" />
+    <Compile Include="../../Helpers/ReminderSchedule.cs" Link="ReminderSchedule.cs" />
+    <Compile Include="../../Helpers/TripSchedule.cs" Link="TripSchedule.cs" />
+    <Compile Include="../../Models/Enums/TripStatus.cs" Link="TripStatus.cs" />
+    <Compile Include="../../Models/TripReminder.cs" Link="TripReminder.cs" />
+    <Compile Include="../../Models/DTO/TripDTO.cs" Link="TripDTO.cs" />
+    <Compile Include="../../Models/Enums/TripType.cs" Link="TripType.cs" />
+    <Compile Include="../../Models/Enums/CoverThemeType.cs" Link="CoverThemeType.cs" />
+  </ItemGroup>
+</Project>

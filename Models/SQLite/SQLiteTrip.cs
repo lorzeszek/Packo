@@ -16,6 +16,7 @@ namespace Packo.Models.SQLite
         public DateTime CreatedDate { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
+        public string? TimeZoneId { get; set; }
         public string Destination { get; set; } = string.Empty;
         public int AdultsCount { get; set; } = 1;
         public string ChildrenAgesJson { get; set; } = "[]";

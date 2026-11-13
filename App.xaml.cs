@@ -23,6 +23,7 @@ namespace Packo
         private readonly ITripRepository _trips;
         private readonly IPackingItemRepository _packingItems;
         private readonly TripInvitationService _invitations;
+        private readonly TripReminderService _reminders;
         private LoadingPage? _loadingPage;
         //private Task _loadingModalTask = Task.CompletedTask;
 
@@ -35,7 +36,8 @@ namespace Packo
             IDocumentPreloadService documentPreloadService,
             ITripRepository trips,
             IPackingItemRepository packingItems,
-            TripInvitationService invitations)
+            TripInvitationService invitations,
+            TripReminderService reminders)
         {
             InitializeComponent();
             LocalizationResourceManager.Instance.ApplySavedLanguage();
@@ -49,6 +51,7 @@ namespace Packo
             _trips = trips;
             _packingItems = packingItems;
             _invitations = invitations;
+            _reminders = reminders;
             _invitations.InviteReceived += (_, _) =>
             {
                 if (_startupRunning && Windows.FirstOrDefault()?.Page is StartupPage startupPage)
@@ -59,11 +62,16 @@ namespace Packo
                 {
                     await app.ResumePendingChangesAsync();
                     await app._invitations.ProcessPendingAsync();
+                    await app._reminders.RefreshSafeAsync();
                 }));
             Connectivity.Current.ConnectivityChanged += (_, args) =>
             {
                 if (args.NetworkAccess == NetworkAccess.Internet)
-                    MainThread.BeginInvokeOnMainThread(async () => await _invitations.ProcessPendingAsync());
+                    MainThread.BeginInvokeOnMainThread(async () =>
+                    {
+                        await _invitations.ProcessPendingAsync();
+                        await _reminders.RefreshSafeAsync();
+                    });
             };
 
             if (_sessionService is INotifyPropertyChanged npc)
@@ -82,6 +90,8 @@ namespace Packo
 
         private void OnSessionPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
+            if (e.PropertyName == nameof(ISessionService.LocalUserId) || e.PropertyName == nameof(ISessionService.UserId))
+                _ = _reminders.Scheduler.ReplaceAsync("", []);
             if (e.PropertyName != nameof(ISessionService.GlobalIsBusy))
                 return;
 
@@ -196,6 +206,7 @@ namespace Packo
                     return;
 
                 var recovered = await _sessionService.TryRecoverSessionAsync();
+                _ = _reminders.RefreshSafeAsync();
                 WeakReferenceMessenger.Default.Send(new PackingSyncMessage(0));
                 if (!recovered)
                 {
@@ -256,6 +267,7 @@ namespace Packo
                 _ = ResumePendingChangesAsync();
                 _ = _weatherPreloadService.PrefetchAsync();
                 _ = _documentPreloadService.PrefetchAsync();
+                _ = _reminders.RefreshSafeAsync();
             }
             catch (Exception ex)
             {
@@ -300,6 +312,9 @@ namespace Packo
             await EnsureTripColumnAsync("ChildrenAgesJson", "TEXT NOT NULL DEFAULT '[]'");
             await EnsureTripColumnAsync("SelectedTransportTypesJson", "TEXT NOT NULL DEFAULT '[]'");
             await EnsureTripColumnAsync("TripType", "TEXT NOT NULL DEFAULT 'Leisure'");
+            await EnsureTripColumnAsync("TimeZoneId", "TEXT");
+            await _db.CreateTableAsync<SQLiteTripReminder>();
+            await _db.CreateTableAsync<SQLiteReminderPreference>();
 
             //await _db.ExecuteAsync("DROP TABLE IF EXISTS SQLitePackingItem");
             await Packo.Repositories.Local.LocalPackingItemRepository.EnsureSchemaAsync(_db);

@@ -121,12 +121,16 @@
                                            FontAttributes="Bold" TextColor="#5D514B" />
                                 </Border>
                                 <HorizontalStackLayout Grid.Column="1" Spacing="8">
-                                    <Button Text="&#xe8f9;" FontFamily="MaterialIcons" FontSize="22"
+                                    <Grid WidthRequest="46" HeightRequest="46">
+                                    <Button Text="&#xe7f4;" FontFamily="MaterialIcons" FontSize="22"
                                             WidthRequest="46" HeightRequest="46" Padding="6" CornerRadius="16"
                                             BackgroundColor="#FFFFFFE8" TextColor="#5D514B"
-                                            SemanticProperties.Description="{loc:Translate TripDetails}"
-                                            Command="{Binding BindingContext.OpenTripDetailsCommand, Source={x:Reference TripListView}}"
-                                            CommandParameter="{Binding .}" />
+                                            SemanticProperties.Description="{loc:Translate Reminders}"
+                                            Clicked="OnRemindersClicked" />
+                                    <Border IsVisible="{Binding HasReminders}" InputTransparent="True" WidthRequest="8" HeightRequest="8"
+                                            Margin="0,5,5,0" HorizontalOptions="End" VerticalOptions="Start" StrokeThickness="0"
+                                            StrokeShape="RoundRectangle 4" BackgroundColor="{StaticResource PackoAccentLight}" />
+                                    </Grid>
                                     <Button Text="&#xe3c9;" FontFamily="MaterialIcons" FontSize="22"
                                             IsVisible="{Binding CanManageTrip}"
                                             WidthRequest="46" HeightRequest="46" Padding="6" CornerRadius="16"

@@ -208,4 +208,73 @@
   <data name="PackingSyncPending" xml:space="preserve"><value>Changes awaiting sync: {0}</value></data>
   <data name="PackingSyncConflict" xml:space="preserve"><value>Some edits could not be applied because the list changed. Check the latest version before editing again.</value></data>
   <data name="Offline" xml:space="preserve"><value>Offline</value></data>
+  <data name="Reminders" xml:space="preserve"><value>Reminders</value></data>
+  <data name="ReminderTitle" xml:space="preserve"><value>Title</value></data>
+  <data name="ReminderBody" xml:space="preserve"><value>Notification text</value></data>
+  <data name="ReminderWhen" xml:space="preserve"><value>When?</value></data>
+  <data name="ReminderAtDate" xml:space="preserve"><value>Specific date and time</value></data>
+  <data name="ReminderHoursBefore" xml:space="preserve"><value>Hours before departure</value></data>
+  <data name="ReminderDaysBefore" xml:space="preserve"><value>Days before departure, at a time</value></data>
+  <data name="ReminderFirstDate" xml:space="preserve"><value>First reminder date</value></data>
+  <data name="ReminderTime" xml:space="preserve"><value>Time</value></data>
+  <data name="ReminderClock" xml:space="preserve"><value>Reminder time zone</value></data>
+  <data name="ReminderTripZone" xml:space="preserve"><value>Trip time zone</value></data>
+  <data name="ReminderDeviceClock" xml:space="preserve"><value>Device's current local time</value></data>
+  <data name="ReminderTripClock" xml:space="preserve"><value>Time in the trip's time zone</value></data>
+  <data name="ReminderRepeat" xml:space="preserve"><value>Repeat</value></data>
+  <data name="ReminderOnce" xml:space="preserve"><value>Once</value></data>
+  <data name="ReminderDaily" xml:space="preserve"><value>Daily</value></data>
+  <data name="ReminderWeekly" xml:space="preserve"><value>Weekly</value></data>
+  <data name="ReminderCustomEnd" xml:space="preserve"><value>End the series earlier</value></data>
+  <data name="ReminderRecipients" xml:space="preserve"><value>Who receives this reminder?</value></data>
+  <data name="ReminderOnlyMe" xml:space="preserve"><value>Only me</value></data>
+  <data name="ReminderEveryone" xml:space="preserve"><value>All participants</value></data>
+  <data name="ReminderSelected" xml:space="preserve"><value>Selected people</value></data>
+  <data name="ReminderBoundHint" xml:space="preserve"><value>Reminders stop by the end of the trip. Changing trip dates recalculates relative reminders.</value></data>
+  <data name="ReminderNumberHours" xml:space="preserve"><value>How many hours before departure?</value></data>
+  <data name="ReminderNumberDays" xml:space="preserve"><value>How many days before departure?</value></data>
+  <data name="ReminderAdd" xml:space="preserve"><value>Add</value></data>
+  <data name="ReminderNewHeading" xml:space="preserve"><value>New reminder</value></data>
+  <data name="ReminderEdit" xml:space="preserve"><value>Edit</value></data>
+  <data name="ReminderEditHeading" xml:space="preserve"><value>Edit reminder</value></data>
+  <data name="ReminderClose" xml:space="preserve"><value>Close</value></data>
+  <data name="ReminderParticipant" xml:space="preserve"><value>Trip participant</value></data>
+  <data name="ReminderTextError" xml:space="preserve"><value>Enter a title (up to 80 characters) and text (up to 500 characters).</value></data>
+  <data name="ReminderScheduleError" xml:space="preserve"><value>Check the date, time, time zone and departure offset.</value></data>
+  <data name="ReminderNeedsDates" xml:space="preserve"><value>Set valid start and end dates for the trip first.</value></data>
+  <data name="ReminderSelectPeople" xml:space="preserve"><value>Choose at least one recipient.</value></data>
+  <data name="ReminderPast" xml:space="preserve"><value>This time has passed. Choose a future time.</value></data>
+  <data name="ReminderOutsideTrip" xml:space="preserve"><value>There is no future occurrence before the trip ends. Change the time or series end.</value></data>
+  <data name="ReminderCollision" xml:space="preserve"><value>Another reminder overlaps for at least one recipient. You can still save this reminder.</value></data>
+  <data name="ReminderSaveAnyway" xml:space="preserve"><value>Save anyway</value></data>
+  <data name="ReminderPermissionMissing" xml:space="preserve"><value>Notifications are disabled on this device. The configuration is saved, but alerts will not be displayed.</value></data>
+  <data name="ReminderAllowNotifications" xml:space="preserve"><value>Enable notifications</value></data>
+  <data name="ReminderAllowExact" xml:space="preserve"><value>Allow exact alarms</value></data>
+  <data name="ReminderApproximateHint" xml:space="preserve"><value>Without exact alarm access, the system may delay reminders.</value></data>
+  <data name="ReminderOfflineHint" xml:space="preserve"><value>Downloaded reminders work offline. Changes from other people require synchronization.</value></data>
+  <data name="ReminderDesktopHint" xml:space="preserve"><value>You can manage reminders here. Notification delivery is available on Android.</value></data>
+  <data name="ReminderSyncFailed" xml:space="preserve"><value>Reminder synchronization failed. Local reminders remain available; check your connection and server configuration.</value></data>
+  <data name="ReminderSaveFailed" xml:space="preserve"><value>Could not save the reminder. Try again.</value></data>
+  <data name="ReminderConflict" xml:space="preserve"><value>This reminder changed on another device. The newer version was loaded; review it before editing again.</value></data>
+  <data name="ReminderDenied" xml:space="preserve"><value>You no longer have permission for this change, or a recipient has left the trip.</value></data>
+  <data name="ReminderMuteTrip" xml:space="preserve"><value>Mute group reminders</value></data>
+  <data name="ReminderUnmuteTrip" xml:space="preserve"><value>Unmute group reminders</value></data>
+  <data name="ReminderEmpty" xml:space="preserve"><value>There are no active reminders for this trip.</value></data>
+  <data name="ReminderNoNext" xml:space="preserve"><value>No upcoming occurrence</value></data>
+  <data name="ReminderAuthor" xml:space="preserve"><value>Created by</value></data>
+  <data name="ReminderDisable" xml:space="preserve"><value>Disable</value></data>
+  <data name="ReminderEnable" xml:space="preserve"><value>Enable</value></data>
+  <data name="ReminderMute" xml:space="preserve"><value>Mute for me</value></data>
+  <data name="ReminderUnmute" xml:space="preserve"><value>Unmute</value></data>
+  <data name="ReminderDelete" xml:space="preserve"><value>Delete this reminder?</value></data>
+  <data name="ReminderDisabled" xml:space="preserve"><value>Disabled</value></data>
+  <data name="ReminderNeedsReview" xml:space="preserve"><value>Expired or needs a new time</value></data>
+  <data name="ReminderMuted" xml:space="preserve"><value>Muted for you</value></data>
+  <data name="ReminderActive" xml:space="preserve"><value>Active</value></data>
+  <data name="ReminderPending" xml:space="preserve"><value>Pending synchronization</value></data>
+  <data name="ReminderCount" xml:space="preserve"><value>Active reminders: {0}</value></data>
+  <data name="ReminderNotRecipient" xml:space="preserve"><value>You are not a recipient</value></data>
+  <data name="ReminderMutedByTrip" xml:space="preserve"><value>Group reminders for this trip are muted. Use the button above to unmute them.</value></data>
+  <data name="ReminderNextOccurrence" xml:space="preserve"><value>Next alert</value></data>
+  <data name="ReminderSeriesStart" xml:space="preserve"><value>Series starts</value></data>
 </root>

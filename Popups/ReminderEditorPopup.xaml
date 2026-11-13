@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<toolkit:Popup x:TypeArguments="x:Boolean" x:Class="Packo.Popups.ReminderEditorPopup"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:loc="clr-namespace:Packo.Extensions"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    Padding="0" CanBeDismissedByTappingOutsideOfPopup="False">
+    <Border x:Name="PopupCard" Style="{StaticResource PackoPopupCardStyle}">
+        <Grid RowDefinitions="Auto,*,Auto,Auto" RowSpacing="16">
+            <Label x:Name="Heading" Style="{StaticResource PackoPopupTitleStyle}" />
+            <ScrollView x:Name="FormScroll" Grid.Row="1">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="{loc:Translate ReminderTitle}" Style="{StaticResource PackoFieldCaptionStyle}" />
+                    <Border Style="{StaticResource ReminderFieldStyle}">
+                        <Entry x:Name="TitleEntry" MaxLength="80" MinimumHeightRequest="44" />
+                    </Border>
+                    <Label Text="{loc:Translate ReminderBody}" Style="{StaticResource PackoFieldCaptionStyle}" />
+                    <Border Style="{StaticResource ReminderFieldStyle}">
+                        <Editor x:Name="BodyEditor" MaxLength="500" HeightRequest="86" AutoSize="TextChanges" />
+                    </Border>
+                    <Label Text="{loc:Translate ReminderWhen}" Style="{StaticResource PackoFieldCaptionStyle}" />
+                    <Border Style="{StaticResource ReminderFieldStyle}">
+                        <Picker x:Name="TimingPicker" SelectedIndexChanged="OnTimingChanged" />
+                    </Border>
+                    <VerticalStackLayout x:Name="DateFields" Spacing="6">
+                        <Label Text="{loc:Translate ReminderFirstDate}" Style="{StaticResource PackoFieldCaptionStyle}" />
+                        <DatePicker x:Name="FirstDatePicker" Format="dd MMM yyyy" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout x:Name="OffsetFields" Spacing="6">
+                        <Label x:Name="OffsetCaption" Style="{StaticResource PackoFieldCaptionStyle}" />
+                        <Border Style="{StaticResource ReminderFieldStyle}">
+                            <Entry x:Name="OffsetEntry" Keyboard="Numeric" MaxLength="4" />
+                        </Border>
+                    </VerticalStackLayout>
+                    <VerticalStackLayout x:Name="TimeFields" Spacing="6">
+                        <Label Text="{loc:Translate ReminderTime}" Style="{StaticResource PackoFieldCaptionStyle}" />
+                        <TimePicker x:Name="ClockPicker" Format="HH:mm" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout x:Name="ZoneFields" Spacing="6">
+                        <Label Text="{loc:Translate ReminderClock}" Style="{StaticResource PackoFieldCaptionStyle}" />
+                        <Border Style="{StaticResource ReminderFieldStyle}">
+                            <Picker x:Name="ZonePicker" />
+                        </Border>
+                    </VerticalStackLayout>
+                    <Label x:Name="ZoneHint" Style="{StaticResource PackoFieldCaptionStyle}" LineBreakMode="WordWrap" />
+                    <Label Text="{loc:Translate ReminderRepeat}" Style="{StaticResource PackoFieldCaptionStyle}" />
+                    <Border Style="{StaticResource ReminderFieldStyle}">
+                        <Picker x:Name="RepeatPicker" SelectedIndexChanged="OnRepeatChanged" />
+                    </Border>
+                    <VerticalStackLayout x:Name="RepeatEndFields" Spacing="6">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <Label Text="{loc:Translate ReminderCustomEnd}" VerticalOptions="Center"
+                                   Style="{StaticResource PackoFieldCaptionStyle}" />
+                            <Switch x:Name="CustomEndSwitch" Grid.Column="1" Toggled="OnRepeatEndChanged" />
+                        </Grid>
+                        <DatePicker x:Name="RepeatEndPicker" Format="dd MMM yyyy" IsVisible="False" />
+                    </VerticalStackLayout>
+                    <Label Text="{loc:Translate ReminderRecipients}" Style="{StaticResource PackoFieldCaptionStyle}" />
+                    <Border Style="{StaticResource ReminderFieldStyle}">
+                        <Picker x:Name="AudiencePicker" SelectedIndexChanged="OnAudienceChanged" />
+                    </Border>
+                    <VerticalStackLayout x:Name="PeopleList" Spacing="4" />
+                    <Label Text="{loc:Translate ReminderBoundHint}" Style="{StaticResource PackoFieldCaptionStyle}" LineBreakMode="WordWrap" />
+                </VerticalStackLayout>
+            </ScrollView>
+            <Label x:Name="ErrorLabel" Grid.Row="2" IsVisible="False" FontSize="13" LineBreakMode="WordWrap"
+                   TextColor="{AppThemeBinding Light={StaticResource PackoAccentStrongLight}, Dark={StaticResource PackoAccentDark}}" />
+            <Grid Grid.Row="3" ColumnDefinitions="*,*" ColumnSpacing="10">
+                <Button Text="{loc:Translate Cancel}" Clicked="OnCancelClicked" Style="{StaticResource PackoPopupSecondaryButtonStyle}" />
+                <Button x:Name="SaveButton" Grid.Column="1" Text="{loc:Translate SaveChanges}" Clicked="OnSaveClicked"
+                        Style="{StaticResource PackoPopupPrimaryButtonStyle}" />
+            </Grid>
+        </Grid>
+    </Border>
+</toolkit:Popup>

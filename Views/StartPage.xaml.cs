@@ -13,17 +13,19 @@ public partial class StartPage : ContentPage
     private readonly StartViewModel _viewModel;
     private readonly IDispatcherTimer _scheduleTimer;
     private readonly TripInvitationService _invitations;
+    private readonly TripReminderService _reminders;
     private DateTime _nextAccessCheck;
     private bool _refreshRequested;
     private bool _refreshing;
     private bool _sharing;
     private static LocalizationResourceManager Strings => LocalizationResourceManager.Instance;
 
-    public StartPage(StartViewModel viewModel, IPackingListRepository packingLists, TripInvitationService invitations)
+    public StartPage(StartViewModel viewModel, IPackingListRepository packingLists, TripInvitationService invitations, TripReminderService reminders)
     {
         InitializeComponent();
         _viewModel = viewModel;
         _invitations = invitations;
+        _reminders = reminders;
         BindingContext = _viewModel;
         PackingLists.Repository = packingLists;
         _scheduleTimer = Dispatcher.CreateTimer();
@@ -58,6 +60,7 @@ public partial class StartPage : ContentPage
         await Task.WhenAll(PackingLists.ShowAsync(_viewModel.Trip?.TripModel), _viewModel.OnAppearingAsync());
         await PackingLists.UpdateTripAsync(_viewModel.Trip?.TripModel);
         UpdateShareButtons();
+        await UpdateRemindersAsync();
     }
 
     protected override void OnDisappearing()
@@ -80,6 +83,24 @@ public partial class StartPage : ContentPage
         var owner = _viewModel.Trip is { CanManageTrip: true };
         ShareTripButton.IsVisible = owner && _invitations.IsConfigured;
         ManageSharingButton.IsVisible = owner && _invitations.IsConfigured && _viewModel.Trip!.TripModel.RemoteTripId > 0;
+    }
+
+    private async Task UpdateRemindersAsync()
+    {
+        if (_viewModel.Trip?.TripModel is not { } trip) return;
+        await _reminders.RefreshSafeAsync(force: false);
+        var entries = await _reminders.GetAsync(trip);
+        var active = entries.Count(x => x.Definition.Enabled && !x.Muted && x.Definition.IsRecipient(_reminders.UserId)
+            && Packo.Helpers.ReminderSchedule.Next(x.Definition, trip, DateTimeOffset.UtcNow, Packo.Helpers.TripSchedule.DeviceTimeZone).HasValue);
+        RemindersSummary.Text = active == 0 ? Strings["ReminderEmpty"]
+            : string.Format(Strings["ReminderCount"], active);
+    }
+
+    private async void OnRemindersClicked(object? sender, EventArgs e)
+    {
+        if (_viewModel.Trip?.TripModel is not { } trip || _viewModel.Session.GlobalIsBusy) return;
+        await ReminderListPopup.ShowAsync(this, _reminders, trip);
+        await UpdateRemindersAsync();
     }
 
     private async Task RefreshSharingAsync()

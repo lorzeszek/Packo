@@ -4,6 +4,20 @@ namespace Packo.Helpers;
 
 public static class TripSchedule
 {
+    public static TimeZoneInfo DeviceTimeZone
+    {
+        get
+        {
+#if ANDROID
+            // The Android runtime can retain .NET's original Local zone after travel.
+            // Read the platform's current zone instead of relying on that cached value.
+            var id = global::Java.Util.TimeZone.Default?.ID;
+            if (!string.IsNullOrWhiteSpace(id)) return TimeZoneInfo.FindSystemTimeZoneById(id);
+#endif
+            return TimeZoneInfo.Local;
+        }
+    }
+    public static string NormalizeZoneId(string id) => TimeZoneInfo.TryConvertWindowsIdToIanaId(id, out var iana) ? iana : id;
     // Trip timestamps are local wall-clock values, matching Supabase's timestamp columns.
     public static DateTime Combine(DateTime date, TimeSpan time) =>
         DateTime.SpecifyKind(date.Date.Add(time), DateTimeKind.Unspecified);

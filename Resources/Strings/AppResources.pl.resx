@@ -138,4 +138,73 @@
   <data name="PackingSyncPending" xml:space="preserve"><value>Zmiany do synchronizacji: {0}</value></data>
   <data name="PackingSyncConflict" xml:space="preserve"><value>Część zmian pominięto, ponieważ lista się zmieniła. Sprawdź aktualny stan przed kolejną edycją.</value></data>
   <data name="Offline" xml:space="preserve"><value>Offline</value></data>
+  <data name="Reminders" xml:space="preserve"><value>Przypomnienia</value></data>
+  <data name="ReminderTitle" xml:space="preserve"><value>Tytuł</value></data>
+  <data name="ReminderBody" xml:space="preserve"><value>Treść powiadomienia</value></data>
+  <data name="ReminderWhen" xml:space="preserve"><value>Kiedy przypomnieć?</value></data>
+  <data name="ReminderAtDate" xml:space="preserve"><value>Konkretna data i godzina</value></data>
+  <data name="ReminderHoursBefore" xml:space="preserve"><value>Godziny przed wyjazdem</value></data>
+  <data name="ReminderDaysBefore" xml:space="preserve"><value>Dni przed wyjazdem, o godzinie</value></data>
+  <data name="ReminderFirstDate" xml:space="preserve"><value>Data pierwszego przypomnienia</value></data>
+  <data name="ReminderTime" xml:space="preserve"><value>Godzina</value></data>
+  <data name="ReminderClock" xml:space="preserve"><value>Strefa czasowa przypomnienia</value></data>
+  <data name="ReminderTripZone" xml:space="preserve"><value>Strefa czasowa wyjazdu</value></data>
+  <data name="ReminderDeviceClock" xml:space="preserve"><value>Aktualny czas lokalny telefonu</value></data>
+  <data name="ReminderTripClock" xml:space="preserve"><value>Czas w strefie wyjazdu</value></data>
+  <data name="ReminderRepeat" xml:space="preserve"><value>Powtarzanie</value></data>
+  <data name="ReminderOnce" xml:space="preserve"><value>Jednorazowo</value></data>
+  <data name="ReminderDaily" xml:space="preserve"><value>Codziennie</value></data>
+  <data name="ReminderWeekly" xml:space="preserve"><value>Co tydzień</value></data>
+  <data name="ReminderCustomEnd" xml:space="preserve"><value>Zakończ serię wcześniej</value></data>
+  <data name="ReminderRecipients" xml:space="preserve"><value>Kto otrzyma przypomnienie?</value></data>
+  <data name="ReminderOnlyMe" xml:space="preserve"><value>Tylko ja</value></data>
+  <data name="ReminderEveryone" xml:space="preserve"><value>Wszyscy uczestnicy</value></data>
+  <data name="ReminderSelected" xml:space="preserve"><value>Wybrane osoby</value></data>
+  <data name="ReminderBoundHint" xml:space="preserve"><value>Przypomnienia kończą się najpóźniej z końcem wyjazdu. Zmiana dat wyjazdu przelicza terminy względne.</value></data>
+  <data name="ReminderNumberHours" xml:space="preserve"><value>Ile godzin przed rozpoczęciem?</value></data>
+  <data name="ReminderNumberDays" xml:space="preserve"><value>Ile dni przed rozpoczęciem?</value></data>
+  <data name="ReminderAdd" xml:space="preserve"><value>Dodaj</value></data>
+  <data name="ReminderNewHeading" xml:space="preserve"><value>Nowe przypomnienie</value></data>
+  <data name="ReminderEdit" xml:space="preserve"><value>Edytuj</value></data>
+  <data name="ReminderEditHeading" xml:space="preserve"><value>Edytuj przypomnienie</value></data>
+  <data name="ReminderClose" xml:space="preserve"><value>Zamknij</value></data>
+  <data name="ReminderParticipant" xml:space="preserve"><value>Uczestnik wyjazdu</value></data>
+  <data name="ReminderTextError" xml:space="preserve"><value>Wpisz tytuł (do 80 znaków) i treść (do 500 znaków).</value></data>
+  <data name="ReminderScheduleError" xml:space="preserve"><value>Sprawdź datę, godzinę, strefę i odstęp przed wyjazdem.</value></data>
+  <data name="ReminderNeedsDates" xml:space="preserve"><value>Najpierw ustaw poprawną datę rozpoczęcia i zakończenia wyjazdu.</value></data>
+  <data name="ReminderSelectPeople" xml:space="preserve"><value>Wybierz co najmniej jednego odbiorcę.</value></data>
+  <data name="ReminderPast" xml:space="preserve"><value>Ten termin już minął. Wybierz przyszły termin.</value></data>
+  <data name="ReminderOutsideTrip" xml:space="preserve"><value>Brak przyszłego wystąpienia przed końcem wyjazdu. Zmień termin lub koniec serii.</value></data>
+  <data name="ReminderCollision" xml:space="preserve"><value>Istnieje już przypomnienie w tym samym czasie dla co najmniej jednego z tych odbiorców. Możesz zapisać mimo to.</value></data>
+  <data name="ReminderSaveAnyway" xml:space="preserve"><value>Zapisz mimo to</value></data>
+  <data name="ReminderPermissionMissing" xml:space="preserve"><value>Powiadomienia na tym telefonie są wyłączone. Konfiguracja jest zapisana, ale telefon nie pokaże alertów.</value></data>
+  <data name="ReminderAllowNotifications" xml:space="preserve"><value>Włącz powiadomienia</value></data>
+  <data name="ReminderAllowExact" xml:space="preserve"><value>Zezwól na dokładne alarmy</value></data>
+  <data name="ReminderApproximateHint" xml:space="preserve"><value>Bez zgody na dokładne alarmy system może opóźniać przypomnienia.</value></data>
+  <data name="ReminderOfflineHint" xml:space="preserve"><value>Pobrane przypomnienia działają offline. Zmiany innych osób wymagają synchronizacji.</value></data>
+  <data name="ReminderDesktopHint" xml:space="preserve"><value>Na tym urządzeniu możesz zarządzać przypomnieniami. Wyświetlanie alertów jest dostępne na Androidzie.</value></data>
+  <data name="ReminderSyncFailed" xml:space="preserve"><value>Nie udało się zsynchronizować przypomnień. Zapisane lokalnie pozostają dostępne; sprawdź połączenie i konfigurację serwera.</value></data>
+  <data name="ReminderSaveFailed" xml:space="preserve"><value>Nie udało się zapisać przypomnienia. Spróbuj ponownie.</value></data>
+  <data name="ReminderConflict" xml:space="preserve"><value>Przypomnienie zmieniło się na innym urządzeniu. Wczytano nowszą wersję; sprawdź ją przed kolejną edycją.</value></data>
+  <data name="ReminderDenied" xml:space="preserve"><value>Nie masz już uprawnień do tej zmiany lub odbiorca opuścił wyjazd.</value></data>
+  <data name="ReminderMuteTrip" xml:space="preserve"><value>Wycisz przypomnienia grupowe</value></data>
+  <data name="ReminderUnmuteTrip" xml:space="preserve"><value>Włącz przypomnienia grupowe</value></data>
+  <data name="ReminderEmpty" xml:space="preserve"><value>Nie masz aktywnych przypomnień dla tego wyjazdu.</value></data>
+  <data name="ReminderNoNext" xml:space="preserve"><value>Brak kolejnego wystąpienia</value></data>
+  <data name="ReminderAuthor" xml:space="preserve"><value>Autor</value></data>
+  <data name="ReminderDisable" xml:space="preserve"><value>Wyłącz</value></data>
+  <data name="ReminderEnable" xml:space="preserve"><value>Włącz</value></data>
+  <data name="ReminderMute" xml:space="preserve"><value>Wycisz u mnie</value></data>
+  <data name="ReminderUnmute" xml:space="preserve"><value>Cofnij wyciszenie</value></data>
+  <data name="ReminderDelete" xml:space="preserve"><value>Usunąć przypomnienie?</value></data>
+  <data name="ReminderDisabled" xml:space="preserve"><value>Wyłączone</value></data>
+  <data name="ReminderNeedsReview" xml:space="preserve"><value>Wygasło lub wymaga zmiany terminu</value></data>
+  <data name="ReminderMuted" xml:space="preserve"><value>Wyciszone u Ciebie</value></data>
+  <data name="ReminderActive" xml:space="preserve"><value>Aktywne</value></data>
+  <data name="ReminderPending" xml:space="preserve"><value>Oczekuje na synchronizację</value></data>
+  <data name="ReminderCount" xml:space="preserve"><value>Aktywne przypomnienia: {0}</value></data>
+  <data name="ReminderNotRecipient" xml:space="preserve"><value>Nie jesteś odbiorcą</value></data>
+  <data name="ReminderMutedByTrip" xml:space="preserve"><value>Przypomnienia grupowe tego wyjazdu są wyciszone. Możesz je włączyć przyciskiem powyżej.</value></data>
+  <data name="ReminderNextOccurrence" xml:space="preserve"><value>Najbliższy alert</value></data>
+  <data name="ReminderSeriesStart" xml:space="preserve"><value>Początek serii</value></data>
 </root>

@@ -30,6 +30,9 @@ namespace Packo.Models.Supabase
         [Column("EndDate")]
         public DateTime? EndDate { get; set; }
 
+        [Column("TimeZoneId")]
+        public string? TimeZoneId { get; set; }
+
         [Column("AdultsCount")]
         public int AdultsCount { get; set; } = 1;
 

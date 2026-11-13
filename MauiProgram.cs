@@ -124,6 +124,12 @@ namespace Packo
             });
             builder.Services.AddSingleton<ITripListPreloadService, TripListPreloadService>();
             builder.Services.AddSingleton<TripInvitationService>();
+            builder.Services.AddSingleton<TripReminderService>();
+#if ANDROID
+            builder.Services.AddSingleton<IReminderScheduler, Packo.Platforms.Android.AndroidReminderScheduler>();
+#else
+            builder.Services.AddSingleton<IReminderScheduler, UnsupportedReminderScheduler>();
+#endif
             builder.Services.AddSingleton<IDocumentPreloadService, DocumentPreloadService>();
 
             builder.Services.AddSingleton(sp =>

@@ -13,6 +13,7 @@ namespace Packo.Models.DTO
         public DateTime CreatedDate { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
+        public string? TimeZoneId { get; set; }
         public string Destination { get; set; } = string.Empty;
         public int AdultsCount { get; set; } = 1;
         public List<int> ChildrenAges { get; set; } = [];

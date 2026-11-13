@@ -112,6 +112,7 @@ namespace Packo.Repositories.Local
             CreatedDate = trip.CreatedDate,
             StartDate = trip.StartDate,
             EndDate = trip.EndDate,
+            TimeZoneId = trip.TimeZoneId,
             Destination = trip.Destination,
             AdultsCount = trip.AdultsCount,
             ChildrenAgesJson = JsonSerializer.Serialize(trip.ChildrenAges),
@@ -122,7 +123,7 @@ namespace Packo.Repositories.Local
             CoverTheme = trip.CoverTheme
         };
 
-        private static TripDTO ToTrip(SQLiteTrip row) => new()
+        internal static TripDTO ToTrip(SQLiteTrip row) => new()
         {
             LocalTripId = row.LocalTripId,
             RemoteTripId = row.RemoteTripId ?? 0,
@@ -133,6 +134,7 @@ namespace Packo.Repositories.Local
             CreatedDate = row.CreatedDate,
             StartDate = row.StartDate,
             EndDate = row.EndDate,
+            TimeZoneId = row.TimeZoneId,
             Destination = row.Destination,
             AdultsCount = row.AdultsCount,
             ChildrenAges = DeserializeOrEmpty<int>(row.ChildrenAgesJson),

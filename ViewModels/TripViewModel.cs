@@ -11,6 +11,8 @@ namespace Packo.ViewModels
     {
         //public Trip TripModel { get; }
         public TripDTO TripModel { get; }
+        private bool _hasReminders;
+        public bool HasReminders { get => _hasReminders; set => SetProperty(ref _hasReminders, value); }
         private readonly TimeProvider _timeProvider;
         private DateTime _now;
 
@@ -77,7 +79,7 @@ namespace Packo.ViewModels
         {
             TripModel = trip;
             _timeProvider = timeProvider ?? TimeProvider.System;
-            _now = _timeProvider.GetLocalNow().DateTime;
+            _now = NowInTripZone();
             TripModel.IsActive = TripModel.EndDate > _now;
             LocalizationResourceManager.Instance.PropertyChanged += OnLanguageChanged;
         }
@@ -94,7 +96,7 @@ namespace Packo.ViewModels
         public bool RefreshSchedule()
         {
             var previousStatus = Status;
-            var now = _timeProvider.GetLocalNow().DateTime;
+            var now = NowInTripZone();
             if (now.Ticks / TimeSpan.TicksPerMinute == _now.Ticks / TimeSpan.TicksPerMinute
                 && TripSchedule.GetStatus(TripModel.StartDate, TripModel.EndDate, now) == previousStatus)
                 return false;
@@ -115,6 +117,17 @@ namespace Packo.ViewModels
             OnPropertyChanged(nameof(TripDaysToGo));
             OnPropertyChanged(nameof(TripDaysRemaining));
             OnPropertyChanged(nameof(TripCountdown));
+        }
+
+        private DateTime NowInTripZone()
+        {
+            if (!string.IsNullOrWhiteSpace(TripModel.TimeZoneId))
+            {
+                try { return TimeZoneInfo.ConvertTime(_timeProvider.GetUtcNow(), TimeZoneInfo.FindSystemTimeZoneById(TripModel.TimeZoneId)).DateTime; }
+                catch (TimeZoneNotFoundException) { }
+                catch (InvalidTimeZoneException) { }
+            }
+            return _timeProvider.GetLocalNow().DateTime;
         }
 
         private string GetTripDaysToGo()
@@ -164,12 +177,13 @@ namespace Packo.ViewModels
             TripModel.IsInTrash = trip.IsInTrash;
             TripModel.StartDate = trip.StartDate;
             TripModel.EndDate = trip.EndDate;
+            TripModel.TimeZoneId = trip.TimeZoneId;
             TripModel.RemoteUserId = trip.RemoteUserId;
             TripModel.CoverTheme = trip.CoverTheme;
 
             OnPropertyChanged(nameof(Destination));
             OnPropertyChanged(nameof(CoverImageSource));
-            _now = _timeProvider.GetLocalNow().DateTime;
+            _now = NowInTripZone();
             NotifyScheduleChanged();
         }
 

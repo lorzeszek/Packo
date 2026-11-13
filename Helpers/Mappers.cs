@@ -22,6 +22,7 @@ namespace Packo.Helpers
                 CreatedDate = trip.CreatedDate,
                 StartDate = trip.StartDate.HasValue ? DateTime.SpecifyKind(trip.StartDate.Value, DateTimeKind.Unspecified) : null,
                 EndDate = trip.EndDate.HasValue ? DateTime.SpecifyKind(trip.EndDate.Value, DateTimeKind.Unspecified) : null,
+                TimeZoneId = trip.TimeZoneId,
                 AdultsCount = trip.AdultsCount,
                 ChildrenAges = ParseIntegerArray(trip.ChildrenAges),
                 SelectedTransportTypes = ParseTextArray(trip.SelectedTransportTypes),
@@ -45,6 +46,7 @@ namespace Packo.Helpers
                 // timestamp without time zone: preserve the entered clock time without a UTC suffix.
                 StartDate = trip.StartDate.HasValue ? DateTime.SpecifyKind(trip.StartDate.Value, DateTimeKind.Unspecified) : null,
                 EndDate = trip.EndDate.HasValue ? DateTime.SpecifyKind(trip.EndDate.Value, DateTimeKind.Unspecified) : null,
+                TimeZoneId = trip.TimeZoneId,
                 AdultsCount = trip.AdultsCount,
                 ChildrenAges = JArray.FromObject(trip.ChildrenAges),
                 SelectedTransportTypes = JArray.FromObject(trip.SelectedTransportTypes),

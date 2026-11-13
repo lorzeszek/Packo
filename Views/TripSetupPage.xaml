@@ -93,6 +93,9 @@
                                 </Border>
                             </VerticalStackLayout>
                         </Grid>
+                        <Label Text="{loc:Translate ReminderTripZone}" Style="{StaticResource PackoFieldCaptionStyle}" />
+                        <Picker ItemsSource="{Binding TimeZoneIds}" SelectedItem="{Binding SelectedTimeZoneId}"
+                                FontSize="13" SemanticProperties.Description="{loc:Translate ReminderTripZone}" />
                         <Label Text="{loc:Translate TripScheduleError}" IsVisible="{Binding HasScheduleError}"
                                FontSize="13" LineBreakMode="WordWrap"
                                TextColor="{AppThemeBinding Light={StaticResource PackoAccentStrongLight}, Dark={StaticResource PackoAccentDark}}" />

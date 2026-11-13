@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Packo.Interfaces;
 using Packo.Helpers;
@@ -46,6 +46,10 @@ namespace Packo.ViewModels
     public partial class TripSetupViewModel : BaseViewModel, IQueryAttributable
     {
         private TripDTO? _editingTrip;
+        public IReadOnlyList<string> TimeZoneIds { get; } = TimeZoneInfo.GetSystemTimeZones()
+            .Select(x => TripSchedule.NormalizeZoneId(x.Id)).Distinct().OrderBy(x => x).ToList();
+        [ObservableProperty]
+        private string selectedTimeZoneId = TripSchedule.NormalizeZoneId(Packo.Helpers.TripSchedule.DeviceTimeZone.Id);
         public bool IsEditing => _editingTrip != null;
         public DateTime MinimumStartDate => IsEditing ? new DateTime(1900, 1, 1) : DateTime.Today;
         public string PageTitle => LocalizationResourceManager.Instance[IsEditing ? "EditTrip" : "PlanTrip"];
@@ -68,6 +72,7 @@ namespace Packo.ViewModels
             OnPropertyChanged(nameof(Intro));
             OnPropertyChanged(nameof(SubmitText));
             Destination = trip.Destination;
+            SelectedTimeZoneId = TripSchedule.NormalizeZoneId(trip.TimeZoneId ?? Packo.Helpers.TripSchedule.DeviceTimeZone.Id);
             StartDate = trip.StartDate?.Date ?? DateTime.Today;
             StartTime = trip.StartDate?.TimeOfDay ?? TimeSpan.Zero;
             EndDate = trip.EndDate?.Date ?? StartDate;
@@ -324,6 +329,7 @@ namespace Packo.ViewModels
                     CreatedDate = DateTime.Now,
                     StartDate = StartDateTime,
                     EndDate = EndDateTime,
+                    TimeZoneId = SelectedTimeZoneId,
                     Destination = Destination,
                     AdultsCount = AdultsCount,
                     ChildrenAges = ChildrenAge.ToList(),
@@ -361,6 +367,7 @@ namespace Packo.ViewModels
             trip.Destination = Destination.Trim();
             trip.StartDate = StartDateTime;
             trip.EndDate = EndDateTime;
+            trip.TimeZoneId = SelectedTimeZoneId;
             trip.IsActive = EndDateTime > DateTime.Now;
             trip.AdultsCount = AdultsCount;
             trip.ChildrenAges = ChildrenAge.ToList();
