@@ -4,7 +4,18 @@ using Packo.Models.DTO;
 
 if (args.Length >= 2 && args[0] == "--seed-emulator")
 {
-    await SeedFixture.WriteAsync(args[1], args.Length >= 3 && args[2] == "alarms");
+    await SeedFixture.WriteAsync(args[1], args.Length >= 3 && args[2] == "alarms", args.Length >= 3 && args[2] == "navigation",
+        args.Length >= 3 && args[2] == "ui");
+    return;
+}
+if (args.Length == 1 && args[0] == "--navigation-only")
+{
+    await NavigationChecks.RunAsync();
+    return;
+}
+if (args.Length == 1 && args[0] == "--delivery-only")
+{
+    DeliveryChecks.Run();
     return;
 }
 
@@ -96,6 +107,8 @@ Check(ReminderSchedule.Collides(reminder, other, trip, Utc(9), warsaw), "Group r
 other.MinuteOfDay += 1;
 Check(!ReminderSchedule.Collides(reminder, other, trip, Utc(9), warsaw), "Different times do not collide");
 Console.WriteLine($"{count} reminder schedule checks passed.");
+DeliveryChecks.Run();
 await ServiceChecks.RunAsync();
 await TransportChecks.RunAsync();
 await DeviceIntegrationChecks.RunAsync();
+await NavigationChecks.RunAsync();

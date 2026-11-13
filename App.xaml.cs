@@ -24,6 +24,7 @@ namespace Packo
         private readonly IPackingItemRepository _packingItems;
         private readonly TripInvitationService _invitations;
         private readonly TripReminderService _reminders;
+        private readonly ReminderNavigationService _reminderNavigation;
         private LoadingPage? _loadingPage;
         //private Task _loadingModalTask = Task.CompletedTask;
 
@@ -37,7 +38,8 @@ namespace Packo
             ITripRepository trips,
             IPackingItemRepository packingItems,
             TripInvitationService invitations,
-            TripReminderService reminders)
+            TripReminderService reminders,
+            ReminderNavigationService reminderNavigation)
         {
             InitializeComponent();
             LocalizationResourceManager.Instance.ApplySavedLanguage();
@@ -52,6 +54,7 @@ namespace Packo
             _packingItems = packingItems;
             _invitations = invitations;
             _reminders = reminders;
+            _reminderNavigation = reminderNavigation;
             _invitations.InviteReceived += (_, _) =>
             {
                 if (_startupRunning && Windows.FirstOrDefault()?.Page is StartupPage startupPage)
@@ -66,7 +69,9 @@ namespace Packo
                 }));
             Connectivity.Current.ConnectivityChanged += (_, args) =>
             {
-                if (args.NetworkAccess == NetworkAccess.Internet)
+                // Android can create App solely to run a reminder receiver. Its
+                // connectivity callback must not start account sync before UI startup.
+                if (_startupInitialized && args.NetworkAccess == NetworkAccess.Internet)
                     MainThread.BeginInvokeOnMainThread(async () =>
                     {
                         await _invitations.ProcessPendingAsync();
@@ -101,7 +106,10 @@ namespace Packo
             {
                 await UpdateLoadingModalAsync(isBusy);
                 if (!isBusy)
+                {
                     await _invitations.ProcessPendingAsync();
+                    await _reminderNavigation.ProcessPendingAsync();
+                }
             });
         }
 
@@ -198,8 +206,8 @@ namespace Packo
         {
             var bootstrapPage = new StartupPage();
             var window = new Window(bootstrapPage);
-            window.Activated += (_, _) => _invitations.SetWindowActive(true);
-            window.Deactivated += (_, _) => _invitations.SetWindowActive(false);
+            window.Activated += (_, _) => { _invitations.SetWindowActive(true); _reminderNavigation.SetWindowActive(true); };
+            window.Deactivated += (_, _) => { _invitations.SetWindowActive(false); _reminderNavigation.SetWindowActive(false); };
             window.Resumed += async (_, _) =>
             {
                 if (!_startupInitialized)
@@ -260,6 +268,7 @@ namespace Packo
                 {
                     var shell = new AppShell();
                     _invitations.AttachShell(shell);
+                    _reminderNavigation.AttachShell(shell);
                     window.Page = shell;
                 });
 

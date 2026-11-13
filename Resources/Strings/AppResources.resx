@@ -277,4 +277,10 @@
   <data name="ReminderMutedByTrip" xml:space="preserve"><value>Group reminders for this trip are muted. Use the button above to unmute them.</value></data>
   <data name="ReminderNextOccurrence" xml:space="preserve"><value>Next alert</value></data>
   <data name="ReminderSeriesStart" xml:space="preserve"><value>Series starts</value></data>
+  <data name="ReminderTripUnavailable" xml:space="preserve"><value>This trip was deleted, moved to trash, or is no longer available to you.</value></data>
+  <data name="ReminderOpenTripFailed" xml:space="preserve"><value>Could not open the trip from this reminder. Try opening it from your trips list.</value></data>
+  <data name="ReminderChangeStart" xml:space="preserve"><value>Change start date</value></data>
+  <data name="ReminderSaving" xml:space="preserve"><value>Saving…</value></data>
+  <data name="ReminderDetails" xml:space="preserve"><value>Reminder details</value></data>
+  <data name="ReminderBackToList" xml:space="preserve"><value>Back to list</value></data>
 </root>

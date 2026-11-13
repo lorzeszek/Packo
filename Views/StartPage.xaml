@@ -103,8 +103,8 @@
                         BackgroundColor="{AppThemeBinding Light={StaticResource PackoSurfaceLight}, Dark={StaticResource PackoSurfaceDark}}">
                     <VerticalStackLayout Spacing="8">
                         <Button Text="{loc:Translate Reminders}" Clicked="OnRemindersClicked"
-                                ImageSource="{FontImageSource Glyph=&#xe7f4;, FontFamily=MaterialIcons, Color=#A85D3C, Size=22}"
-                                Style="{StaticResource PackoPopupSecondaryButtonStyle}" />
+                                ImageSource="{FontImageSource Glyph=&#xe7f4;, FontFamily=MaterialIcons, Color=White, Size=22}"
+                                Style="{StaticResource PackoPopupPrimaryButtonStyle}" />
                         <Label x:Name="RemindersSummary" Style="{StaticResource PackoFieldCaptionStyle}" LineBreakMode="WordWrap" />
                     </VerticalStackLayout>
                 </Border>

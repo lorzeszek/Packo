@@ -25,11 +25,24 @@ No service-role key belongs in the app. Client access uses the authenticated ses
   take effect after the next successful sync. Closed-app background synchronization on restored
   connectivity is not guaranteed. This version does not require Firebase or duplicate delivery
   from a server push scheduler.
-- Past occurrences are not replayed during sync. Native delivery drops alarms delayed by more
-  than 15 minutes or past the trip end. Timing remains subject to Android and device restrictions.
+- A cold Android broadcast may create the MAUI application without restoring its user session.
+  Connectivity callbacks do not start UI/account synchronization in this state, and an unresolved
+  session never clears native alarms. Explicit logout/account changes still cancel them.
+- Past occurrences are not replayed during sync. An unchanged alarm already registered with
+  Android is retained until delivery, even if the OS delays it; refresh cannot silently skip it.
+  Delivery stops at the trip end. Timing remains subject to Android and device restrictions.
 - Desktop builds can edit/sync definitions; native notification delivery currently targets Android.
+- Tapping a new Android reminder opens its trip details and packing lists. Cold-start taps
+  wait for storage/session/navigation initialization. The target is bound to the local account;
+  deleted, trashed or inaccessible trips show a message instead. Back returns to the Trips list.
 
 ## Permissions and sharing
+
+The editor uses the app's popup styling for timing, repeat, clock and audience choices.
+Calendar selection starts at today in the occurrence's time zone. An existing repeating
+series may retain its past start without exposing past dates as new choices. Saving keeps
+progress visible until the refreshed list snapshot is ready. List cards show a title, next
+time and concise status; their details panel contains the message and management actions.
 
 Android 13+ asks for notification access while saving the first reminder. The list shows
 permission status and offers exact-alarm settings. Without exact-alarm access, scheduling

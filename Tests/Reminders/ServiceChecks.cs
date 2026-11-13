@@ -1,4 +1,5 @@
 using System.Text.Json;
+using CommunityToolkit.Mvvm.Messaging;
 using Packo.Models;
 using Packo.Models.DTO;
 using Packo.Models.SQLite;
@@ -46,6 +47,23 @@ internal static class ServiceChecks
             Connectivity.Current.NetworkAccess = NetworkAccess.None;
             await service.SaveAsync(trip, reminder);
             Check((await service.GetAsync(trip)).Single().Pending && scheduler.Items.Count == 1, "An offline reminder is persisted and scheduled without a server");
+            var coldSession = new Session { LocalUserId = null, UserId = null };
+            var coldService = new TripReminderService(db, coldSession, remote, new Trips(), scheduler);
+            var replacementsBeforeColdRefresh = scheduler.Replacements;
+            await coldService.RefreshAsync();
+            Check(scheduler.Replacements == replacementsBeforeColdRefresh && scheduler.Items.Count == 1,
+                "A cold receiver's connectivity refresh cannot clear persisted alarms before session restoration");
+            CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger.Default.UnregisterAll(coldService);
+            var overdue = reminder.Copy(); overdue.Id = Guid.NewGuid().ToString();
+            overdue.Date = DateTime.Today.AddDays(-1); overdue.Repeat = ReminderRepeat.Once;
+            var overdueRow = new SQLiteTripReminder { Key = "local-a:" + overdue.Id, LocalUserId = "local-a",
+                LocalTripId = trip.LocalTripId, ReminderId = overdue.Id,
+                DefinitionJson = JsonSerializer.Serialize(overdue), TripJson = JsonSerializer.Serialize(trip) };
+            await db.InsertAsync(overdueRow);
+            await service.RefreshAsync();
+            Check(scheduler.Configurations.Any(x => x.Definition.Id == overdue.Id),
+                "Refresh supplies an overdue definition so the native scheduler can retain its pending alarm");
+            await db.DeleteAsync(overdueRow);
             await service.SetMutedAsync(trip, reminder.Id, true);
             Check(scheduler.Items.Count == 0 && (await service.GetAsync(trip)).Single().Muted, "Individual muting immediately cancels local delivery");
             await service.SetMutedAsync(trip, reminder.Id, false);
@@ -157,6 +175,13 @@ internal static class ServiceChecks
             await service.RefreshAsync();
             Check((await service.GetAsync(trip)).All(x => x.Definition.Id == rejected.Id) && scheduler.Items.Count == 0,
                 "A successful snapshot removes revoked, deleted and no-longer-addressed server reminders");
+            await scheduler.ReplaceAsync("previous-account", [new ScheduledReminder { AccountId = "previous-account",
+                Definition = reminder, Trip = trip }]);
+            session.LocalUserId = null; session.UserId = null;
+            CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger.Default.Send(new Packo.Messages.LogoutCompletedMessage());
+            for (var attempt = 0; attempt < 100 && scheduler.Account != ""; attempt++) await Task.Delay(10);
+            Check(scheduler.Account == "" && scheduler.Configurations.Count == 0,
+                "An explicit logout still clears alarms even when the next session has not been initialized");
             Console.WriteLine($"{count} reminder storage and sync checks passed.");
         }
         finally { await db.CloseAsync(); File.Delete(path); }
@@ -179,12 +204,21 @@ internal static class ServiceChecks
     {
         public string Account { get; private set; } = "";
         public IReadOnlyList<ScheduledReminder> Items { get; private set; } = [];
+        public IReadOnlyList<ScheduledReminder> Configurations { get; private set; } = [];
+        public int Replacements { get; private set; }
         public bool IsSupported => true;
         public bool HasExactTiming => true;
         public bool HasPermission => true;
         public Task<bool> RequestPermissionAsync() => Task.FromResult(true);
         public Task ReplaceAsync(string accountId, IReadOnlyList<ScheduledReminder> reminders)
-        { Account = accountId; Items = reminders; return Task.CompletedTask; }
+        {
+            Account = accountId;
+            Replacements++;
+            Configurations = reminders;
+            Items = reminders.Where(x => Packo.Helpers.ReminderSchedule.Next(x.Definition, x.Trip,
+                DateTimeOffset.UtcNow, Packo.Helpers.TripSchedule.DeviceTimeZone).HasValue).ToList();
+            return Task.CompletedTask;
+        }
         public void OpenTimingSettings() { }
     }
 }

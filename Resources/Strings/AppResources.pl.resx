@@ -207,4 +207,10 @@
   <data name="ReminderMutedByTrip" xml:space="preserve"><value>Przypomnienia grupowe tego wyjazdu są wyciszone. Możesz je włączyć przyciskiem powyżej.</value></data>
   <data name="ReminderNextOccurrence" xml:space="preserve"><value>Najbliższy alert</value></data>
   <data name="ReminderSeriesStart" xml:space="preserve"><value>Początek serii</value></data>
+  <data name="ReminderTripUnavailable" xml:space="preserve"><value>Ten wyjazd został usunięty, przeniesiony do kosza lub nie masz już do niego dostępu.</value></data>
+  <data name="ReminderOpenTripFailed" xml:space="preserve"><value>Nie udało się otworzyć wyjazdu z przypomnienia. Spróbuj otworzyć go z listy wyjazdów.</value></data>
+  <data name="ReminderChangeStart" xml:space="preserve"><value>Zmień datę rozpoczęcia</value></data>
+  <data name="ReminderSaving" xml:space="preserve"><value>Zapisywanie…</value></data>
+  <data name="ReminderDetails" xml:space="preserve"><value>Szczegóły przypomnienia</value></data>
+  <data name="ReminderBackToList" xml:space="preserve"><value>Wróć do listy</value></data>
 </root>

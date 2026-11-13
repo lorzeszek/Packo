@@ -493,6 +493,15 @@
         <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
     </Style>
 
+    <Style x:Key="ReminderChoiceButtonStyle" TargetType="Button" BasedOn="{StaticResource PackoPopupSecondaryButtonStyle}">
+        <Setter Property="HeightRequest" Value="-1" />
+        <Setter Property="MinimumHeightRequest" Value="48" />
+        <Setter Property="Padding" Value="12,10" />
+        <Setter Property="FontAttributes" Value="None" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="LineBreakMode" Value="WordWrap" />
+    </Style>
+
     <Style x:Key="PackoCounterButtonStyle" TargetType="Button">
         <Setter Property="WidthRequest" Value="42" />
         <Setter Property="HeightRequest" Value="42" />

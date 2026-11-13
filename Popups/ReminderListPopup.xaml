@@ -7,7 +7,8 @@
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     Padding="0" CanBeDismissedByTappingOutsideOfPopup="False">
     <Border x:Name="PopupCard" Style="{StaticResource PackoPopupCardStyle}">
-        <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="12">
+      <Grid>
+        <Grid x:Name="ListPanel" RowDefinitions="Auto,Auto,*,Auto" RowSpacing="12">
             <Label Text="{loc:Translate Reminders}" Style="{StaticResource PackoPopupTitleStyle}" />
             <Label x:Name="TripLabel" Grid.Row="1" HorizontalTextAlignment="Center" Style="{StaticResource PackoFieldCaptionStyle}" />
             <ScrollView x:Name="ListScroll" Grid.Row="2">
@@ -26,23 +27,21 @@
                                 <Border Padding="12" StrokeShape="RoundRectangle 16"
                                         BackgroundColor="{AppThemeBinding Light={StaticResource PackoRaisedSurfaceLight}, Dark={StaticResource PackoRaisedSurfaceDark}}"
                                         Stroke="{AppThemeBinding Light={StaticResource PackoControlBorderLight}, Dark={StaticResource PackoControlBorderDark}}">
-                                    <VerticalStackLayout Spacing="7">
-                                        <Label Text="{Binding Title}" FontSize="15" FontAttributes="Bold" LineBreakMode="WordWrap" />
-                                        <Label Text="{Binding Body}" FontSize="13" LineBreakMode="WordWrap" />
-                                        <Label Text="{Binding Details}" Style="{StaticResource PackoFieldCaptionStyle}" LineBreakMode="WordWrap" />
-                                        <Label Text="{Binding State}" Style="{StaticResource PackoFieldCaptionStyle}" LineBreakMode="WordWrap" />
-                                        <Grid ColumnDefinitions="*,*" ColumnSpacing="6" IsVisible="{Binding CanEdit}">
-                                            <Button Text="{loc:Translate ReminderEdit}" Clicked="OnEditClicked" FontSize="12" Padding="4,0"
-                                                    Style="{StaticResource PackoPopupSecondaryButtonStyle}" />
-                                            <Button Grid.Column="1" Text="{Binding ToggleText}" Clicked="OnToggleClicked" FontSize="12" Padding="4,0"
-                                                    Style="{StaticResource PackoPopupSecondaryButtonStyle}" />
+                                    <VerticalStackLayout Spacing="6">
+                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                            <Label Text="{Binding Title}" FontSize="16" FontAttributes="Bold"
+                                                   MaxLines="2" LineBreakMode="TailTruncation" VerticalOptions="Center" />
+                                            <Button Grid.Column="1" Text="···" Clicked="OnDetailsClicked"
+                                                    SemanticProperties.Description="{loc:Translate ReminderDetails}"
+                                                    Style="{StaticResource PackoCounterButtonStyle}" FontSize="22" />
                                         </Grid>
-                                        <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
-                                            <Button Text="{Binding MuteText}" Clicked="OnMuteClicked" IsEnabled="{Binding CanMute}" FontSize="12" Padding="4,0"
-                                                    Style="{StaticResource PackoPopupSecondaryButtonStyle}" />
-                                            <Button Grid.Column="1" Text="{loc:Translate Delete}" Clicked="OnDeleteClicked" IsVisible="{Binding CanEdit}"
-                                                    FontSize="12" Padding="4,0" Style="{StaticResource PackoPopupSecondaryButtonStyle}" />
-                                        </Grid>
+                                        <Label Text="{Binding When}" FontSize="14" FontAttributes="Bold" LineBreakMode="WordWrap" />
+                                        <Label Text="{Binding Summary}" Style="{StaticResource PackoFieldCaptionStyle}" LineBreakMode="WordWrap" />
+                                        <Border Padding="8,4" StrokeThickness="0" StrokeShape="RoundRectangle 8" HorizontalOptions="Start"
+                                                BackgroundColor="{AppThemeBinding Light={StaticResource PackoAccentSoftLight}, Dark={StaticResource PackoAccentSoftDark}}">
+                                            <Label Text="{Binding ShortState}" FontSize="11" LineBreakMode="WordWrap"
+                                                   TextColor="{AppThemeBinding Light={StaticResource PackoAccentStrongLight}, Dark={StaticResource PackoAccentDark}}" />
+                                        </Border>
                                     </VerticalStackLayout>
                                 </Border>
                             </DataTemplate>
@@ -56,5 +55,25 @@
                         Style="{StaticResource PackoPopupPrimaryButtonStyle}" />
             </Grid>
         </Grid>
+        <Grid x:Name="DetailsPanel" IsVisible="False" RowDefinitions="Auto,*,Auto" RowSpacing="16">
+            <Label x:Name="DetailTitle" Style="{StaticResource PackoPopupTitleStyle}" />
+            <ScrollView Grid.Row="1" MaximumHeightRequest="440">
+                <VerticalStackLayout Spacing="12">
+                    <Label x:Name="DetailBody" FontSize="15" LineBreakMode="WordWrap" />
+                    <Label x:Name="DetailInfo" Style="{StaticResource PackoFieldCaptionStyle}" LineBreakMode="WordWrap" />
+                    <Label x:Name="DetailState" Style="{StaticResource PackoFieldCaptionStyle}" LineBreakMode="WordWrap" />
+                    <Grid x:Name="EditActions" ColumnDefinitions="*,*" ColumnSpacing="8">
+                        <Button Text="{loc:Translate ReminderEdit}" Clicked="OnDetailEditClicked" Style="{StaticResource PackoPopupPrimaryButtonStyle}" />
+                        <Button x:Name="DetailToggle" Grid.Column="1" Clicked="OnDetailToggleClicked" Style="{StaticResource PackoPopupSecondaryButtonStyle}" />
+                    </Grid>
+                    <Button x:Name="DetailMute" Clicked="OnDetailMuteClicked" Style="{StaticResource PackoPopupSecondaryButtonStyle}" />
+                    <Button x:Name="DetailDelete" Text="{loc:Translate Delete}" Clicked="OnDetailDeleteClicked"
+                            Style="{StaticResource PackoPopupSecondaryButtonStyle}" />
+                </VerticalStackLayout>
+            </ScrollView>
+            <Button Grid.Row="2" Text="{loc:Translate ReminderBackToList}" Clicked="OnBackToListClicked"
+                    Style="{StaticResource PackoPopupSecondaryButtonStyle}" />
+        </Grid>
+      </Grid>
     </Border>
 </toolkit:Popup>

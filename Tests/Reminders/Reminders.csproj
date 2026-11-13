@@ -20,6 +20,9 @@
     <Compile Include="../../Messages/PackingSyncMessage.cs" Link="PackingSyncMessage.cs" />
     <Compile Include="../../Messages/LogoutCompletedMessage.cs" Link="LogoutCompletedMessage.cs" />
     <Compile Include="../../Helpers/ReminderSchedule.cs" Link="ReminderSchedule.cs" />
+    <Compile Include="../../Helpers/ReminderDelivery.cs" Link="ReminderDelivery.cs" />
+    <Compile Include="../../Helpers/ReminderEditorCalendar.cs" Link="ReminderEditorCalendar.cs" />
+    <Compile Include="../../Helpers/ReminderNavigationQueue.cs" Link="ReminderNavigationQueue.cs" />
     <Compile Include="../../Helpers/TripSchedule.cs" Link="TripSchedule.cs" />
     <Compile Include="../../Models/Enums/TripStatus.cs" Link="TripStatus.cs" />
     <Compile Include="../../Models/TripReminder.cs" Link="TripReminder.cs" />

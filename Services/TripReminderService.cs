@@ -40,7 +40,7 @@ public sealed class TripReminderService
         WeakReferenceMessenger.Default.Register<TripReminderService, TripDataChangedMessage>(this, (s, message) => { _ = s.RefreshSafeAsync(); });
         WeakReferenceMessenger.Default.Register<TripReminderService, PackingSyncMessage>(this, (s, m) =>
         { if (m.AccessRevoked || m.RemoteTripId == 0) _ = s.RefreshSafeAsync(); });
-        WeakReferenceMessenger.Default.Register<TripReminderService, LogoutCompletedMessage>(this, (s, message) => { _ = s.RefreshSafeAsync(); });
+        WeakReferenceMessenger.Default.Register<TripReminderService, LogoutCompletedMessage>(this, (s, message) => { _ = s.ResetAfterLogoutAsync(); });
     }
 
     private async Task EnsureSchemaAsync()
@@ -183,6 +183,14 @@ public sealed class TripReminderService
         catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"Reminder refresh: {ex.GetType().Name}"); }
     }
 
+    private async Task ResetAfterLogoutAsync()
+    {
+        await _gate.WaitAsync();
+        try { await _scheduler.ReplaceAsync("", []); }
+        finally { _gate.Release(); }
+        await RefreshSafeAsync();
+    }
+
     public async Task RefreshAsync(bool force = true)
     {
         await _gate.WaitAsync();
@@ -193,7 +201,9 @@ public sealed class TripReminderService
             var account = UserId;
             if (string.IsNullOrWhiteSpace(scope))
             {
-                await _scheduler.ReplaceAsync("", []);
+                // A cold Android receiver has no restored MAUI session. This is
+                // not a logout: keep its persisted alarms and visible notifications.
+                // Actual logout and account changes clear them explicitly.
                 return;
             }
             var localTrips = (await _db.Table<SQLiteTrip>().Where(x => x.LocalUserId == scope).ToListAsync())
@@ -384,8 +394,10 @@ public sealed class TripReminderService
         {
             var reminder = Read(row);
             var trip = JsonSerializer.Deserialize<TripDTO>(row.TripJson)!;
+            // Include elapsed definitions: Android may still hold their undelivered alarm.
+            // The native scheduler retains only a known pending occurrence, never replays a past download.
             if (!reminder.IsRecipient(account) || IsMuted(prefs, row, reminder)
-                || ReminderSchedule.Next(reminder, trip, DateTimeOffset.UtcNow, Packo.Helpers.TripSchedule.DeviceTimeZone) is null) continue;
+                || !ReminderDelivery.IsActive(reminder, trip, DateTimeOffset.UtcNow)) continue;
             scheduled.Add(new ScheduledReminder { AccountId = scope, Definition = reminder, Trip = trip });
         }
         if (scope != Scope || account != UserId) { await _scheduler.ReplaceAsync("", []); return; }

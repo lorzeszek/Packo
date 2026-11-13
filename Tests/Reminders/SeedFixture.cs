@@ -7,7 +7,7 @@ using System.Text.Json;
 // Used only with a fresh, isolated emulator. No real account or remote data is involved.
 internal static class SeedFixture
 {
-    public static async Task WriteAsync(string path, bool alarms)
+    public static async Task WriteAsync(string path, bool alarms, bool navigation = false, bool ui = false)
     {
         if (File.Exists(path)) File.Delete(path);
         var db = new SQLiteAsyncConnection(path);
@@ -20,8 +20,17 @@ internal static class SeedFixture
         var row = new SQLiteTrip { LocalUserId = scope, Destination = "Rzym · test przypomnień",
             StartDate = DateTime.Today.AddDays(-1), EndDate = DateTime.Today.AddDays(5),
             TimeZoneId = alarms ? "Etc/UTC" : "Europe/Warsaw", CreatedDate = DateTime.Now, IsActive = true };
+        if (ui)
+        {
+            row.RemoteTripId = 100;
+            row.ParticipantsJson = "[{\"UserId\":\"reminder-emulator-fixture\",\"Name\":\"Anna\"},{\"UserId\":\"fixture-friend\",\"Name\":\"Michał\"}]";
+        }
         await db.InsertAsync(row);
-        if (alarms)
+        if (navigation)
+            await db.InsertAsync(new SQLiteTrip { LocalUserId = scope, Destination = "Berlin · test nawigacji",
+                StartDate = DateTime.Today.AddDays(1), EndDate = DateTime.Today.AddDays(3),
+                TimeZoneId = "Europe/Berlin", CreatedDate = DateTime.Now, IsActive = true });
+        if (alarms || ui)
         {
             // Use a fixed UTC trip zone, independently of the emulator's device zone.
             var upcoming = DateTime.UtcNow.AddMinutes(2);
@@ -31,6 +40,15 @@ internal static class SeedFixture
                 var reminder = new TripReminder { Title = "TravelSet test " + i, Body = "Dwa alerty w tym samym czasie",
                     AuthorId = scope, Date = upcoming.Date, MinuteOfDay = upcoming.Hour * 60 + upcoming.Minute,
                     Clock = ReminderClock.Trip, TimeZoneId = "Etc/UTC" };
+                if (ui)
+                {
+                    reminder.Title = i == 1 ? "Dokumenty i bilety" : "Wieczorne przypomnienie";
+                    reminder.Body = "Sprawdź paszporty, bilety i potwierdzenie rezerwacji. Ta treść jest dostępna w szczegółach przypomnienia.";
+                    reminder.Date = DateTime.Today.AddDays(-1);
+                    reminder.Repeat = ReminderRepeat.Daily;
+                    reminder.MinuteOfDay = i == 1 ? 9 * 60 : 18 * 60;
+                    reminder.TimeZoneId = "Europe/Warsaw";
+                }
                 await db.InsertAsync(new SQLiteTripReminder { Key = scope + ":" + reminder.Id,
                     LocalUserId = scope, ReminderId = reminder.Id, LocalTripId = row.LocalTripId,
                     DefinitionJson = JsonSerializer.Serialize(reminder), TripJson = JsonSerializer.Serialize(trip),

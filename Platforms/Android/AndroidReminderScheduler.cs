@@ -51,8 +51,12 @@ public sealed class AndroidReminderScheduler : IReminderScheduler
             state.AccountId = accountId;
             state.Entries = reminders.ToList();
             foreach (var item in state.Entries)
-                item.NotificationId = oldEntries.FirstOrDefault(x => x.Definition.Id == item.Definition.Id)?.NotificationId ?? state.NextId++;
-            Reschedule(state);
+            {
+                var previous = oldEntries.FirstOrDefault(x => x.Definition.Id == item.Definition.Id);
+                item.NotificationId = previous?.NotificationId ?? state.NextId++;
+                item.NextAt = ReminderDelivery.PendingFrom(previous, item);
+            }
+            Reschedule(state, preservePending: true);
         }
         return Task.CompletedTask;
     }
@@ -68,7 +72,7 @@ public sealed class AndroidReminderScheduler : IReminderScheduler
                 if (intent.Action == Intent.ActionTimezoneChanged && intent.GetStringExtra("time-zone") is { Length: > 0 } zoneId)
                     Java.Util.TimeZone.Default = Java.Util.TimeZone.GetTimeZone(zoneId);
                 TimeZoneInfo.ClearCachedData();
-                Reschedule(state);
+                Reschedule(state, preservePending: intent.Action == "android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED");
                 return;
             }
             var itemToShow = state.Entries.FirstOrDefault(x => x.Definition.Id == intent.GetStringExtra("reminder_id")
@@ -82,9 +86,7 @@ public sealed class AndroidReminderScheduler : IReminderScheduler
                 var at = due.NextAt!.Value;
                 var key = ReminderSchedule.KeyAt(due.Definition, due.Trip, at, Packo.Helpers.TripSchedule.DeviceTimeZone);
                 var history = History(state, due);
-                var end = due.Trip.EndDate is { } date
-                    ? ReminderSchedule.Instant(date, ReminderSchedule.TripZone(due.Definition, due.Trip)) : DateTimeOffset.MinValue;
-                if (now <= end && now - at < TimeSpan.FromMinutes(15) && !history.Contains(key))
+                if (ReminderDelivery.CanDeliver(due, at, now) && !history.Contains(key))
                 {
                     history.Add(key);
                     WriteState(state);
@@ -95,7 +97,7 @@ public sealed class AndroidReminderScheduler : IReminderScheduler
         }
     }
 
-    private static void Reschedule(NativeState state)
+    private static void Reschedule(NativeState state, bool preservePending = false)
     {
         foreach (var item in state.Entries)
         {
@@ -103,9 +105,8 @@ public sealed class AndroidReminderScheduler : IReminderScheduler
             {
                 var after = DateTimeOffset.UtcNow;
                 var history = History(state, item);
-                item.NextAt = ReminderSchedule.Next(item.Definition, item.Trip, after, Packo.Helpers.TripSchedule.DeviceTimeZone);
-                while (item.NextAt is { } next && history.Contains(ReminderSchedule.KeyAt(item.Definition, item.Trip, next, Packo.Helpers.TripSchedule.DeviceTimeZone)))
-                    item.NextAt = ReminderSchedule.Next(item.Definition, item.Trip, next, Packo.Helpers.TripSchedule.DeviceTimeZone);
+                item.NextAt = ReminderDelivery.Next(item, after, Packo.Helpers.TripSchedule.DeviceTimeZone,
+                    history, preservePending ? item.NextAt : null);
             }
             catch (Exception ex) when (ex is ArgumentException or TimeZoneNotFoundException or InvalidTimeZoneException)
             { item.NextAt = null; }
@@ -161,7 +162,11 @@ public sealed class AndroidReminderScheduler : IReminderScheduler
     {
         EnsureChannel();
         if (!NotificationManagerCompat.From(Context)!.AreNotificationsEnabled()) return;
-        var open = new Intent(Context, typeof(MainActivity)).SetAction("com.travelset.app.OPEN_REMINDER")
+        var open = new Intent(Context, typeof(MainActivity)).SetAction(Packo.Services.ReminderNavigationService.OpenAction)
+            .SetData(global::Android.Net.Uri.Parse($"travelset://reminder-open/{item.AccountId}/{item.Definition.Id}"))
+            .PutExtra(Packo.Services.ReminderNavigationService.AccountExtra, item.AccountId)
+            .PutExtra(Packo.Services.ReminderNavigationService.LocalTripExtra, item.Trip.LocalTripId)
+            .PutExtra(Packo.Services.ReminderNavigationService.RemoteTripExtra, item.Trip.RemoteTripId)
             .AddFlags(ActivityFlags.ClearTop | ActivityFlags.SingleTop);
         var pending = PendingIntent.GetActivity(Context, item.NotificationId, open,
             PendingIntentFlags.UpdateCurrent | PendingIntentFlags.Immutable);
