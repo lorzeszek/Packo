@@ -23,8 +23,11 @@ public partial class ReminderListPopup : Popup<ReminderAction>
 {
     private static readonly SemaphoreSlim FlowGate = new(1, 1);
     private readonly TripReminderService _service;
-    private readonly bool _tripMuted;
+    private readonly TripDTO _trip;
+    private bool _tripMuted;
+    private bool _busy;
     private bool _closing;
+    private IReadOnlyList<ReminderEntry> _entries = [];
     private ReminderListItem? _selected;
     private static LocalizationResourceManager S => LocalizationResourceManager.Instance;
 
@@ -32,11 +35,20 @@ public partial class ReminderListPopup : Popup<ReminderAction>
         IReadOnlyList<ReminderEntry> entries, bool tripMuted)
     {
         InitializeComponent();
-        (_service, _tripMuted) = (service, tripMuted);
+        (_service, _trip) = (service, trip);
         PopupCard.WidthRequest = PopupCardSizing.GetWidth(page);
         PopupCard.MaximumHeightRequest = Math.Max(240, (page.Height > 0 ? page.Height : 740) - 70);
-        ListScroll.MaximumHeightRequest = Math.Clamp((page.Height > 0 ? page.Height : 740) - 270, 140, 470);
+        ListScroll.MaximumHeightRequest = DetailsScroll.MaximumHeightRequest = Math.Clamp((page.Height > 0 ? page.Height : 740) - 330, 120, 420);
         TripLabel.Text = trip.Destination;
+        ApplyEntries(entries, tripMuted);
+    }
+
+    private void ApplyEntries(IReadOnlyList<ReminderEntry> entries, bool tripMuted)
+    {
+        _entries = entries;
+        var service = _service;
+        var trip = _trip;
+        _tripMuted = tripMuted;
         MuteTripButton.Text = S[tripMuted ? "ReminderUnmuteTrip" : "ReminderMuteTrip"];
         MuteTripButton.IsVisible = trip.Participants.Count > 0 || trip.IsJoinedTrip;
         EmptyLabel.IsVisible = entries.Count == 0;
@@ -104,21 +116,16 @@ public partial class ReminderListPopup : Popup<ReminderAction>
                 first = false;
                 var muted = snapshot?.TripMuted ?? await service.IsTripMutedAsync(trip);
                 snapshot = null;
-                var result = (await page.ShowPopupAsync<ReminderAction>(new ReminderListPopup(page, service, trip, entries, muted))).Result;
+                var popup = new ReminderListPopup(page, service, trip, entries, muted);
+                var result = (await page.ShowPopupAsync<ReminderAction>(popup)).Result;
+                entries = popup._entries;
                 if (result is null || result.Kind == "close") return;
                 if (result.Kind == "add")
-                    snapshot = await ReminderEditorPopup.ShowAsync(page, service, trip, service.New(trip), entries);
-                else if (result.Kind == "tripmute") await service.SetMutedAsync(trip, "*", !muted);
-                else if (entries.FirstOrDefault(x => x.Definition.Id == result.Id) is { } entry)
-                {
-                    if (result.Kind == "edit") snapshot = await ReminderEditorPopup.ShowAsync(page, service, trip, entry.Definition, entries);
-                    else if (result.Kind == "mute") await service.SetMutedAsync(trip, entry.Definition.Id, !entry.IndividuallyMuted);
-                    else if (result.Kind == "delete" && service.CanEdit(entry.Definition, trip)
-                        && await ConfirmPopup.AskAsync(S["ReminderDelete"], entry.Definition.Title))
-                    { var deleted = entry.Definition.Copy(); deleted.Deleted = true; await service.SaveAsync(trip, deleted); }
-                    else if (result.Kind == "toggle" && service.CanEdit(entry.Definition, trip))
-                    { var changed = entry.Definition.Copy(); changed.Enabled = !changed.Enabled; await service.SaveAsync(trip, changed); }
-                }
+                    snapshot = await ReminderEditorPopup.ShowAsync(page, service, trip, service.New(trip), entries)
+                        ?? new ReminderEditorResult(entries, popup._tripMuted);
+                else if (result.Kind == "edit" && entries.FirstOrDefault(x => x.Definition.Id == result.Id) is { } entry)
+                    snapshot = await ReminderEditorPopup.ShowAsync(page, service, trip, entry.Definition, entries)
+                        ?? new ReminderEditorResult(entries, popup._tripMuted);
             }
         }
         catch (Exception ex)
@@ -131,36 +138,107 @@ public partial class ReminderListPopup : Popup<ReminderAction>
 
     private async Task FinishAsync(ReminderAction action)
     {
-        if (_closing) return;
+        if (_closing || _busy) return;
         _closing = true;
         await CloseAsync(action);
     }
     private async void OnCloseClicked(object? sender, EventArgs e) => await FinishAsync(new("close"));
     private async void OnAddClicked(object? sender, EventArgs e) => await FinishAsync(new("add"));
-    private async void OnMuteTripClicked(object? sender, EventArgs e) => await FinishAsync(new("tripmute"));
+    private async void OnMuteTripClicked(object? sender, EventArgs e) =>
+        await RunMutationAsync(() => _service.SetMutedAsync(_trip, "*", !_tripMuted), showList: true);
     private void OnDetailsClicked(object? sender, EventArgs e)
     {
-        if (sender is not Button { BindingContext: ReminderListItem row }) return;
+        if (_busy || _closing || sender is not Button { BindingContext: ReminderListItem row }) return;
+        ShowDetails(row);
+    }
+    private void ShowDetails(ReminderListItem row)
+    {
         _selected = row;
         DetailTitle.Text = row.Title; DetailBody.Text = row.Body;
         DetailInfo.Text = row.Details; DetailState.Text = row.State;
         EditActions.IsVisible = DetailDelete.IsVisible = row.CanEdit;
         DetailToggle.Text = row.ToggleText;
         DetailMute.Text = row.MuteText; DetailMute.IsEnabled = row.CanMute;
-        ListPanel.IsVisible = false; DetailsPanel.IsVisible = true;
+        ListPanel.IsVisible = DeletePanel.IsVisible = false; DetailsPanel.IsVisible = true;
     }
     private void OnBackToListClicked(object? sender, EventArgs e)
-    { DetailsPanel.IsVisible = false; ListPanel.IsVisible = true; _selected = null; }
-    private Task DetailAction(string action) => _selected is { } row ? FinishAsync(new(action, row.Entry.Definition.Id)) : Task.CompletedTask;
-    private async void OnDetailEditClicked(object? sender, EventArgs e) => await DetailAction("edit");
-    private async void OnDetailToggleClicked(object? sender, EventArgs e) => await DetailAction("toggle");
-    private async void OnDetailMuteClicked(object? sender, EventArgs e) => await DetailAction("mute");
-    private async void OnDetailDeleteClicked(object? sender, EventArgs e) => await DetailAction("delete");
+    { if (!_busy) ShowList(); }
+    private void ShowList()
+    { DetailsPanel.IsVisible = DeletePanel.IsVisible = false; ListPanel.IsVisible = true; _selected = null; }
+    private async void OnDetailEditClicked(object? sender, EventArgs e)
+    { if (_selected is { CanEdit: true } row) await FinishAsync(new("edit", row.Entry.Definition.Id)); }
+    private async void OnDetailToggleClicked(object? sender, EventArgs e)
+    {
+        if (_selected is not { CanEdit: true } row) return;
+        var changed = row.Entry.Definition.Copy(); changed.Enabled = !changed.Enabled;
+        await RunMutationAsync(() => _service.SaveAsync(_trip, changed));
+    }
+    private async void OnDetailMuteClicked(object? sender, EventArgs e)
+    {
+        if (_selected is { CanMute: true } row)
+            await RunMutationAsync(() => _service.SetMutedAsync(_trip, row.Entry.Definition.Id, !row.Entry.IndividuallyMuted));
+    }
+    private void OnDetailDeleteClicked(object? sender, EventArgs e)
+    {
+        if (_busy || _selected is not { CanEdit: true } row) return;
+        MutationError.IsVisible = false;
+        DeleteTitle.Text = row.Title;
+        ListPanel.IsVisible = DetailsPanel.IsVisible = false; DeletePanel.IsVisible = true;
+    }
+    private void OnDeleteCancelClicked(object? sender, EventArgs e)
+    { if (!_busy && _selected is { } row) { MutationError.IsVisible = false; ShowDetails(row); } }
+    private async void OnDeleteConfirmClicked(object? sender, EventArgs e)
+    {
+        if (_selected is not { CanEdit: true } row) return;
+        var deleted = row.Entry.Definition.Copy(); deleted.Deleted = true;
+        await RunMutationAsync(() => _service.SaveAsync(_trip, deleted), showList: true);
+    }
+
+    private async Task RunMutationAsync(Func<Task> operation, bool showList = false)
+    {
+        if (_busy || _closing) return;
+        _busy = true;
+        MutationError.IsVisible = false;
+        InteractionPanels.IsEnabled = false;
+        UpdatingPanel.IsVisible = UpdatingIndicator.IsRunning = true;
+        try
+        {
+            await operation();
+            await ReloadAsync(showList);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Reminder action: {ex.GetType().Name}");
+            // A conflict may have downloaded a newer definition. Keep subsequent
+            // editing/retries bound to that version without closing the popup.
+            try { await ReloadAsync(showList: true); }
+            catch (Exception refreshError) { System.Diagnostics.Debug.WriteLine($"Reminder reload: {refreshError.GetType().Name}"); }
+            MutationError.Text = S[ex is InvalidOperationException && S[ex.Message] != ex.Message ? ex.Message : "ReminderSaveFailed"];
+            MutationError.IsVisible = true;
+        }
+        finally
+        {
+            _busy = false;
+            InteractionPanels.IsEnabled = true;
+            UpdatingPanel.IsVisible = UpdatingIndicator.IsRunning = false;
+        }
+    }
+
+    private async Task ReloadAsync(bool showList)
+    {
+        var selectedId = _selected?.Entry.Definition.Id;
+        var entries = await _service.GetAsync(_trip);
+        var muted = await _service.IsTripMutedAsync(_trip);
+        ApplyEntries(entries, muted);
+        if (!showList && entries.FirstOrDefault(x => x.Definition.Id == selectedId) is { } entry)
+            ShowDetails(Item(_service, _trip, entry));
+        else ShowList();
+    }
     private async void OnTimingClicked(object? sender, EventArgs e)
     { _service.Scheduler.OpenTimingSettings(); await FinishAsync(new("close")); }
     private async void OnPermissionClicked(object? sender, EventArgs e)
     {
-        if (!await _service.Scheduler.RequestPermissionAsync()) AppInfo.Current.ShowSettingsUI();
-        await FinishAsync(new("refresh"));
+        await RunMutationAsync(async () =>
+        { if (!await _service.Scheduler.RequestPermissionAsync()) AppInfo.Current.ShowSettingsUI(); }, showList: true);
     }
 }

@@ -213,4 +213,7 @@
   <data name="ReminderSaving" xml:space="preserve"><value>Zapisywanie…</value></data>
   <data name="ReminderDetails" xml:space="preserve"><value>Szczegóły przypomnienia</value></data>
   <data name="ReminderBackToList" xml:space="preserve"><value>Wróć do listy</value></data>
+  <data name="ReminderGoToTripDetails" xml:space="preserve"><value>Szczegóły wyjazdu</value></data>
+  <data name="ReminderNotificationTextUnavailable" xml:space="preserve"><value>Treść tego przypomnienia nie jest już dostępna. Możesz przejść do szczegółów wyjazdu.</value></data>
+  <data name="ReminderUpdating" xml:space="preserve"><value>Aktualizowanie przypomnień…</value></data>
 </root>

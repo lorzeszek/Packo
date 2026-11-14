@@ -13,19 +13,25 @@ public sealed class ReminderNavigationService
     public const string AccountExtra = "reminder_account_id";
     public const string LocalTripExtra = "reminder_local_trip_id";
     public const string RemoteTripExtra = "reminder_remote_trip_id";
+    public const string ReminderIdExtra = "reminder_id";
+    public const string TitleExtra = "reminder_title";
+    public const string BodyExtra = "reminder_body";
     private readonly ISessionService _session;
     private readonly ITripListPreloadService _preload;
     private readonly ITripRepository _trips;
+    private readonly TripReminderService _reminders;
     private readonly ReminderNavigationQueue _queue;
     private Shell? _shell;
     private Page? _watchedPage;
     private bool _active;
     private static LocalizationResourceManager Strings => LocalizationResourceManager.Instance;
 
-    public ReminderNavigationService(ISessionService session, ITripListPreloadService preload, ITripRepository trips)
+    public ReminderNavigationService(ISessionService session, ITripListPreloadService preload, ITripRepository trips,
+        TripReminderService reminders)
     {
-        (_session, _preload, _trips) = (session, preload, trips);
-        _queue = new ReminderNavigationQueue(CanNavigate, () => _session.LocalUserId, ResolveAsync, OpenAsync,
+        (_session, _preload, _trips, _reminders) = (session, preload, trips, reminders);
+        _queue = new ReminderNavigationQueue(CanNavigate, () => _session.LocalUserId, ResolveAsync,
+            OpenTripListAsync, ShowReminderAsync, OpenDetailsAsync,
             () => ConfirmPopup.ShowMessageAsync(Strings["Reminders"], Strings["ReminderTripUnavailable"]));
     }
 
@@ -96,13 +102,28 @@ public sealed class ReminderNavigationService
         return trip is not null && target.Matches(trip) ? trip : null;
     }
 
-    private async Task OpenAsync(TripDTO trip)
+    private Task OpenTripListAsync() => _shell!.GoToAsync("//TripList", animate: false);
+
+    private async Task<bool> ShowReminderAsync(ReminderTripTarget target, TripDTO trip)
     {
-        var shell = _shell!;
-        // Reuse the current details screen if it already displays this trip.
-        if (shell.CurrentPage.BindingContext is StartViewModel { Trip: { } current }
-            && new ReminderTripTarget(trip.LocalUserId, trip.LocalTripId, trip.RemoteTripId).Matches(current.TripModel)) return;
-        await shell.GoToAsync("//TripList", animate: false);
-        await shell.GoToAsync(StartViewModel.Route, animate: false, new ShellNavigationQueryParameters { ["trip"] = trip });
+        var title = target.Title;
+        var body = target.Body;
+        // Older displayed notifications only carried the ID in their data URI.
+        if (body is null && target.ReminderId is { Length: > 0 } id)
+        {
+            var entry = (await _reminders.GetAsync(trip)).FirstOrDefault(x => x.Definition.Id == id);
+            title ??= entry?.Definition.Title;
+            body = entry?.Definition.Body;
+        }
+        if (_session.LocalUserId != target.AccountId || _queue.HasPending) return false;
+        if (!CanNavigate())
+        {
+            _queue.Receive(target with { Title = title, Body = body });
+            return false;
+        }
+        return await ReminderNotificationPopup.ShowAsync(_shell!.CurrentPage, trip.Destination, title, body);
     }
+
+    private Task OpenDetailsAsync(TripDTO trip) => _shell!.GoToAsync(StartViewModel.Route, animate: false,
+        new ShellNavigationQueryParameters { ["trip"] = trip });
 }

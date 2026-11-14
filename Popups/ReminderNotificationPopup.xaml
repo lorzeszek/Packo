@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<toolkit:Popup x:TypeArguments="x:Boolean" x:Class="Packo.Popups.ReminderNotificationPopup"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:loc="clr-namespace:Packo.Extensions"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    Padding="0" CanBeDismissedByTappingOutsideOfPopup="False"
+    HorizontalOptions="Center" VerticalOptions="Center">
+    <Border x:Name="PopupCard" Style="{StaticResource PackoPopupCardStyle}" VerticalOptions="Center">
+        <VerticalStackLayout Spacing="14" VerticalOptions="Start">
+            <Label Text="{loc:Translate Reminders}" HorizontalTextAlignment="Center"
+                   Style="{StaticResource PackoFieldCaptionStyle}" />
+            <Label x:Name="TripNameLabel" Style="{StaticResource PackoPopupTitleStyle}" />
+            <ScrollView x:Name="MessageScroll" VerticalOptions="Start">
+                <VerticalStackLayout Spacing="10">
+                    <Label x:Name="ReminderTitleLabel" FontSize="16" FontAttributes="Bold" LineBreakMode="WordWrap" />
+                    <Label x:Name="MessageLabel" FontSize="15" LineBreakMode="WordWrap"
+                           TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+                </VerticalStackLayout>
+            </ScrollView>
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,2,0,0">
+                <Button Text="{loc:Translate ReminderClose}" Clicked="OnCloseClicked"
+                        Style="{StaticResource PackoPopupSecondaryButtonStyle}"
+                        HeightRequest="-1" MinimumHeightRequest="52" Padding="10,12" LineBreakMode="WordWrap" />
+                <Button Grid.Column="1" Text="{loc:Translate ReminderGoToTripDetails}" Clicked="OnDetailsClicked"
+                        Style="{StaticResource PackoPopupPrimaryButtonStyle}"
+                        HeightRequest="-1" MinimumHeightRequest="52" Padding="10,12" LineBreakMode="WordWrap" />
+            </Grid>
+        </VerticalStackLayout>
+    </Border>
+</toolkit:Popup>

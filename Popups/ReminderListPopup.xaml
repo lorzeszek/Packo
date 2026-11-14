@@ -5,13 +5,15 @@
     xmlns:loc="clr-namespace:Packo.Extensions"
     xmlns:local="clr-namespace:Packo.Popups"
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
-    Padding="0" CanBeDismissedByTappingOutsideOfPopup="False">
+    Padding="0" CanBeDismissedByTappingOutsideOfPopup="False"
+    HorizontalOptions="Center" VerticalOptions="Center">
     <Border x:Name="PopupCard" Style="{StaticResource PackoPopupCardStyle}">
-      <Grid>
-        <Grid x:Name="ListPanel" RowDefinitions="Auto,Auto,*,Auto" RowSpacing="12">
+      <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="10" VerticalOptions="Start">
+       <Grid x:Name="InteractionPanels" VerticalOptions="Start">
+        <Grid x:Name="ListPanel" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="12" VerticalOptions="Start">
             <Label Text="{loc:Translate Reminders}" Style="{StaticResource PackoPopupTitleStyle}" />
             <Label x:Name="TripLabel" Grid.Row="1" HorizontalTextAlignment="Center" Style="{StaticResource PackoFieldCaptionStyle}" />
-            <ScrollView x:Name="ListScroll" Grid.Row="2">
+            <ScrollView x:Name="ListScroll" Grid.Row="2" VerticalOptions="Start">
                 <VerticalStackLayout Spacing="12">
                     <Label x:Name="StatusLabel" FontSize="12" LineBreakMode="WordWrap" />
                     <Button x:Name="PermissionButton" Clicked="OnPermissionClicked" Text="{loc:Translate ReminderAllowNotifications}"
@@ -55,9 +57,9 @@
                         Style="{StaticResource PackoPopupPrimaryButtonStyle}" />
             </Grid>
         </Grid>
-        <Grid x:Name="DetailsPanel" IsVisible="False" RowDefinitions="Auto,*,Auto" RowSpacing="16">
+        <Grid x:Name="DetailsPanel" IsVisible="False" RowDefinitions="Auto,Auto,Auto" RowSpacing="16" VerticalOptions="Start">
             <Label x:Name="DetailTitle" Style="{StaticResource PackoPopupTitleStyle}" />
-            <ScrollView Grid.Row="1" MaximumHeightRequest="440">
+            <ScrollView x:Name="DetailsScroll" Grid.Row="1" VerticalOptions="Start">
                 <VerticalStackLayout Spacing="12">
                     <Label x:Name="DetailBody" FontSize="15" LineBreakMode="WordWrap" />
                     <Label x:Name="DetailInfo" Style="{StaticResource PackoFieldCaptionStyle}" LineBreakMode="WordWrap" />
@@ -74,6 +76,23 @@
             <Button Grid.Row="2" Text="{loc:Translate ReminderBackToList}" Clicked="OnBackToListClicked"
                     Style="{StaticResource PackoPopupSecondaryButtonStyle}" />
         </Grid>
+        <VerticalStackLayout x:Name="DeletePanel" IsVisible="False" Spacing="16">
+            <Label Text="{loc:Translate ReminderDelete}" Style="{StaticResource PackoPopupTitleStyle}" />
+            <Label x:Name="DeleteTitle" FontSize="15" HorizontalTextAlignment="Center" LineBreakMode="WordWrap" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                <Button Text="{loc:Translate Cancel}" Clicked="OnDeleteCancelClicked" Style="{StaticResource PackoPopupSecondaryButtonStyle}" />
+                <Button Grid.Column="1" Text="{loc:Translate Delete}" Clicked="OnDeleteConfirmClicked"
+                        Style="{StaticResource PackoPopupPrimaryButtonStyle}" />
+            </Grid>
+        </VerticalStackLayout>
+       </Grid>
+       <HorizontalStackLayout x:Name="UpdatingPanel" Grid.Row="1" IsVisible="False" Spacing="10" HorizontalOptions="Center">
+           <ActivityIndicator x:Name="UpdatingIndicator" WidthRequest="22" HeightRequest="22"
+                Color="{AppThemeBinding Light={StaticResource PackoAccentStrongLight}, Dark={StaticResource PackoAccentDark}}" />
+           <Label Text="{loc:Translate ReminderUpdating}" Style="{StaticResource PackoFieldCaptionStyle}" VerticalOptions="Center" />
+       </HorizontalStackLayout>
+       <Label x:Name="MutationError" Grid.Row="2" IsVisible="False" FontSize="13" LineBreakMode="WordWrap"
+              TextColor="{AppThemeBinding Light={StaticResource PackoAccentStrongLight}, Dark={StaticResource PackoAccentDark}}" />
       </Grid>
     </Border>
 </toolkit:Popup>

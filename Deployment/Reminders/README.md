@@ -32,9 +32,12 @@ No service-role key belongs in the app. Client access uses the authenticated ses
   Android is retained until delivery, even if the OS delays it; refresh cannot silently skip it.
   Delivery stops at the trip end. Timing remains subject to Android and device restrictions.
 - Desktop builds can edit/sync definitions; native notification delivery currently targets Android.
-- Tapping a new Android reminder opens its trip details and packing lists. Cold-start taps
-  wait for storage/session/navigation initialization. The target is bound to the local account;
-  deleted, trashed or inaccessible trips show a message instead. Back returns to the Trips list.
+- Tapping an Android reminder opens the Trips list and a styled popup with the trip name,
+  reminder title and full message. Close stays on the list; Go to trip details opens packing
+  lists only after confirmation and another access check. New notifications carry a snapshot
+  of the delivered text; older ones fall back to a locally stored definition when available.
+  Cold-start taps wait for storage/session/navigation initialization. The target is bound to
+  the local account; deleted, trashed or inaccessible trips show an unavailable message.
 
 ## Permissions and sharing
 
@@ -43,6 +46,9 @@ Calendar selection starts at today in the occurrence's time zone. An existing re
 series may retain its past start without exposing past dates as new choices. Saving keeps
 progress visible until the refreshed list snapshot is ready. List cards show a title, next
 time and concise status; their details panel contains the message and management actions.
+Delete confirmation, deletion, toggling and muting stay inside the same list popup, with
+progress and errors shown inline. Editing afterwards uses the refreshed definition/version.
+The notification-message popup sizes to its contents and scrolls only for longer messages.
 
 Android 13+ asks for notification access while saving the first reminder. The list shows
 permission status and offers exact-alarm settings. Without exact-alarm access, scheduling

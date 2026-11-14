@@ -167,6 +167,9 @@ public sealed class AndroidReminderScheduler : IReminderScheduler
             .PutExtra(Packo.Services.ReminderNavigationService.AccountExtra, item.AccountId)
             .PutExtra(Packo.Services.ReminderNavigationService.LocalTripExtra, item.Trip.LocalTripId)
             .PutExtra(Packo.Services.ReminderNavigationService.RemoteTripExtra, item.Trip.RemoteTripId)
+            .PutExtra(Packo.Services.ReminderNavigationService.ReminderIdExtra, item.Definition.Id)
+            .PutExtra(Packo.Services.ReminderNavigationService.TitleExtra, item.Definition.Title)
+            .PutExtra(Packo.Services.ReminderNavigationService.BodyExtra, item.Definition.Body)
             .AddFlags(ActivityFlags.ClearTop | ActivityFlags.SingleTop);
         var pending = PendingIntent.GetActivity(Context, item.NotificationId, open,
             PendingIntentFlags.UpdateCurrent | PendingIntentFlags.Immutable);

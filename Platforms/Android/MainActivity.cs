@@ -39,11 +39,17 @@ namespace Packo
                 IPlatformApplication.Current?.Services.GetService<ReminderNavigationService>()?.Receive(new ReminderTripTarget(
                     intent.GetStringExtra(ReminderNavigationService.AccountExtra) ?? "",
                     intent.GetIntExtra(ReminderNavigationService.LocalTripExtra, 0),
-                    intent.GetIntExtra(ReminderNavigationService.RemoteTripExtra, 0)));
+                    intent.GetIntExtra(ReminderNavigationService.RemoteTripExtra, 0),
+                    intent.GetStringExtra(ReminderNavigationService.ReminderIdExtra) ?? intent.Data?.LastPathSegment,
+                    intent.GetStringExtra(ReminderNavigationService.TitleExtra),
+                    intent.GetStringExtra(ReminderNavigationService.BodyExtra)));
             intent.SetAction(Intent.ActionMain);
             intent.RemoveExtra(ReminderNavigationService.AccountExtra);
             intent.RemoveExtra(ReminderNavigationService.LocalTripExtra);
             intent.RemoveExtra(ReminderNavigationService.RemoteTripExtra);
+            intent.RemoveExtra(ReminderNavigationService.ReminderIdExtra);
+            intent.RemoveExtra(ReminderNavigationService.TitleExtra);
+            intent.RemoveExtra(ReminderNavigationService.BodyExtra);
         }
     }
 }

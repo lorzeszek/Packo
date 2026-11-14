@@ -77,6 +77,14 @@ namespace Packo
 #endif
             });
 
+            Microsoft.Maui.Handlers.EditorHandler.Mapper.AppendToMapping("ReminderBodyNoUnderline", (handler, view) =>
+            {
+#if ANDROID
+                if (view.AutomationId == "ReminderBodyEditor")
+                    handler.PlatformView.BackgroundTintList = Android.Content.Res.ColorStateList.ValueOf(Android.Graphics.Color.Transparent);
+#endif
+            });
+
             Microsoft.Maui.Handlers.PickerHandler.Mapper.AppendToMapping("NoUnderline", (handler, view) =>
             {
 #if ANDROID

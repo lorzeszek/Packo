@@ -283,4 +283,7 @@
   <data name="ReminderSaving" xml:space="preserve"><value>Saving…</value></data>
   <data name="ReminderDetails" xml:space="preserve"><value>Reminder details</value></data>
   <data name="ReminderBackToList" xml:space="preserve"><value>Back to list</value></data>
+  <data name="ReminderGoToTripDetails" xml:space="preserve"><value>Go to trip details</value></data>
+  <data name="ReminderNotificationTextUnavailable" xml:space="preserve"><value>This reminder's message is no longer available. You can open the trip details.</value></data>
+  <data name="ReminderUpdating" xml:space="preserve"><value>Updating reminders…</value></data>
 </root>

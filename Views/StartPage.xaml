@@ -94,11 +94,6 @@
                     </VerticalStackLayout>
                 </Border>
 
-                <VerticalStackLayout Spacing="12">
-                    <Label Text="{loc:Translate NamedPackingLists}" FontSize="18" FontAttributes="Bold"
-                           TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
-                    <views:PackingListsView x:Name="PackingLists" />
-                </VerticalStackLayout>
                 <Border Padding="18" StrokeShape="RoundRectangle 22" StrokeThickness="0"
                         BackgroundColor="{AppThemeBinding Light={StaticResource PackoSurfaceLight}, Dark={StaticResource PackoSurfaceDark}}">
                     <VerticalStackLayout Spacing="8">
@@ -108,6 +103,11 @@
                         <Label x:Name="RemindersSummary" Style="{StaticResource PackoFieldCaptionStyle}" LineBreakMode="WordWrap" />
                     </VerticalStackLayout>
                 </Border>
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="{loc:Translate NamedPackingLists}" FontSize="18" FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+                    <views:PackingListsView x:Name="PackingLists" />
+                </VerticalStackLayout>
             </VerticalStackLayout>
 
             <VerticalStackLayout IsVisible="{Binding HasLoadError}" Spacing="16" Padding="32">

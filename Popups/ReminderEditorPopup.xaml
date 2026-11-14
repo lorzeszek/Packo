@@ -18,7 +18,7 @@
                     </Border>
                     <Label Text="{loc:Translate ReminderBody}" Style="{StaticResource PackoFieldCaptionStyle}" />
                     <Border Style="{StaticResource ReminderFieldStyle}">
-                        <Editor x:Name="BodyEditor" MaxLength="500" HeightRequest="86" AutoSize="TextChanges" />
+                        <Editor x:Name="BodyEditor" AutomationId="ReminderBodyEditor" MaxLength="500" HeightRequest="86" AutoSize="TextChanges" />
                     </Border>
                     <Label Text="{loc:Translate ReminderWhen}" Style="{StaticResource PackoFieldCaptionStyle}" />
                     <Button x:Name="TimingChoice" Clicked="OnTimingChoiceClicked" Style="{StaticResource ReminderChoiceButtonStyle}" />
