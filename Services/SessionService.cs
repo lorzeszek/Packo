@@ -187,6 +187,48 @@ namespace Packo.Services
             finally { _sessionGate.Release(); }
         }
 
+        public async Task DeleteAccountAsync()
+        {
+            await _sessionGate.WaitAsync();
+            try
+            {
+                if (!IsAuthenticated || Connectivity.Current.NetworkAccess != NetworkAccess.Internet)
+                    throw new InvalidOperationException("DeleteAccountConnectionRequired");
+
+                var auth = _supabase.Client.Auth;
+                // Prepare local storage before committing the irreversible remote operation.
+                var guest = await _localUserService.GetOrCreateLocalUserAsync();
+                // Keep the session until the transactional server operation has succeeded.
+                var response = await _supabase.Client.Rpc("delete_my_account", new Dictionary<string, object>());
+                if (response.Content?.Trim() != "true")
+                    throw new InvalidOperationException("DeleteAccountFailed");
+
+                // GoTrue 6.0.3 sends a logout request only when AccessToken is present.
+                // The server already removed this user: clear that token first so SignOut
+                // clears the SDK session and auto refresh without another remote request.
+                try
+                {
+                    if (auth.CurrentSession is { } current)
+                        current.AccessToken = null;
+                    await auth.SignOut(Constants.SignOutScope.Local);
+                    SecureStorage.Remove("access_token");
+                    SecureStorage.Remove("refresh_token");
+                    SecureStorage.Remove(CachedAccountKey);
+                }
+                finally
+                {
+                    await MainThread.InvokeOnMainThreadAsync(() =>
+                    {
+                        SetLocalUser(guest.LocalUserId);
+                        UserId = null;
+                        User = null;
+                        OnPropertyChanged(nameof(IsAuthenticated));
+                    });
+                }
+            }
+            finally { _sessionGate.Release(); }
+        }
+
         private string? GetProfileValue(params string[] keys)
         {
             if (User is null)

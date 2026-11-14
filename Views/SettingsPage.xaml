@@ -84,6 +84,22 @@
                            TextColor="{StaticResource PackoAccentStrongLight}" />
                 </Grid>
             </Border>
+            <Border Padding="18" StrokeThickness="1" IsVisible="{Binding Session.IsAuthenticated}"
+                    Stroke="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoBorderDark}}"
+                    StrokeShape="RoundRectangle 22"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource PackoSurfaceLight}, Dark={StaticResource PackoSurfaceDark}}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="{loc:Translate DeleteAccount}" FontSize="18" FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light=#B43C35, Dark=#FF9A92}" />
+                    <Label Text="{loc:Translate DeleteAccountHelp}" FontSize="13" LineBreakMode="WordWrap"
+                           TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+                    <Button Text="{loc:Translate DeleteAccount}" Command="{Binding DeleteAccountCommand}"
+                            AutomationId="DeleteAccountButton" BackgroundColor="{AppThemeBinding Light=#B43C35, Dark=#A63731}"
+                            TextColor="White" CornerRadius="15" FontAttributes="Bold" MinimumHeightRequest="48" />
+                    <Label Text="{Binding DeleteAccountError}" FontSize="13" LineBreakMode="WordWrap"
+                           TextColor="{AppThemeBinding Light=#B43C35, Dark=#FF9A92}" />
+                </VerticalStackLayout>
+            </Border>
         </VerticalStackLayout>
     </ScrollView>
 </local:BasePage>

@@ -13,6 +13,21 @@ namespace Packo.Services
             _db = db;
         }
 
+        public Task DeleteAccountDataAsync(string supabaseUserId) => _db.RunInTransactionAsync(db =>
+        {
+            var accounts = db.Table<SQLiteUser>().Where(x => x.SupabaseUserId == supabaseUserId).ToList();
+            foreach (var account in accounts)
+            {
+                foreach (var table in new[] { "SQLitePendingPackingItemChange", "SQLitePendingTripChange",
+                    "SQLiteTripReminder", "SQLiteReminderPreference", "SQLitePackingItem", "SQLitePackingList", "SQLiteTrip" })
+                {
+                    if (db.ExecuteScalar<int>("SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = ?", table) > 0)
+                        db.Execute($"DELETE FROM {table} WHERE LocalUserId = ?", account.LocalUserId);
+                }
+                db.Delete(account);
+            }
+        });
+
         public async Task<SQLiteUser> CreateLocalUserAsync()
         {
             var user = new SQLiteUser

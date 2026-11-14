@@ -216,4 +216,11 @@
   <data name="ReminderGoToTripDetails" xml:space="preserve"><value>Szczegóły wyjazdu</value></data>
   <data name="ReminderNotificationTextUnavailable" xml:space="preserve"><value>Treść tego przypomnienia nie jest już dostępna. Możesz przejść do szczegółów wyjazdu.</value></data>
   <data name="ReminderUpdating" xml:space="preserve"><value>Aktualizowanie przypomnień…</value></data>
+  <data name="DeleteAccount" xml:space="preserve"><value>Usuń konto</value></data>
+  <data name="DeleteAccountHelp" xml:space="preserve"><value>Trwale usuń konto i dane swoich wycieczek. Tej operacji nie można cofnąć.</value></data>
+  <data name="DeleteAccountConfirmTitle" xml:space="preserve"><value>Czy na pewno usunąć konto?</value></data>
+  <data name="DeleteAccountConfirmMessage" xml:space="preserve"><value>Twoje konto, wszystkie Twoje wycieczki, ich dane oraz utworzone przez Ciebie przypomnienia zostaną trwale usunięte. Wycieczki innych osób i ich przypomnienia pozostaną — zniknie z nich tylko Twój udział. Nastąpi wylogowanie. Tej operacji nie można cofnąć.</value></data>
+  <data name="DeleteAccountConnectionRequired" xml:space="preserve"><value>Aby usunąć konto, połącz się z internetem i zaloguj się ponownie, jeśli sesja wygasła.</value></data>
+  <data name="DeleteAccountFailed" xml:space="preserve"><value>Nie udało się potwierdzić usunięcia konta. Sprawdź połączenie i spróbuj ponownie.</value></data>
+  <data name="DeleteAccountLocalCleanupFailed" xml:space="preserve"><value>Konto zostało usunięte i nastąpiło wylogowanie, ale nie udało się wyczyścić wszystkich danych na tym urządzeniu.</value></data>
 </root>

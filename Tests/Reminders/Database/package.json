@@ -2,6 +2,6 @@
   "name": "packo-reminder-database-checks",
   "private": true,
   "type": "module",
-  "scripts": { "test": "node checks.mjs" },
+  "scripts": { "test": "node checks.mjs && node account-deletion-checks.mjs" },
   "devDependencies": { "@electric-sql/pglite": "0.5.16" }
 }

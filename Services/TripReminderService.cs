@@ -183,10 +183,17 @@ public sealed class TripReminderService
         catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"Reminder refresh: {ex.GetType().Name}"); }
     }
 
-    private async Task ResetAfterLogoutAsync()
+    public async Task ResetAfterLogoutAsync()
     {
         await _gate.WaitAsync();
-        try { await _scheduler.ReplaceAsync("", []); }
+        try
+        {
+            foreach (var channel in _channels) channel.Unsubscribe();
+            _channels.Clear();
+            _channelAccount = null;
+            _lastSync = default;
+            await _scheduler.ReplaceAsync("", []);
+        }
         finally { _gate.Release(); }
         await RefreshSafeAsync();
     }

@@ -17,6 +17,7 @@ namespace Packo.Services.Interfaces
         Task<bool> TryRecoverSessionAsync(bool forceRefresh = false);
         Task SetAuthenticatedUserAsync(User user, bool attachGuestDrafts = false);
         Task SwitchToGuestAsync();
+        Task DeleteAccountAsync();
         void SetLocalUser(string localUserId);
     }
 }

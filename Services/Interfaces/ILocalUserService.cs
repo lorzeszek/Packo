@@ -8,5 +8,6 @@ namespace Packo.Services.Interfaces
         Task<SQLiteUser> GetOrCreateLocalUserAsync();
         Task<SQLiteUser> CreateLocalUserAsync();
         Task<SQLiteUser> GetOrCreateAccountAsync(string supabaseUserId, bool attachGuestDrafts = false);
+        Task DeleteAccountDataAsync(string supabaseUserId);
     }
 }

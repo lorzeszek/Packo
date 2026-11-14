@@ -286,4 +286,11 @@
   <data name="ReminderGoToTripDetails" xml:space="preserve"><value>Go to trip details</value></data>
   <data name="ReminderNotificationTextUnavailable" xml:space="preserve"><value>This reminder's message is no longer available. You can open the trip details.</value></data>
   <data name="ReminderUpdating" xml:space="preserve"><value>Updating reminders…</value></data>
+  <data name="DeleteAccount" xml:space="preserve"><value>Delete account</value></data>
+  <data name="DeleteAccountHelp" xml:space="preserve"><value>Permanently delete your account and your trip data. This cannot be undone.</value></data>
+  <data name="DeleteAccountConfirmTitle" xml:space="preserve"><value>Delete your account?</value></data>
+  <data name="DeleteAccountConfirmMessage" xml:space="preserve"><value>Your account, all trips you own, their data and reminders you created will be permanently deleted. Other people's trips and reminders will stay — only your participation will be removed. You will be signed out. This cannot be undone.</value></data>
+  <data name="DeleteAccountConnectionRequired" xml:space="preserve"><value>To delete your account, connect to the internet and sign in again if your session has expired.</value></data>
+  <data name="DeleteAccountFailed" xml:space="preserve"><value>We could not confirm account deletion. Check your connection and try again.</value></data>
+  <data name="DeleteAccountLocalCleanupFailed" xml:space="preserve"><value>Your account was deleted and you have been signed out, but some data on this device could not be cleared.</value></data>
 </root>
