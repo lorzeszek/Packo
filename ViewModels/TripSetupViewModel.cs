@@ -1,7 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Packo.Interfaces;
 using Packo.Helpers;
+using Packo.Interfaces;
 using Packo.Models;
 using Packo.Models.DTO;
 using Packo.Models.Enums;
@@ -9,40 +9,10 @@ using Packo.Popups;
 using Packo.Repositories.Interfaces;
 using Packo.Services;
 using Packo.Services.Interfaces;
-using Packo.Views;
 using System.Collections.ObjectModel;
 
 namespace Packo.ViewModels
 {
-    //public partial class ChildAgeItem : ObservableObject
-    //{
-    //    private int _age;
-
-    //    public int Age
-    //    {
-    //        get => _age;
-    //        set => SetProperty(ref _age, value);
-    //    }
-
-    //    public ChildAgeItem(int age)
-    //    {
-    //        Age = age;
-    //    }
-
-    //    [RelayCommand]
-    //    private void IncreaseAge()
-    //    {
-    //        Age++;
-    //    }
-
-    //    [RelayCommand]
-    //    private void DecreaseAge()
-    //    {
-    //        if (Age > 0)
-    //            Age--;
-    //    }
-    //}
-
     public partial class TripSetupViewModel : BaseViewModel, IQueryAttributable
     {
         private TripDTO? _editingTrip;

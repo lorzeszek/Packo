@@ -25,7 +25,8 @@ namespace Packo.Services
 
             var request = new
             {
-                model = "gpt-4.1-mini",
+                model = "gpt-6-luna",
+                reasoning_effort = "none",
                 messages = new[]
                 {
                     new { role = "system", content = "You are a helpful assistant." },
