@@ -33,6 +33,12 @@ public sealed class Shell
     }
 }
 public sealed class Navigation { public Task PopAsync(bool animated) => Task.CompletedTask; }
+public enum NetworkAccess { None, Internet }
+public sealed class Connectivity
+{
+    public static Connectivity Current { get; } = new();
+    public NetworkAccess NetworkAccess { get; set; }
+}
 namespace Packo.Popups
 {
     public static class ConfirmPopup
@@ -110,6 +116,10 @@ namespace Packo.Repositories.Interfaces
         Task SyncPendingChangesAsync() => Task.CompletedTask;
         Task StartRealtimeAsync() => Task.CompletedTask;
         Task<bool> IsChannelCreatedAsync() => Task.FromResult(false);
+        Task<IReadOnlyList<string>> GetActiveDestinationsAsync() => Task.FromResult<IReadOnlyList<string>>([]);
+        Task SaveDocAsync(TripDocumentDTO document) => Task.CompletedTask;
+        Task<List<Packo.Models.SQLite.SQLiteTripDocument>> GetByTripDocsAsync() => Task.FromResult(new List<Packo.Models.SQLite.SQLiteTripDocument>());
+        Task DeleteDocAsync(Guid id) => Task.CompletedTask;
     }
 }
 namespace Packo.Views

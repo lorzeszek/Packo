@@ -89,6 +89,7 @@ Check(tripListPreload.ForceRefresh && tripList.ShowTrips && tripList.Trips.Singl
 await TripDeletionChecks.RunAsync();
 await TripScheduleChecks.RunAsync();
 await CompletedTripChecks.RunAsync();
+await TripCreationChecks.RunAsync();
 
 static TripDTO Trip(int localId, int remoteId, string destination, DateTime start) => new()
 {

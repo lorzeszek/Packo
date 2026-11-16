@@ -12,6 +12,12 @@
     <PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
     <Compile Include="../../Repositories/Supabase/SupabaseTripRepository.cs" Link="SupabaseTripRepository.cs" />
     <Compile Include="../../Repositories/Local/LocalTripRepository.cs" Link="LocalTripRepository.cs" />
+    <Compile Include="../../Repositories/SyncTripRepository.cs" Link="SyncTripRepository.cs" />
+    <Compile Include="../../Repositories/Models/SQLitePendingTripChange.cs" Link="SQLitePendingTripChange.cs" />
+    <Compile Include="../../Repositories/Models/SQLitePendingPackingItemChange.cs" Link="SQLitePendingPackingItemChange.cs" />
+    <Compile Include="../../Repositories/Models/PackingStatsSnapshot.cs" Link="PackingStatsSnapshot.cs" />
+    <Compile Include="../../Models/SQLite/SQLitePackingList.cs" Link="SQLitePackingList.cs" />
+    <Compile Include="../../Messages/PackingSyncMessage.cs" Link="PackingSyncMessage.cs" />
     <Compile Include="../../Services/TripListPreloadService.cs" Link="TripListPreloadService.cs" />
     <Compile Include="../../Models/SQLite/SQLiteTrip.cs" Link="SQLiteTrip.cs" />
     <Compile Include="../../Models/SQLite/SQLitePackingItem.cs" Link="SQLitePackingItem.cs" />

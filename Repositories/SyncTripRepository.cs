@@ -59,8 +59,9 @@ namespace Packo.Repositories
                     trip.RemoteTripId = remoteTripId;
                     await _local.UpdateTripAsync(trip);
                 }
-                catch
+                catch (Exception ex)
                 {
+                    System.Diagnostics.Debug.WriteLine($"Trip upload deferred: {ex}");
                     var pending = new SQLitePendingTripChange
                     {
                         LocalUserId = trip.LocalUserId,
@@ -127,6 +128,9 @@ namespace Packo.Repositories
 
         public async Task<TripDTO?> GetTripAsync(TripDTO trip)
         {
+            if (trip.RemoteTripId <= 0)
+                return await _local.GetTripAsync(trip);
+
             if (Connectivity.Current.NetworkAccess == NetworkAccess.Internet && _sessionService.IsAuthenticated)
             {
                 var remoteTrip = await _remote.GetTripAsync(trip);
@@ -199,6 +203,7 @@ namespace Packo.Repositories
                 return;
 
             var pendingChanges = await _pendingDb.Table<SQLitePendingTripChange>().Where(x => x.LocalUserId == _sessionService.LocalUserId).ToListAsync();
+            var synced = false;
 
             foreach (var change in pendingChanges)
             {
@@ -229,12 +234,17 @@ namespace Packo.Repositories
 
                     // Po sukcesie – usuń z kolejki
                     await _pendingDb.DeleteAsync(change);
+                    synced = true;
                 }
-                catch
+                catch (Exception ex)
                 {
                     // Jeśli nie uda się wysłać – zostaje w kolejce
+                    System.Diagnostics.Debug.WriteLine($"Pending trip {change.Operation} failed: {ex}");
                 }
             }
+
+            if (synced)
+                WeakReferenceMessenger.Default.Send(new Packo.Messages.TripDataChangedMessage());
         }
 
 
@@ -312,7 +322,16 @@ namespace Packo.Repositories
             foreach (var id in removed)
                 WeakReferenceMessenger.Default.Send(new Packo.Messages.PackingSyncMessage(id, AccessRevoked: true));
             var latest = await PackingStatsSnapshot.ReadAsync(_pendingDb, localUserId);
-            return latest.ApplyTo(remoteTrips, beforeRequest);
+            var result = latest.ApplyTo(remoteTrips, beforeRequest).ToList();
+            var pendingLocalTrips = await _local.GetActiveTripsWithStatsAsync();
+            if (_sessionService.LocalUserId != localUserId || _sessionService.UserId != account)
+                return await _local.GetActiveTripsWithStatsAsync();
+
+            // Unsynced trips are durable local data, even while signed in online.
+            // Keep them visible until an upload assigns their remote identity.
+            result.AddRange(pendingLocalTrips.Where(entry => entry.Trip.RemoteTripId <= 0
+                && !entry.Trip.IsJoinedTrip));
+            return result;
         }
 
         public async Task<IReadOnlyList<string>> GetActiveDestinationsAsync()

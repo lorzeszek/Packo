@@ -6,6 +6,7 @@ using Packo.Repositories.Interfaces;
 using Packo.Repositories.Models;
 using Packo.Services.Interfaces;
 using Supabase.Realtime;
+using Supabase.Postgrest;
 using System.Text.Json;
 using static Supabase.Postgrest.Constants;
 
@@ -63,27 +64,21 @@ namespace Packo.Repositories.Supabase
 
         public async Task<int> AddTripAsync(TripDTO trip)
         {
-            try
-            {
-                TripSupabase mappedTrip = Mappers.MapToTripSupabase(trip);
+            // A previous upload may have committed before its response was lost.
+            var existing = await GetTripAsync(trip);
+            if (existing?.RemoteTripId > 0)
+                return existing.RemoteTripId;
 
-                // Use upsert to make Add idempotent (safe to repeat during sync)
-                await _supabase.Client.From<TripSupabase>().Insert(mappedTrip);
+            // The sharing SELECT policy looks up the stored trip. INSERT RETURNING
+            // cannot see that new row through the policy's STABLE function yet.
+            // Commit the insert first, then read its generated identity separately.
+            await _supabase.Client.From<TripSupabase>().Insert(Mappers.MapToTripSupabase(trip),
+                new QueryOptions { Returning = QueryOptions.ReturnType.Minimal });
 
-                // Supabase C# client doesn't always populate identity after Insert.
-                // Fetch the row back by (ClientId, LocalTripId) to get the generated remote id.
-                var response = await _supabase.Client
-                    .From<TripSupabase>()
-                    .Where(x => x.ClientId == trip.LocalUserId && x.LocalTripId == trip.LocalTripId)
-                    .Get();
-
-                return response.Models.FirstOrDefault()?.Id ?? mappedTrip.Id;
-            }
-            catch (Exception ex)
-            {
-                var message = ex.Message;
-                throw;
-            }
+            var saved = await GetTripAsync(trip);
+            return saved?.RemoteTripId > 0
+                ? saved.RemoteTripId
+                : throw new InvalidOperationException("The saved trip's remote identity could not be read.");
         }
 
         public async Task DeleteTripAsync(TripDTO trip)

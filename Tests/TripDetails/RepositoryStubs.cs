@@ -11,6 +11,19 @@ namespace Packo.Services.Interfaces
     {
         public List<TripSupabase> TripRows { get; } = [];
         public string StatsJson { get; set; } = "[]";
+        public bool FailTripInserts { get; set; }
+        public bool RejectInsertReturning { get; set; }
+        public bool HideTripReads { get; set; }
+        public int TripInsertCount { get; private set; }
+        public void InsertTrip(TripSupabase trip, Supabase.Postgrest.QueryOptions? options)
+        {
+            if (FailTripInserts) throw new IOException("Upload unavailable");
+            if (RejectInsertReturning && options?.Returning != Supabase.Postgrest.QueryOptions.ReturnType.Minimal)
+                throw new InvalidOperationException("new row violates row-level security policy trip_access_guard");
+            TripInsertCount++;
+            trip.Id = TripRows.Select(row => row.Id).DefaultIfEmpty().Max() + 1;
+            TripRows.Add(trip);
+        }
         public RepositoryTable<T> From<T>() where T : BaseModel, new() => new(this);
         public Task<RpcResponse> Rpc(string name, object? args)
             => Task.FromResult(new RpcResponse(name == "trip_participants" ? "[]" : StatsJson));
@@ -38,6 +51,7 @@ namespace Packo.Services.Interfaces
         }
         public Task<ModelResponse<T>> Get()
         {
+            if (client.HideTripReads) return Task.FromResult(new ModelResponse<T>([]));
             var rows = client.TripRows.OfType<T>().Where(row => _predicates.All(predicate => predicate(row)));
             return Task.FromResult(new ModelResponse<T>((_order is null ? rows : rows.OrderBy(_order)).Take(_limit).ToList()));
         }
@@ -49,7 +63,12 @@ namespace Packo.Services.Interfaces
             client.TripRows[index] = trip;
             return Task.CompletedTask;
         }
-        public Task Insert(T model) => throw new NotSupportedException();
+        public Task Insert(T model, Supabase.Postgrest.QueryOptions? options = null)
+        {
+            if (model is not TripSupabase trip) throw new NotSupportedException();
+            client.InsertTrip(trip, options);
+            return Task.CompletedTask;
+        }
         public Task Delete(T model) => throw new NotSupportedException();
     }
 }
