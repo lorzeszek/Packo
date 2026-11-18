@@ -262,4 +262,22 @@
   <data name="PlacesCategoryFamily" xml:space="preserve"><value>Dla rodziny</value></data>
   <data name="PlacesCategoryLandmark" xml:space="preserve"><value>Warte zobaczenia</value></data>
   <data name="PlacesCategoryManual" xml:space="preserve"><value>Własne miejsce</value></data>
+  <data name="WeatherClear" xml:space="preserve"><value>Bezchmurnie</value></data>
+  <data name="WeatherClearNight" xml:space="preserve"><value>Pogodna noc</value></data>
+  <data name="WeatherPartlyCloudy" xml:space="preserve"><value>Częściowe zachmurzenie</value></data>
+  <data name="WeatherCloudy" xml:space="preserve"><value>Pochmurno</value></data>
+  <data name="WeatherFog" xml:space="preserve"><value>Mgła</value></data>
+  <data name="WeatherDrizzle" xml:space="preserve"><value>Mżawka</value></data>
+  <data name="WeatherFreezingRain" xml:space="preserve"><value>Marznące opady</value></data>
+  <data name="WeatherRain" xml:space="preserve"><value>Deszcz</value></data>
+  <data name="WeatherSnow" xml:space="preserve"><value>Śnieg</value></data>
+  <data name="WeatherStorm" xml:space="preserve"><value>Burza</value></data>
+  <data name="WeatherUnknown" xml:space="preserve"><value>Brak opisu warunków</value></data>
+  <data name="WeatherFreezing" xml:space="preserve"><value>Mróz</value></data>
+  <data name="WeatherWindLight" xml:space="preserve"><value>Słaby wiatr</value></data>
+  <data name="WeatherWindModerate" xml:space="preserve"><value>Umiarkowany wiatr</value></data>
+  <data name="WeatherWindStrong" xml:space="preserve"><value>Silny wiatr</value></data>
+  <data name="WeatherHumidityLow" xml:space="preserve"><value>Niska wilgotność</value></data>
+  <data name="WeatherHumidityModerate" xml:space="preserve"><value>Umiarkowana wilgotność</value></data>
+  <data name="WeatherHumidityHigh" xml:space="preserve"><value>Wysoka wilgotność</value></data>
 </root>

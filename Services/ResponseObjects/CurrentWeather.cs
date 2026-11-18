@@ -15,5 +15,8 @@ namespace Packo.Services.ResponseObjects
 
         [JsonPropertyName("wind_speed_10m")]
         public decimal WindSpeed { get; set; }
+
+        [JsonPropertyName("is_day")]
+        public int IsDay { get; set; } = 1;
     }
 }

@@ -8,6 +8,7 @@
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.1" />
     <Compile Include="../../Services/WeatherService.cs" Link="WeatherService.cs" />
+    <Compile Include="../../Helpers/WeatherDisplay.cs" Link="WeatherDisplay.cs" />
     <Compile Include="../../Services/WeatherPreloadService.cs" Link="WeatherPreloadService.cs" />
     <Compile Include="../../Services/Interfaces/IWeatherPreloadService.cs" Link="IWeatherPreloadService.cs" />
     <Compile Include="../../ViewModels/WeatherViewModel.cs" Link="WeatherViewModel.cs" />

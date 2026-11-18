@@ -5,6 +5,9 @@ using Packo.Services;
 using Packo.Services.Interfaces;
 using Packo.ViewModels;
 using System.Net;
+using Packo.Helpers;
+using Packo.Models.DTO;
+using Packo.Services.ResponseObjects;
 
 if (args.Contains("--live"))
 {
@@ -29,6 +32,42 @@ Check(http.Requests.Count == 2 && http.Requests[1].Contains("&current=") && http
     "Each destination uses one geocoding request and one combined forecast request");
 var queryKeys = new Uri(http.Requests[1]).Query.TrimStart('?').Split('&').Select(part => part.Split('=')[0]).ToList();
 Check(queryKeys.Count == queryKeys.Distinct().Count(), "The combined forecast request has no duplicate query parameters");
+Check(http.Requests[1].Contains("wind_speed_unit=kmh") && http.Requests[1].Contains("temperature_unit=celsius")
+    && http.Requests[1].Contains("wind_speed_10m,is_day"),
+    "Weather requests explicitly use Celsius and km/h and include day/night conditions");
+Check(afterLogin.Forecasts.Single().CurrentWeather is { WindSpeed: 11.9m, Humidity: 80, IsDay: 0 },
+    "Wind, humidity and day/night data survive API deserialization and forecast loading");
+
+var cold = new DestinationWeatherDTO
+{
+    CurrentWeather = new CurrentWeather { Temperature = -0.1m, WeatherCode = 0, IsDay = 0, WindSpeed = 39.9m, Humidity = 79 }
+};
+Check(cold.IsFreezing && cold.WeatherIcon == "weather_moon.png" && cold.ConditionDescription == "WeatherClearNight",
+    "A clear freezing night keeps its moon icon and marks the temperature as freezing");
+Check(!cold.IsWindy && !cold.IsHighHumidity, "Values just below emphasis thresholds stay unhighlighted");
+cold.CurrentWeather.Temperature = 0;
+cold.CurrentWeather.WindSpeed = 40;
+cold.CurrentWeather.Humidity = 80;
+Check(!cold.IsFreezing && cold.IsWindy && cold.IsHighHumidity,
+    "Freezing starts below zero; wind and humidity emphasis starts at 40 km/h and 80 percent");
+Check(cold.WindDescription == "WeatherWindStrong" && cold.HumidityDescription == "WeatherHumidityHigh",
+    "Highlighted measurements have corresponding readable descriptions");
+Check(WeatherDisplay.GetWindLevelKey(19.9m) == "WeatherWindLight"
+    && WeatherDisplay.GetWindLevelKey(20) == "WeatherWindModerate"
+    && WeatherDisplay.GetHumidityLevelKey(39) == "WeatherHumidityLow"
+    && WeatherDisplay.GetHumidityLevelKey(40) == "WeatherHumidityModerate",
+    "Wind and humidity level descriptions change at their intended boundaries");
+Check(new[] { 71, 73, 75, 77, 85, 86 }.All(code => WeatherDisplay.GetConditionIcon(code) == "weather_snow.png")
+    && new[] { 56, 57, 66, 67 }.All(code => WeatherDisplay.GetConditionIcon(code) == "weather_rain.png"
+        && WeatherDisplay.GetConditionKey(code) == "WeatherFreezingRain"),
+    "Snow codes show snow, while freezing rain remains rain");
+Check(WeatherDisplay.GetConditionIcon(95) == "weather_storm.png"
+    && WeatherDisplay.GetConditionIcon(45) == "weather_fog.png"
+    && WeatherDisplay.GetConditionIcon(999) == "weather_unknown.png",
+    "Storm, fog and unknown conditions have distinct icons");
+var frostyDay = new DailyForecastDTO { WeatherCode = 0, MinTemp = -2, MaxTemp = 4 };
+Check(frostyDay.WeatherIcon == "weather_sun.png" && frostyDay.IsFreezing,
+    "A sunny forecast can independently mark an overnight freezing minimum");
 
 trips.Source = () => Task.FromResult<IReadOnlyList<string>>(["Kraków"]);
 WeakReferenceMessenger.Default.Send(new TripDataChangedMessage());
@@ -146,7 +185,7 @@ sealed class WeatherHandler : HttpMessageHandler
         {
             if (uri.Query.StartsWith("?latitude=1&")) throw new HttpRequestException("Destination forecast unavailable");
             json = """
-                {"current":{"temperature_2m":10.1,"relative_humidity_2m":80,"weather_code":3,"wind_speed_10m":11.9},
+                {"current":{"temperature_2m":10.1,"relative_humidity_2m":80,"weather_code":3,"wind_speed_10m":11.9,"is_day":0},
                  "daily":{"time":["2026-10-26"],"temperature_2m_max":[12.5],"temperature_2m_min":[4.5],"weather_code":[3]}}
                 """;
         }

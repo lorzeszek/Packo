@@ -12,6 +12,10 @@
 
     <ContentPage.Resources>
         <ResourceDictionary>
+            <Color x:Key="WeatherCoolTextLight">#397D9D</Color>
+            <Color x:Key="WeatherCoolTextDark">#9BD5EA</Color>
+            <Color x:Key="WeatherCoolSurfaceLight">#E9F3F7</Color>
+            <Color x:Key="WeatherCoolSurfaceDark">#233840</Color>
         </ResourceDictionary>
     </ContentPage.Resources>
 
@@ -50,38 +54,96 @@
                             StrokeShape="RoundRectangle 24"
                             BackgroundColor="{AppThemeBinding Light={StaticResource PackoSurfaceLight}, Dark={StaticResource PackoSurfaceDark}}">
                         <VerticalStackLayout Spacing="16">
-                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-                                <VerticalStackLayout Spacing="3" VerticalOptions="Center">
-                                    <Label Text="{Binding Destination}" FontSize="20" FontAttributes="Bold"
-                                           LineBreakMode="TailTruncation"
-                                           TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
-                                    <Label Text="{loc:Translate CurrentConditions}" FontSize="10" CharacterSpacing="1.4"
-                                           FontAttributes="Bold" TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
-                                </VerticalStackLayout>
-                                <Border Grid.Column="1" Padding="13,9" StrokeThickness="0"
-                                        StrokeShape="RoundRectangle 16" BackgroundColor="{StaticResource PackoAccentSoftLight}">
-                                    <Label Text="{Binding CurrentWeather.Temperature, StringFormat='{}{0:0}°'}"
-                                           FontSize="25" FontAttributes="Bold" TextColor="{StaticResource PackoAccentStrongLight}" />
+                            <VerticalStackLayout Spacing="4">
+                                <Label Text="{Binding Destination}" FontSize="20" FontAttributes="Bold"
+                                       LineBreakMode="TailTruncation"
+                                       TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+                                <Label Text="{loc:Translate CurrentConditions}" FontSize="10" CharacterSpacing="1.4"
+                                       FontAttributes="Bold" TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+                            </VerticalStackLayout>
+
+                            <Grid ColumnDefinitions="48,*,Auto" ColumnSpacing="10">
+                                <Image Source="{Binding WeatherIcon}" HeightRequest="48" WidthRequest="48"
+                                       VerticalOptions="Center" AutomationProperties.IsInAccessibleTree="False" />
+                                <Label Grid.Column="1" Text="{Binding ConditionDescription}" FontSize="15"
+                                       VerticalOptions="Center" LineBreakMode="WordWrap"
+                                       TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+                                <Border Grid.Column="2" Padding="13,9" StrokeThickness="0"
+                                        StrokeShape="RoundRectangle 16"
+                                        BackgroundColor="{AppThemeBinding Light={StaticResource PackoAccentSoftLight}, Dark={StaticResource PackoAccentSoftDark}}">
+                                    <Border.Triggers>
+                                        <DataTrigger TargetType="Border" Binding="{Binding IsFreezing}" Value="True">
+                                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource WeatherCoolSurfaceLight}, Dark={StaticResource WeatherCoolSurfaceDark}}" />
+                                        </DataTrigger>
+                                    </Border.Triggers>
+                                    <VerticalStackLayout Spacing="2" HorizontalOptions="Center">
+                                        <Label Text="{Binding CurrentWeather.Temperature, StringFormat='{}{0:0}°'}"
+                                               FontSize="30" FontAttributes="Bold" HorizontalTextAlignment="Center"
+                                               TextColor="{AppThemeBinding Light={StaticResource PackoAccentStrongLight}, Dark={StaticResource PackoAccentStrongDark}}">
+                                            <Label.Triggers>
+                                                <DataTrigger TargetType="Label" Binding="{Binding IsFreezing}" Value="True">
+                                                    <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource WeatherCoolTextLight}, Dark={StaticResource WeatherCoolTextDark}}" />
+                                                </DataTrigger>
+                                            </Label.Triggers>
+                                        </Label>
+                                        <HorizontalStackLayout Spacing="3" IsVisible="{Binding IsFreezing}" HorizontalOptions="Center">
+                                            <Image Source="weather_snow.png" WidthRequest="13" HeightRequest="13"
+                                                   AutomationProperties.IsInAccessibleTree="False" />
+                                            <Label Text="{loc:Translate WeatherFreezing}" FontSize="10" FontAttributes="Bold"
+                                                   TextColor="{AppThemeBinding Light={StaticResource WeatherCoolTextLight}, Dark={StaticResource WeatherCoolTextDark}}" />
+                                        </HorizontalStackLayout>
+                                    </VerticalStackLayout>
                                 </Border>
                             </Grid>
 
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
                                 <Border Padding="12,10" StrokeThickness="0" StrokeShape="RoundRectangle 15"
                                         BackgroundColor="{AppThemeBinding Light={StaticResource PackoRaisedSurfaceLight}, Dark={StaticResource PackoRaisedSurfaceDark}}">
-                                    <VerticalStackLayout Spacing="3">
-                                        <Label Text="{loc:Translate Humidity}" FontSize="9" CharacterSpacing="1"
-                                               FontAttributes="Bold" TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
-                                        <Label Text="{Binding CurrentWeather.Humidity, StringFormat='{}{0}%'}" FontSize="15"
+                                    <Border.Triggers>
+                                        <DataTrigger TargetType="Border" Binding="{Binding IsHighHumidity}" Value="True">
+                                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource WeatherCoolSurfaceLight}, Dark={StaticResource WeatherCoolSurfaceDark}}" />
+                                        </DataTrigger>
+                                    </Border.Triggers>
+                                    <VerticalStackLayout Spacing="5">
+                                        <HorizontalStackLayout Spacing="6">
+                                            <Image Source="weather_humidity.png" WidthRequest="20" HeightRequest="20"
+                                                   AutomationProperties.IsInAccessibleTree="False" />
+                                            <Label Text="{loc:Translate Humidity}" FontSize="9" CharacterSpacing="0.5"
+                                                   VerticalOptions="Center" FontAttributes="Bold"
+                                                   TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+                                        </HorizontalStackLayout>
+                                        <Label Text="{Binding CurrentWeather.Humidity, StringFormat='{}{0}%'}" FontSize="20"
                                                FontAttributes="Bold" TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+                                        <Label Text="{Binding HumidityDescription}" FontSize="11" LineBreakMode="WordWrap"
+                                               TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
                                     </VerticalStackLayout>
                                 </Border>
                                 <Border Grid.Column="1" Padding="12,10" StrokeThickness="0" StrokeShape="RoundRectangle 15"
                                         BackgroundColor="{AppThemeBinding Light={StaticResource PackoRaisedSurfaceLight}, Dark={StaticResource PackoRaisedSurfaceDark}}">
-                                    <VerticalStackLayout Spacing="3">
-                                        <Label Text="{loc:Translate Wind}" FontSize="9" CharacterSpacing="1"
-                                               FontAttributes="Bold" TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
-                                        <Label Text="{Binding CurrentWeather.WindSpeed, StringFormat='{}{0:0} km/h'}" FontSize="15"
+                                    <Border.Triggers>
+                                        <DataTrigger TargetType="Border" Binding="{Binding IsWindy}" Value="True">
+                                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PackoAccentSoftLight}, Dark={StaticResource PackoAccentSoftDark}}" />
+                                        </DataTrigger>
+                                    </Border.Triggers>
+                                    <VerticalStackLayout Spacing="5">
+                                        <HorizontalStackLayout Spacing="6">
+                                            <Image Source="weather_wind.png" WidthRequest="20" HeightRequest="20"
+                                                   AutomationProperties.IsInAccessibleTree="False" />
+                                            <Label Text="{loc:Translate Wind}" FontSize="9" CharacterSpacing="0.5"
+                                                   VerticalOptions="Center" FontAttributes="Bold"
+                                                   TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+                                        </HorizontalStackLayout>
+                                        <Label Text="{Binding CurrentWeather.WindSpeed, StringFormat='{}{0:0} km/h'}" FontSize="20"
                                                FontAttributes="Bold" TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+                                        <Label Text="{Binding WindDescription}" FontSize="11" LineBreakMode="WordWrap"
+                                               TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}">
+                                            <Label.Triggers>
+                                                <DataTrigger TargetType="Label" Binding="{Binding IsWindy}" Value="True">
+                                                    <Setter Property="FontAttributes" Value="Bold" />
+                                                    <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource PackoAccentStrongLight}, Dark={StaticResource PackoAccentStrongDark}}" />
+                                                </DataTrigger>
+                                            </Label.Triggers>
+                                        </Label>
                                     </VerticalStackLayout>
                                 </Border>
                             </Grid>
@@ -91,11 +153,11 @@
                                    FontAttributes="Bold" TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
 
                             <CollectionView ItemsSource="{Binding ForecastDays}" ItemsLayout="HorizontalList"
-                                            HeightRequest="104" SelectionMode="None"
+                                            HeightRequest="144" SelectionMode="None"
                                             HorizontalScrollBarVisibility="Never">
                                 <CollectionView.ItemTemplate>
                                     <DataTemplate x:DataType="dto:DailyForecastDTO">
-                                        <Border Margin="0,0,8,0" Padding="10,9" MinimumWidthRequest="56" StrokeThickness="0"
+                                        <Border Margin="0,0,8,0" Padding="10,9" MinimumWidthRequest="64" StrokeThickness="0"
                                                 StrokeShape="RoundRectangle 15"
                                                 BackgroundColor="{AppThemeBinding Light={StaticResource PackoRaisedSurfaceLight}, Dark={StaticResource PackoRaisedSurfaceDark}}">
                                             <VerticalStackLayout Spacing="5" HorizontalOptions="Center">
@@ -107,12 +169,25 @@
                                                            HorizontalTextAlignment="Center"
                                                            TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
                                                 </VerticalStackLayout>
+                                                <Image Source="{Binding WeatherIcon}" WidthRequest="28" HeightRequest="28"
+                                                       HorizontalOptions="Center" SemanticProperties.Description="{Binding ConditionDescription}" />
                                                 <Label Text="{Binding MaxTemp, StringFormat='{}{0:0}°'}" FontSize="15"
                                                        FontAttributes="Bold" HorizontalTextAlignment="Center"
                                                        TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
-                                                <Label Text="{Binding MinTemp, StringFormat='{}{0:0}°'}" FontSize="12"
-                                                       HorizontalTextAlignment="Center"
-                                                       TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+                                                <HorizontalStackLayout Spacing="2" HorizontalOptions="Center">
+                                                    <Image Source="weather_snow.png" WidthRequest="12" HeightRequest="12"
+                                                           IsVisible="{Binding IsFreezing}" VerticalOptions="Center"
+                                                           SemanticProperties.Description="{loc:Translate WeatherFreezing}" />
+                                                    <Label Text="{Binding MinTemp, StringFormat='{}{0:0}°'}" FontSize="12"
+                                                           HorizontalTextAlignment="Center"
+                                                           TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}">
+                                                        <Label.Triggers>
+                                                            <DataTrigger TargetType="Label" Binding="{Binding IsFreezing}" Value="True">
+                                                                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource WeatherCoolTextLight}, Dark={StaticResource WeatherCoolTextDark}}" />
+                                                            </DataTrigger>
+                                                        </Label.Triggers>
+                                                    </Label>
+                                                </HorizontalStackLayout>
                                             </VerticalStackLayout>
                                         </Border>
                                     </DataTemplate>

@@ -332,4 +332,22 @@
   <data name="PlacesCategoryFamily" xml:space="preserve"><value>Family</value></data>
   <data name="PlacesCategoryLandmark" xml:space="preserve"><value>Worth seeing</value></data>
   <data name="PlacesCategoryManual" xml:space="preserve"><value>Your own place</value></data>
+  <data name="WeatherClear" xml:space="preserve"><value>Clear skies</value></data>
+  <data name="WeatherClearNight" xml:space="preserve"><value>Clear night</value></data>
+  <data name="WeatherPartlyCloudy" xml:space="preserve"><value>Partly cloudy</value></data>
+  <data name="WeatherCloudy" xml:space="preserve"><value>Cloudy</value></data>
+  <data name="WeatherFog" xml:space="preserve"><value>Fog</value></data>
+  <data name="WeatherDrizzle" xml:space="preserve"><value>Drizzle</value></data>
+  <data name="WeatherFreezingRain" xml:space="preserve"><value>Freezing rain</value></data>
+  <data name="WeatherRain" xml:space="preserve"><value>Rain</value></data>
+  <data name="WeatherSnow" xml:space="preserve"><value>Snow</value></data>
+  <data name="WeatherStorm" xml:space="preserve"><value>Thunderstorm</value></data>
+  <data name="WeatherUnknown" xml:space="preserve"><value>Conditions unavailable</value></data>
+  <data name="WeatherFreezing" xml:space="preserve"><value>Freezing</value></data>
+  <data name="WeatherWindLight" xml:space="preserve"><value>Light wind</value></data>
+  <data name="WeatherWindModerate" xml:space="preserve"><value>Moderate wind</value></data>
+  <data name="WeatherWindStrong" xml:space="preserve"><value>Strong wind</value></data>
+  <data name="WeatherHumidityLow" xml:space="preserve"><value>Low humidity</value></data>
+  <data name="WeatherHumidityModerate" xml:space="preserve"><value>Moderate humidity</value></data>
+  <data name="WeatherHumidityHigh" xml:space="preserve"><value>High humidity</value></data>
 </root>
