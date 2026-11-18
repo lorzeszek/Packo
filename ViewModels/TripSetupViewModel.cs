@@ -15,9 +15,18 @@ namespace Packo.ViewModels
 {
     public partial class TripSetupViewModel : BaseViewModel, IQueryAttributable
     {
+        private static readonly Lazy<Task<IReadOnlyList<string>>> CachedTimeZoneIds = new(() =>
+            Task.Run<IReadOnlyList<string>>(() => TimeZoneInfo.GetSystemTimeZones()
+                .Select(x => TripSchedule.NormalizeZoneId(x.Id))
+                .Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray()));
+
         private TripDTO? _editingTrip;
-        public IReadOnlyList<string> TimeZoneIds { get; } = TimeZoneInfo.GetSystemTimeZones()
-            .Select(x => TripSchedule.NormalizeZoneId(x.Id)).Distinct().OrderBy(x => x).ToList();
+        private IReadOnlyList<string> _timeZoneIds = [];
+        public IReadOnlyList<string> TimeZoneIds
+        {
+            get => _timeZoneIds;
+            private set => SetProperty(ref _timeZoneIds, value);
+        }
         [ObservableProperty]
         private string selectedTimeZoneId = TripSchedule.NormalizeZoneId(Packo.Helpers.TripSchedule.DeviceTimeZone.Id);
         public bool IsEditing => _editingTrip != null;
@@ -33,8 +42,7 @@ namespace Packo.ViewModels
                 return;
 
             // Keep form changes separate from the trip displayed in the list until saved.
-            _editingTrip = System.Text.Json.JsonSerializer.Deserialize<TripDTO>(
-                System.Text.Json.JsonSerializer.Serialize(trip))!;
+            _editingTrip = trip.CopyForEditing();
             OnPropertyChanged(nameof(IsEditing));
             OnPropertyChanged(nameof(MinimumStartDate));
             OnPropertyChanged(nameof(PageTitle));
@@ -42,7 +50,8 @@ namespace Packo.ViewModels
             OnPropertyChanged(nameof(Intro));
             OnPropertyChanged(nameof(SubmitText));
             Destination = trip.Destination;
-            SelectedTimeZoneId = TripSchedule.NormalizeZoneId(trip.TimeZoneId ?? Packo.Helpers.TripSchedule.DeviceTimeZone.Id);
+            SetTimeZoneOptions(TimeZoneIds,
+                TripSchedule.NormalizeZoneId(trip.TimeZoneId ?? TripSchedule.DeviceTimeZone.Id));
             StartDate = trip.StartDate?.Date ?? DateTime.Today;
             StartTime = trip.StartDate?.TimeOfDay ?? TimeSpan.Zero;
             EndDate = trip.EndDate?.Date ?? StartDate;
@@ -69,6 +78,8 @@ namespace Packo.ViewModels
         public TripSetupViewModel(ILocalUserService localUserService, ISupabaseService supabase, ISessionService sessionService, IPackingItemRepository packingItemRepository, ITripRepository tripRepository, IGoogleAuthService googleAuthService, ITripClassificationService tripClassificationService) : base(localUserService, supabase, sessionService, packingItemRepository, tripRepository, googleAuthService)
         {
             _tripClassificationService = tripClassificationService;
+            // The form can render immediately with its selected zone. Load the full catalog after navigation.
+            TimeZoneIds = [SelectedTimeZoneId];
 
             TransportOptions = new ObservableCollection<TransportOptionItem>
             {
@@ -106,6 +117,28 @@ namespace Packo.ViewModels
                 OnPropertyChanged(nameof(Intro));
                 OnPropertyChanged(nameof(SubmitText));
             };
+        }
+
+        public async Task LoadTimeZonesAsync()
+        {
+            try
+            {
+                var zones = await CachedTimeZoneIds.Value;
+                SetTimeZoneOptions(zones, SelectedTimeZoneId);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Time zone catalog loading failed: {ex}");
+            }
+        }
+
+        private void SetTimeZoneOptions(IReadOnlyList<string> zones, string selectedZone)
+        {
+            TimeZoneIds = zones.Contains(selectedZone, StringComparer.Ordinal)
+                ? zones
+                : zones.Append(selectedZone).OrderBy(x => x, StringComparer.Ordinal).ToArray();
+            // Replacing a Picker's ItemsSource can clear its two-way SelectedItem binding.
+            SelectedTimeZoneId = selectedZone;
         }
 
         // ====== INPUT ======

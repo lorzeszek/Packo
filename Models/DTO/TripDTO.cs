@@ -23,6 +23,15 @@ namespace Packo.Models.DTO
         public bool IsInTrash { get; set; }
         public CoverThemeType CoverTheme { get; set; }
         public string CoverImagePath { get; set; }
+
+        public TripDTO CopyForEditing()
+        {
+            var copy = (TripDTO)MemberwiseClone();
+            copy.ChildrenAges = [.. ChildrenAges];
+            copy.SelectedTransportTypes = [.. SelectedTransportTypes];
+            copy.Participants = [.. Participants];
+            return copy;
+        }
     }
 
     public sealed record TripParticipant(int TripId, string UserId, bool IsOwner, string Name, string AvatarUrl)

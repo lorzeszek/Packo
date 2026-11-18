@@ -68,6 +68,8 @@ internal static class TripScheduleChecks
         var repository = new Trips();
         var classification = new Classification();
         var form = Form(repository, classification);
+        Check(form.TimeZoneIds.Count == 1 && form.TimeZoneIds[0] == form.SelectedTimeZoneId,
+            "Opening the trip form needs only the selected zone, before loading the full catalog");
         Check(form.StartTime == TimeSpan.Zero && form.EndTime == new TimeSpan(23, 59, 0),
             "New trips retain the familiar full-day defaults");
         form.Destination = "Same-day trip";
@@ -93,8 +95,36 @@ internal static class TripScheduleChecks
             "Creation opens the saved trip's details with its assigned local identity");
 
         var existing = Trip(day.AddHours(13).AddMinutes(20), day.AddHours(18).AddMinutes(50));
+        existing.TimeZoneId = "Asia/Tokyo";
+        existing.LocalTripId = 7;
+        existing.RemoteTripId = 70;
+        existing.CoverImagePath = "trip-cover.png";
+        existing.ChildrenAges = [4, 9];
+        existing.Participants = [new(70, "remote", true, "Owner", "")];
         var edit = Form(repository, classification);
         edit.ApplyQueryAttributes(new Dictionary<string, object> { ["editTrip"] = existing });
+        Check(edit.SelectedTimeZoneId == "Asia/Tokyo" && edit.TimeZoneIds.Contains("Asia/Tokyo")
+            && edit.TimeZoneIds.Count <= 2,
+            "Editing shows the trip's zone immediately, even when it differs from the device zone");
+        // Model the Picker clearing its two-way selection when ItemsSource is replaced.
+        edit.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(edit.TimeZoneIds)) edit.SelectedTimeZoneId = null!;
+        };
+        await edit.LoadTimeZonesAsync();
+        Check(edit.TimeZoneIds.Count > 2 && edit.SelectedTimeZoneId == "Asia/Tokyo",
+            "Loading all zones preserves the selection after the Picker resets its binding");
+        var anotherEdit = Form(repository, classification);
+        anotherEdit.ApplyQueryAttributes(new Dictionary<string, object> { ["editTrip"] = existing });
+        await anotherEdit.LoadTimeZonesAsync();
+        Check(ReferenceEquals(edit.TimeZoneIds, anotherEdit.TimeZoneIds),
+            "Reopening the trip editor reuses the cached time zone catalog");
+        var aliasTrip = Trip(day, day.AddHours(1));
+        aliasTrip.TimeZoneId = "US/Pacific";
+        anotherEdit.ApplyQueryAttributes(new Dictionary<string, object> { ["editTrip"] = aliasTrip });
+        await anotherEdit.LoadTimeZonesAsync();
+        Check(anotherEdit.TimeZoneIds.Contains("US/Pacific") && anotherEdit.SelectedTimeZoneId == "US/Pacific",
+            "Loading the catalog keeps a saved zone alias available and selected");
         Check(edit.StartTime == new TimeSpan(13, 20, 0) && edit.EndTime == new TimeSpan(18, 50, 0),
             "Editing restores existing clock times instead of resetting them to full-day defaults");
         edit.StartTime = new(14, 10, 0);
@@ -104,6 +134,19 @@ internal static class TripScheduleChecks
         Check(repository.Updated!.StartDate!.Value.TimeOfDay == new TimeSpan(14, 10, 0)
             && repository.Updated.EndDate!.Value.TimeOfDay == new TimeSpan(18, 50, 0),
             "Saving an edit persists both the changed start time and the unchanged end time");
+        Check(repository.Updated.TimeZoneId == "Asia/Tokyo" && repository.Updated.LocalTripId == 7
+            && repository.Updated.RemoteTripId == 70 && repository.Updated.CoverImagePath == "trip-cover.png"
+            && repository.Updated.Participants.SequenceEqual(existing.Participants)
+            && repository.Updated.ChildrenAges.SequenceEqual([4, 9]),
+            "The fast edit snapshot preserves the zone, trip identity, cover and participants when saved");
+        existing.SelectedTransportTypes = ["Car"];
+        var draft = existing.CopyForEditing();
+        draft.ChildrenAges[0] = 12;
+        draft.SelectedTransportTypes.Clear();
+        draft.Participants.Clear();
+        Check(existing.ChildrenAges.SequenceEqual([4, 9])
+            && existing.SelectedTransportTypes.SequenceEqual(["Car"]) && existing.Participants.Count == 1,
+            "Changing an edit snapshot's collections leaves the original trip untouched");
         var legacy = Trip(day, day.AddHours(23).AddMinutes(59));
         edit.ApplyQueryAttributes(new Dictionary<string, object> { ["editTrip"] = legacy });
         Check(edit.StartDateTime == legacy.StartDate && edit.EndDateTime == legacy.EndDate,

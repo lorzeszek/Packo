@@ -14,6 +14,12 @@ public partial class TripSetupPage : BasePage
         BindingContext = _viewModel;
     }
 
+    protected override async void OnNavigatedTo(NavigatedToEventArgs args)
+    {
+        base.OnNavigatedTo(args);
+        await _viewModel.LoadTimeZonesAsync();
+    }
+
     private void OnStartDateIconTapped(object sender, TappedEventArgs e)
     {
 #if ANDROID
