@@ -223,4 +223,43 @@
   <data name="DeleteAccountConnectionRequired" xml:space="preserve"><value>Aby usunąć konto, połącz się z internetem i zaloguj się ponownie, jeśli sesja wygasła.</value></data>
   <data name="DeleteAccountFailed" xml:space="preserve"><value>Nie udało się potwierdzić usunięcia konta. Sprawdź połączenie i spróbuj ponownie.</value></data>
   <data name="DeleteAccountLocalCleanupFailed" xml:space="preserve"><value>Konto zostało usunięte i nastąpiło wylogowanie, ale nie udało się wyczyścić wszystkich danych na tym urządzeniu.</value></data>
+  <data name="PlacesTitle" xml:space="preserve"><value>Miejsca do odwiedzenia</value></data>
+  <data name="PlacesEntryIntro" xml:space="preserve"><value>Odkryj ciekawe miejsca w okolicy i zapisz wybrane na ten wyjazd.</value></data>
+  <data name="PlacesEntryCount" xml:space="preserve"><value>Zapisano miejsc: {0}. Twoja lista jest dostępna także offline.</value></data>
+  <data name="PlacesOpen" xml:space="preserve"><value>Zobacz miejsca</value></data>
+  <data name="PlacesSuggestions" xml:space="preserve"><value>Propozycje</value></data>
+  <data name="PlacesSavedCount" xml:space="preserve"><value>Zapisane · {0}</value></data>
+  <data name="PlacesIntro" xml:space="preserve"><value>Znajdź propozycje w promieniu 10 km od celu wyjazdu, dopasowane z pomocą AI. Godziny otwarcia i bilety sprawdzisz na stronie miejsca.</value></data>
+  <data name="PlacesOffline" xml:space="preserve"><value>Wyszukiwanie miejsc jest dostępne tylko online. Zapisane miejsca możesz przeglądać i edytować offline.</value></data>
+  <data name="PlacesLocalList" xml:space="preserve"><value>Twoja osobista lista na tym urządzeniu. Dostępna także bez internetu.</value></data>
+  <data name="PlacesFind" xml:space="preserve"><value>Znajdź propozycje</value></data>
+  <data name="PlacesFindMore" xml:space="preserve"><value>Pokaż kolejne propozycje</value></data>
+  <data name="PlacesSave" xml:space="preserve"><value>+ Zapisz</value></data>
+  <data name="PlacesAlreadySaved" xml:space="preserve"><value>✓ Zapisano</value></data>
+  <data name="PlacesVisited" xml:space="preserve"><value>✓ Odwiedzone</value></data>
+  <data name="PlacesMarkVisited" xml:space="preserve"><value>Oznacz jako odwiedzone</value></data>
+  <data name="PlacesRemove" xml:space="preserve"><value>Usuń</value></data>
+  <data name="PlacesMap" xml:space="preserve"><value>Mapa</value></data>
+  <data name="PlacesWebsite" xml:space="preserve"><value>Strona miejsca</value></data>
+  <data name="PlacesAddManual" xml:space="preserve"><value>+ Dodaj własne miejsce</value></data>
+  <data name="PlacesName" xml:space="preserve"><value>Nazwa miejsca</value></data>
+  <data name="PlacesAddress" xml:space="preserve"><value>Adres lub miejscowość</value></data>
+  <data name="PlacesNote" xml:space="preserve"><value>Notatka (opcjonalnie)</value></data>
+  <data name="PlacesOptionalWebsite" xml:space="preserve"><value>Strona internetowa (opcjonalnie)</value></data>
+  <data name="PlacesInvalidUrl" xml:space="preserve"><value>Podaj pełny adres zaczynający się od https:// lub http://.</value></data>
+  <data name="PlacesWorking" xml:space="preserve"><value>Przygotowywanie miejsc…</value></data>
+  <data name="PlacesSuggestionsEmpty" xml:space="preserve"><value>Kliknij „Znajdź propozycje”, aby odkryć miejsca dla tej wycieczki.</value></data>
+  <data name="PlacesSavedEmpty" xml:space="preserve"><value>Tutaj pojawią się zapisane miejsca. Wybierz propozycję lub dodaj własne miejsce.</value></data>
+  <data name="PlacesNoMore" xml:space="preserve"><value>Nie znaleziono kolejnych miejsc w tej okolicy. Możesz dodać własne miejsce w sekcji „Zapisane”. Dla ogólnego celu podróży spróbuj podać konkretne miasto w danych wycieczki.</value></data>
+  <data name="PlacesSearchFailed" xml:space="preserve"><value>Nie udało się przygotować propozycji. Sprawdź połączenie i spróbuj ponownie.</value></data>
+  <data name="PlacesLoadFailed" xml:space="preserve"><value>Nie udało się odczytać miejsc. Otwórz ten widok ponownie.</value></data>
+  <data name="PlacesSaveFailed" xml:space="preserve"><value>Nie udało się zapisać zmiany. Spróbuj ponownie.</value></data>
+  <data name="PlacesUnavailable" xml:space="preserve"><value>Ten wyjazd nie jest już dostępny.</value></data>
+  <data name="PlacesLinksOnline" xml:space="preserve"><value>Aby otworzyć mapę lub stronę miejsca, połącz się z internetem.</value></data>
+  <data name="PlacesLinkFailed" xml:space="preserve"><value>Nie udało się otworzyć linku.</value></data>
+  <data name="PlacesCategoryCulture" xml:space="preserve"><value>Kultura</value></data>
+  <data name="PlacesCategoryNature" xml:space="preserve"><value>Natura</value></data>
+  <data name="PlacesCategoryFamily" xml:space="preserve"><value>Dla rodziny</value></data>
+  <data name="PlacesCategoryLandmark" xml:space="preserve"><value>Warte zobaczenia</value></data>
+  <data name="PlacesCategoryManual" xml:space="preserve"><value>Własne miejsce</value></data>
 </root>

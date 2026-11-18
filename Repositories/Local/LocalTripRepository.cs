@@ -38,7 +38,12 @@ namespace Packo.Repositories.Local
         {
             var localTrip = ToRow(trip);
 
-            await _db.DeleteAsync(localTrip);
+            await _db.RunInTransactionAsync(db =>
+            {
+                if (db.ExecuteScalar<int>("SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = 'SQLiteTripPlaces'") > 0)
+                    db.Execute("DELETE FROM SQLiteTripPlaces WHERE LocalUserId = ? AND LocalTripId = ?", trip.LocalUserId, trip.LocalTripId);
+                db.Delete(localTrip);
+            });
         }
 
         public async Task<IReadOnlyList<TripWithStats>> GetActiveTripsWithStatsAsync()
@@ -175,7 +180,12 @@ namespace Packo.Repositories.Local
         {
             //var sqliteTrips = await _db.Table<SQLiteTrip>().Where(x => x.LocalUserId == _sessionService.LocalUserId).ToListAsync();
 
-            await _db.DeleteAllAsync<SQLiteTrip>();
+            await _db.RunInTransactionAsync(db =>
+            {
+                if (db.ExecuteScalar<int>("SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = 'SQLiteTripPlaces'") > 0)
+                    db.Execute("DELETE FROM SQLiteTripPlaces");
+                db.DeleteAll<SQLiteTrip>();
+            });
         }
 
         //public async Task<List<SQLiteTripDocument>> GetByTripIdAsync(Guid tripId)

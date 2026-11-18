@@ -41,7 +41,7 @@ try
     var guest = await local.GetOrCreateLocalUserAsync();
 
     var scopedTables = new[] { "SQLitePendingPackingItemChange", "SQLitePendingTripChange",
-        "SQLiteTripReminder", "SQLiteReminderPreference", "SQLitePackingItem", "SQLitePackingList", "SQLiteTrip" };
+        "SQLiteTripReminder", "SQLiteReminderPreference", "SQLiteTripPlaces", "SQLitePackingItem", "SQLitePackingList", "SQLiteTrip" };
     foreach (var table in scopedTables)
     {
         await db.ExecuteAsync($"CREATE TABLE {table}(LocalUserId TEXT, Data TEXT)");

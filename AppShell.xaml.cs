@@ -15,6 +15,7 @@ namespace Packo
             Routing.RegisterRoute(nameof(TripSetupPage), typeof(TripSetupPage));
             Routing.RegisterRoute(PackingListPage.EditorRoute, typeof(PackingListPage));
             Routing.RegisterRoute(StartViewModel.Route, typeof(StartPage));
+            Routing.RegisterRoute(TripPlacesPage.Route, typeof(TripPlacesPage));
 
             Navigating += OnShellNavigating;
         }

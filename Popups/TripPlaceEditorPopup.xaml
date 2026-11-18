@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<toolkit:Popup x:TypeArguments="models:TripPlace" x:Class="Packo.Popups.TripPlaceEditorPopup"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:models="clr-namespace:Packo.Models"
+    xmlns:loc="clr-namespace:Packo.Extensions"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    Padding="0" CanBeDismissedByTappingOutsideOfPopup="False">
+    <Border x:Name="PopupCard" Style="{StaticResource PackoPopupCardStyle}">
+        <ScrollView>
+            <VerticalStackLayout Spacing="12">
+                <Label Text="{loc:Translate PlacesAddManual}" Style="{StaticResource PackoPopupTitleStyle}" />
+                <Label Text="{loc:Translate PlacesName}" Style="{StaticResource PackoFieldCaptionStyle}" />
+                <Entry x:Name="NameEntry" MaxLength="120" TextChanged="OnInputChanged"
+                       Placeholder="{loc:Translate PlacesName}" MinimumHeightRequest="48" />
+                <Label Text="{loc:Translate PlacesAddress}" Style="{StaticResource PackoFieldCaptionStyle}" />
+                <Entry x:Name="AddressEntry" MaxLength="250" MinimumHeightRequest="48" Placeholder="{loc:Translate PlacesAddress}" />
+                <Label Text="{loc:Translate PlacesNote}" Style="{StaticResource PackoFieldCaptionStyle}" />
+                <Editor x:Name="NoteEditor" MaxLength="500" HeightRequest="80" AutoSize="TextChanges" />
+                <Label Text="{loc:Translate PlacesOptionalWebsite}" Style="{StaticResource PackoFieldCaptionStyle}" />
+                <Entry x:Name="WebsiteEntry" Keyboard="Url" MaxLength="2000" TextChanged="OnInputChanged"
+                       Placeholder="https://" MinimumHeightRequest="48" />
+                <Label x:Name="UrlError" Text="{loc:Translate PlacesInvalidUrl}" IsVisible="False" FontSize="12"
+                       TextColor="{AppThemeBinding Light={StaticResource PackoAccentStrongLight}, Dark={StaticResource PackoAccentDark}}" />
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                    <Button Text="{loc:Translate Cancel}" Clicked="OnCancelClicked" Style="{StaticResource PackoPopupSecondaryButtonStyle}" />
+                    <Button x:Name="SaveButton" Grid.Column="1" Text="{loc:Translate PlacesSave}" Clicked="OnSaveClicked"
+                            IsEnabled="False" Style="{StaticResource PackoPopupPrimaryButtonStyle}" />
+                </Grid>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Border>
+</toolkit:Popup>

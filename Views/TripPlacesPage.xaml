@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/maui/global"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:loc="clr-namespace:Packo.Extensions"
+             xmlns:vm="clr-namespace:Packo.ViewModels"
+             x:Class="Packo.Views.TripPlacesPage" x:Name="PlacesPage"
+             x:DataType="vm:TripPlacesViewModel" Title="{loc:Translate PlacesTitle}"
+             BackgroundColor="{AppThemeBinding Light={StaticResource PackoPageBackgroundLight}, Dark={StaticResource PackoPageBackgroundDark}}">
+    <CollectionView ItemsSource="{Binding Items}" SelectionMode="None" Margin="22,16,22,0">
+        <CollectionView.Header>
+        <VerticalStackLayout Spacing="12" Margin="0,0,0,12">
+            <Label Text="{Binding Destination}" FontSize="25" FontAttributes="Bold" MaxLines="2"
+                   TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+            <Border IsVisible="{Binding IsOffline}" Padding="12,10" StrokeThickness="0" StrokeShape="RoundRectangle 14"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource PackoAccentSoftLight}, Dark={StaticResource PackoAccentSoftDark}}">
+                <Label Text="{loc:Translate PlacesOffline}" FontSize="13" LineBreakMode="WordWrap"
+                       SemanticProperties.Description="{loc:Translate PlacesOffline}"
+                       TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+            </Border>
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                <Button Text="{loc:Translate PlacesSuggestions}" Command="{Binding ShowSuggestionsCommand}"
+                        HeightRequest="46" CornerRadius="14" FontSize="13" FontAttributes="Bold"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource PackoSurfaceLight}, Dark={StaticResource PackoSurfaceDark}}"
+                        TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding ShowSuggestions}" Value="True">
+                            <Setter Property="BackgroundColor" Value="{StaticResource PackoAccentLight}" />
+                            <Setter Property="TextColor" Value="White" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                <Button Grid.Column="1" Text="{Binding SavedTabLabel}" Command="{Binding ShowSavedCommand}"
+                        HeightRequest="46" CornerRadius="14" FontSize="13" FontAttributes="Bold"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource PackoSurfaceLight}, Dark={StaticResource PackoSurfaceDark}}"
+                        TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding ShowSaved}" Value="True">
+                            <Setter Property="BackgroundColor" Value="{StaticResource PackoAccentLight}" />
+                            <Setter Property="TextColor" Value="White" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+            </Grid>
+            <VerticalStackLayout IsVisible="{Binding ShowSuggestions}" Spacing="8">
+                <Label Text="{loc:Translate PlacesIntro}" FontSize="13" LineBreakMode="WordWrap"
+                       TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+                <Button Text="{Binding FindLabel}" Command="{Binding FindCommand}" AutomationId="FindPlacesButton"
+                        HeightRequest="48" CornerRadius="14" FontAttributes="Bold"
+                        BackgroundColor="{StaticResource PackoAccentLight}" TextColor="White" />
+            </VerticalStackLayout>
+            <VerticalStackLayout IsVisible="{Binding ShowSaved}" Spacing="8">
+                <Label Text="{loc:Translate PlacesLocalList}" FontSize="12" LineBreakMode="WordWrap"
+                       TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+                <Button Text="{loc:Translate PlacesAddManual}" Clicked="OnAddManualClicked" IsEnabled="{Binding CanEdit}"
+                        HeightRequest="48" CornerRadius="14" FontAttributes="Bold"
+                        BackgroundColor="{StaticResource PackoAccentLight}" TextColor="White" />
+            </VerticalStackLayout>
+            <HorizontalStackLayout IsVisible="{Binding IsWorking}" Spacing="10">
+                <ActivityIndicator IsRunning="{Binding IsWorking}" Color="{StaticResource PackoAccentLight}" WidthRequest="24" />
+                <Label Text="{loc:Translate PlacesWorking}" FontSize="13" VerticalOptions="Center"
+                       TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+            </HorizontalStackLayout>
+            <Label Text="{Binding Message}" IsVisible="{Binding HasMessage}" FontSize="13" LineBreakMode="WordWrap"
+                   TextColor="{AppThemeBinding Light={StaticResource PackoAccentStrongLight}, Dark={StaticResource PackoAccentDark}}" />
+        </VerticalStackLayout>
+        </CollectionView.Header>
+            <CollectionView.ItemsLayout><LinearItemsLayout Orientation="Vertical" ItemSpacing="12" /></CollectionView.ItemsLayout>
+            <CollectionView.EmptyView>
+                <Label Text="{Binding EmptyText}" Padding="8,24" FontSize="14" HorizontalTextAlignment="Center"
+                       TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+            </CollectionView.EmptyView>
+            <CollectionView.Footer><Grid HeightRequest="24" BackgroundColor="Transparent" /></CollectionView.Footer>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="vm:TripPlaceCardViewModel">
+                    <Border Padding="18" StrokeThickness="0" StrokeShape="RoundRectangle 22"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource PackoSurfaceLight}, Dark={StaticResource PackoSurfaceDark}}">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="{Binding CategoryLabel}" FontSize="11" FontAttributes="Bold" CharacterSpacing="1"
+                                   TextColor="{AppThemeBinding Light={StaticResource PackoShellAccentLight}, Dark={StaticResource PackoAccentDark}}" />
+                            <Label Text="{Binding Place.Name}" FontSize="18" FontAttributes="Bold" LineBreakMode="WordWrap"
+                                   TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+                            <Label Text="{Binding Place.Description}" IsVisible="{Binding HasDescription}" FontSize="14" LineBreakMode="WordWrap"
+                                   TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+                            <FlexLayout Wrap="Wrap" Direction="Row" AlignItems="Center">
+                                <Button Text="{loc:Translate PlacesMap}" Clicked="OnMapClicked" Margin="0,0,6,6" HeightRequest="44" CornerRadius="12" FontSize="12"
+                                        BackgroundColor="{AppThemeBinding Light={StaticResource PackoAccentSoftLight}, Dark={StaticResource PackoAccentSoftDark}}"
+                                        TextColor="{AppThemeBinding Light={StaticResource PackoShellAccentLight}, Dark={StaticResource PackoAccentDark}}" />
+                                <Button Text="{loc:Translate PlacesWebsite}" Clicked="OnWebsiteClicked" IsVisible="{Binding HasWebsite}"
+                                        Margin="0,0,6,6" HeightRequest="44" CornerRadius="12" FontSize="12"
+                                        BackgroundColor="{AppThemeBinding Light={StaticResource PackoAccentSoftLight}, Dark={StaticResource PackoAccentSoftDark}}"
+                                        TextColor="{AppThemeBinding Light={StaticResource PackoShellAccentLight}, Dark={StaticResource PackoAccentDark}}" />
+                                <Button Text="Wikipedia" Clicked="OnSourceClicked" IsVisible="{Binding HasSource}"
+                                        Margin="0,0,6,6" HeightRequest="44" CornerRadius="12" FontSize="12" BackgroundColor="Transparent"
+                                        TextColor="{AppThemeBinding Light={StaticResource PackoShellAccentLight}, Dark={StaticResource PackoAccentDark}}" />
+                            </FlexLayout>
+                            <Button Text="{Binding SaveLabel}" Clicked="OnSaveClicked" IsVisible="{Binding ShowSaveAction}" IsEnabled="{Binding CanSave}"
+                                    HeightRequest="46" CornerRadius="13" FontAttributes="Bold"
+                                    BackgroundColor="{StaticResource PackoAccentLight}" TextColor="White" />
+                            <Grid IsVisible="{Binding ShowSavedActions}" IsEnabled="{Binding CanEdit}"
+                                  ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <Button Text="{Binding VisitLabel}" Clicked="OnVisitClicked" HeightRequest="46" CornerRadius="13" FontSize="13"
+                                        BackgroundColor="{AppThemeBinding Light={StaticResource PackoAccentSoftLight}, Dark={StaticResource PackoAccentSoftDark}}"
+                                        TextColor="{AppThemeBinding Light={StaticResource PackoShellAccentLight}, Dark={StaticResource PackoAccentDark}}" />
+                                <Button Grid.Column="1" Text="{loc:Translate PlacesRemove}" Clicked="OnRemoveClicked" HeightRequest="46" CornerRadius="13" FontSize="13"
+                                        BackgroundColor="Transparent"
+                                        TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+    </CollectionView>
+</ContentPage>

@@ -18,7 +18,9 @@ namespace Packo.Services
             _apiKey = configuration["OpenAI:ApiKey"] ?? string.Empty;
         }
 
-        public async Task<string> GetCompletionAsync(string prompt)
+        public Task<string> GetCompletionAsync(string prompt) => GetCompletionAsync(prompt, CancellationToken.None);
+
+        public async Task<string> GetCompletionAsync(string prompt, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(_apiKey))
                 throw new InvalidOperationException("OpenAI API key is not configured. Set it via Preferences with key 'OpenAI_ApiKey'.");
@@ -37,19 +39,19 @@ namespace Packo.Services
 
             var json = JsonSerializer.Serialize(request);
 
-            var httpRequest = new HttpRequestMessage(HttpMethod.Post, "https://api.openai.com/v1/chat/completions");
+            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, "https://api.openai.com/v1/chat/completions");
             httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
             httpRequest.Content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            var response = await _httpClient.SendAsync(httpRequest);
+            using var response = await _httpClient.SendAsync(httpRequest, cancellationToken);
 
             if (!response.IsSuccessStatusCode)
             {
-                var error = await response.Content.ReadAsStringAsync();
+                var error = await response.Content.ReadAsStringAsync(cancellationToken);
                 throw new Exception($"OpenAI error: {error}");
             }
 
-            var responseJson = await response.Content.ReadAsStringAsync();
+            var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
 
             var result = JsonSerializer.Deserialize<OpenAIResponse>(responseJson);
 

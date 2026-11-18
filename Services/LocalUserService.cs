@@ -19,7 +19,7 @@ namespace Packo.Services
             foreach (var account in accounts)
             {
                 foreach (var table in new[] { "SQLitePendingPackingItemChange", "SQLitePendingTripChange",
-                    "SQLiteTripReminder", "SQLiteReminderPreference", "SQLitePackingItem", "SQLitePackingList", "SQLiteTrip" })
+                    "SQLiteTripReminder", "SQLiteReminderPreference", "SQLiteTripPlaces", "SQLitePackingItem", "SQLitePackingList", "SQLiteTrip" })
                 {
                     if (db.ExecuteScalar<int>("SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = ?", table) > 0)
                         db.Execute($"DELETE FROM {table} WHERE LocalUserId = ?", account.LocalUserId);
@@ -83,6 +83,9 @@ namespace Packo.Services
                     if (guest is not null)
                     {
                         const string draftTrips = "SELECT LocalTripId FROM SQLiteTrip WHERE LocalUserId = ? AND coalesce(RemoteTripId, 0) = 0";
+                        if (db.ExecuteScalar<int>("SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = 'SQLiteTripPlaces'") > 0)
+                            db.Execute($"UPDATE SQLiteTripPlaces SET LocalUserId = ?, Key = ? || ':' || LocalTripId WHERE LocalUserId = ? AND LocalTripId IN ({draftTrips})",
+                                user.LocalUserId, user.LocalUserId, guest.LocalUserId, guest.LocalUserId);
                         foreach (var table in new[] { "SQLitePackingItem", "SQLitePackingList", "SQLitePendingPackingItemChange" })
                             db.Execute($"UPDATE {table} SET LocalUserId = ? WHERE LocalUserId = ? AND LocalTripId IN ({draftTrips})",
                                 user.LocalUserId, guest.LocalUserId, guest.LocalUserId);

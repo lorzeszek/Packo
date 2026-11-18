@@ -103,6 +103,18 @@
                         <Label x:Name="RemindersSummary" Style="{StaticResource PackoFieldCaptionStyle}" LineBreakMode="WordWrap" />
                     </VerticalStackLayout>
                 </Border>
+                <Border Padding="20" StrokeShape="RoundRectangle 22" StrokeThickness="0"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource PackoSurfaceLight}, Dark={StaticResource PackoSurfaceDark}}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="{loc:Translate PlacesTitle}" FontSize="18" FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+                        <Label x:Name="PlacesSummary" Text="{loc:Translate PlacesEntryIntro}"
+                               Style="{StaticResource PackoFieldCaptionStyle}" LineBreakMode="WordWrap" />
+                        <Button Text="{loc:Translate PlacesOpen}" Clicked="OnPlacesClicked"
+                                HeightRequest="48" CornerRadius="14" FontAttributes="Bold"
+                                BackgroundColor="{StaticResource PackoAccentLight}" TextColor="White" />
+                    </VerticalStackLayout>
+                </Border>
                 <VerticalStackLayout Spacing="12">
                     <Label Text="{loc:Translate NamedPackingLists}" FontSize="18" FontAttributes="Bold"
                            TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />

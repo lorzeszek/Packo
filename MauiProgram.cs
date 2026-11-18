@@ -110,6 +110,7 @@ namespace Packo
             builder.Services.AddSingleton<SupabaseTripRepository>();
 
             builder.Services.AddSingleton<LocalPackingItemRepository>();
+            builder.Services.AddSingleton<ITripPlacesRepository, LocalTripPlacesRepository>();
             builder.Services.AddSingleton<SupabasePackingItemRepository>();
 
             builder.Services.AddSingleton(sp =>
@@ -158,6 +159,7 @@ namespace Packo
             builder.Services.AddTransient<TripListPage>();
             builder.Services.AddTransient<TripSetupPage>();
             builder.Services.AddTransient<PackingListPage>();
+            builder.Services.AddTransient<TripPlacesPage>();
             builder.Services.AddTransient<WeatherPage>();
             builder.Services.AddTransient<DocsPage>();
             builder.Services.AddTransient<SettingsPage>();
@@ -167,6 +169,7 @@ namespace Packo
             builder.Services.AddTransient<TripSetupViewModel>();
             builder.Services.AddTransient<TripListViewModel>();
             builder.Services.AddTransient<PackingListViewModel>();
+            builder.Services.AddTransient<TripPlacesViewModel>();
             builder.Services.AddTransient<WeatherViewModel>();
             builder.Services.AddTransient<DocsViewModel>();
             builder.Services.AddTransient<SettingsViewModel>();
@@ -213,6 +216,7 @@ namespace Packo
             builder.Services.AddSingleton<IAIService, AIService>();
             builder.Services.AddSingleton<IPackingSuggestionService, PackingSuggestionService>();
             builder.Services.AddSingleton<ITripClassificationService, TripClassificationService>();
+            builder.Services.AddHttpClient<IPlaceSuggestionService, PlaceSuggestionService>(client => client.Timeout = TimeSpan.FromSeconds(20));
             builder.Services.AddHttpClient<WeatherService>(client => client.Timeout = TimeSpan.FromSeconds(15));
             builder.Services.AddSingleton<IWeatherPreloadService, WeatherPreloadService>();
 

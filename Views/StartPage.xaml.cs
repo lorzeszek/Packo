@@ -14,18 +14,20 @@ public partial class StartPage : ContentPage
     private readonly IDispatcherTimer _scheduleTimer;
     private readonly TripInvitationService _invitations;
     private readonly TripReminderService _reminders;
+    private readonly ITripPlacesRepository _places;
     private DateTime _nextAccessCheck;
     private bool _refreshRequested;
     private bool _refreshing;
     private bool _sharing;
     private static LocalizationResourceManager Strings => LocalizationResourceManager.Instance;
 
-    public StartPage(StartViewModel viewModel, IPackingListRepository packingLists, TripInvitationService invitations, TripReminderService reminders)
+    public StartPage(StartViewModel viewModel, IPackingListRepository packingLists, TripInvitationService invitations, TripReminderService reminders, ITripPlacesRepository places)
     {
         InitializeComponent();
         _viewModel = viewModel;
         _invitations = invitations;
         _reminders = reminders;
+        _places = places;
         BindingContext = _viewModel;
         PackingLists.Repository = packingLists;
         _scheduleTimer = Dispatcher.CreateTimer();
@@ -61,6 +63,7 @@ public partial class StartPage : ContentPage
         await PackingLists.UpdateTripAsync(_viewModel.Trip?.TripModel);
         UpdateShareButtons();
         await UpdateRemindersAsync();
+        await UpdatePlacesAsync();
     }
 
     protected override void OnDisappearing()
@@ -76,6 +79,24 @@ public partial class StartPage : ContentPage
         await _viewModel.RetryLoadCommand.ExecuteAsync(null);
         await PackingLists.ShowAsync(_viewModel.Trip?.TripModel);
         UpdateShareButtons();
+    }
+
+    private async Task UpdatePlacesAsync()
+    {
+        if (_viewModel.Trip?.TripModel is not { } trip) return;
+        try
+        {
+            var state = await _places.LoadAsync(trip);
+            PlacesSummary.Text = state.Saved.Count == 0 ? Strings["PlacesEntryIntro"]
+                : string.Format(Strings["PlacesEntryCount"], state.Saved.Count);
+        }
+        catch { PlacesSummary.Text = Strings["PlacesEntryIntro"]; }
+    }
+
+    private async void OnPlacesClicked(object? sender, EventArgs e)
+    {
+        if (_viewModel.Trip?.TripModel is not { } trip || _viewModel.Session.GlobalIsBusy) return;
+        await Shell.Current.GoToAsync(TripPlacesPage.Route, new ShellNavigationQueryParameters { ["trip"] = trip });
     }
 
     private void UpdateShareButtons()

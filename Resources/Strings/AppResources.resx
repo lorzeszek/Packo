@@ -293,4 +293,43 @@
   <data name="DeleteAccountConnectionRequired" xml:space="preserve"><value>To delete your account, connect to the internet and sign in again if your session has expired.</value></data>
   <data name="DeleteAccountFailed" xml:space="preserve"><value>We could not confirm account deletion. Check your connection and try again.</value></data>
   <data name="DeleteAccountLocalCleanupFailed" xml:space="preserve"><value>Your account was deleted and you have been signed out, but some data on this device could not be cleared.</value></data>
+  <data name="PlacesTitle" xml:space="preserve"><value>Places to visit</value></data>
+  <data name="PlacesEntryIntro" xml:space="preserve"><value>Discover interesting places nearby and save your favourites for this trip.</value></data>
+  <data name="PlacesEntryCount" xml:space="preserve"><value>Saved places: {0}. Your list is also available offline.</value></data>
+  <data name="PlacesOpen" xml:space="preserve"><value>Explore places</value></data>
+  <data name="PlacesSuggestions" xml:space="preserve"><value>Suggestions</value></data>
+  <data name="PlacesSavedCount" xml:space="preserve"><value>Saved · {0}</value></data>
+  <data name="PlacesIntro" xml:space="preserve"><value>Find places within 10 km of your destination, selected with AI. Check opening hours and tickets on the place’s website.</value></data>
+  <data name="PlacesOffline" xml:space="preserve"><value>Finding places is only available online. You can view and edit saved places offline.</value></data>
+  <data name="PlacesLocalList" xml:space="preserve"><value>Your personal list on this device. Available without an internet connection.</value></data>
+  <data name="PlacesFind" xml:space="preserve"><value>Find suggestions</value></data>
+  <data name="PlacesFindMore" xml:space="preserve"><value>Find more suggestions</value></data>
+  <data name="PlacesSave" xml:space="preserve"><value>+ Save</value></data>
+  <data name="PlacesAlreadySaved" xml:space="preserve"><value>✓ Saved</value></data>
+  <data name="PlacesVisited" xml:space="preserve"><value>✓ Visited</value></data>
+  <data name="PlacesMarkVisited" xml:space="preserve"><value>Mark as visited</value></data>
+  <data name="PlacesRemove" xml:space="preserve"><value>Remove</value></data>
+  <data name="PlacesMap" xml:space="preserve"><value>Map</value></data>
+  <data name="PlacesWebsite" xml:space="preserve"><value>Website</value></data>
+  <data name="PlacesAddManual" xml:space="preserve"><value>+ Add your own place</value></data>
+  <data name="PlacesName" xml:space="preserve"><value>Place name</value></data>
+  <data name="PlacesAddress" xml:space="preserve"><value>Address or town</value></data>
+  <data name="PlacesNote" xml:space="preserve"><value>Note (optional)</value></data>
+  <data name="PlacesOptionalWebsite" xml:space="preserve"><value>Website (optional)</value></data>
+  <data name="PlacesInvalidUrl" xml:space="preserve"><value>Enter a full address starting with https:// or http://.</value></data>
+  <data name="PlacesWorking" xml:space="preserve"><value>Preparing places…</value></data>
+  <data name="PlacesSuggestionsEmpty" xml:space="preserve"><value>Tap “Find suggestions” to discover places for this trip.</value></data>
+  <data name="PlacesSavedEmpty" xml:space="preserve"><value>Your saved places will appear here. Choose a suggestion or add your own place.</value></data>
+  <data name="PlacesNoMore" xml:space="preserve"><value>No more places were found nearby. You can add your own place under Saved. For a broad destination, try entering a specific town in the trip details.</value></data>
+  <data name="PlacesSearchFailed" xml:space="preserve"><value>Couldn’t prepare suggestions. Check your connection and try again.</value></data>
+  <data name="PlacesLoadFailed" xml:space="preserve"><value>Couldn’t load your places. Open this screen again.</value></data>
+  <data name="PlacesSaveFailed" xml:space="preserve"><value>Couldn’t save the change. Please try again.</value></data>
+  <data name="PlacesUnavailable" xml:space="preserve"><value>This trip is no longer available.</value></data>
+  <data name="PlacesLinksOnline" xml:space="preserve"><value>Connect to the internet to open a map or website.</value></data>
+  <data name="PlacesLinkFailed" xml:space="preserve"><value>Couldn’t open the link.</value></data>
+  <data name="PlacesCategoryCulture" xml:space="preserve"><value>Culture</value></data>
+  <data name="PlacesCategoryNature" xml:space="preserve"><value>Nature</value></data>
+  <data name="PlacesCategoryFamily" xml:space="preserve"><value>Family</value></data>
+  <data name="PlacesCategoryLandmark" xml:space="preserve"><value>Worth seeing</value></data>
+  <data name="PlacesCategoryManual" xml:space="preserve"><value>Your own place</value></data>
 </root>

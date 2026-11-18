@@ -312,6 +312,8 @@ namespace Packo.Repositories
                 }
                 foreach (var row in cached.Where(x => x.IsJoinedTrip && x.RemoteTripId.HasValue && !visible.ContainsKey(x.RemoteTripId.Value)))
                 {
+                    if (db.ExecuteScalar<int>("SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = 'SQLiteTripPlaces'") > 0)
+                        db.Execute("DELETE FROM SQLiteTripPlaces WHERE LocalUserId = ? AND LocalTripId = ?", localUserId, row.LocalTripId);
                     db.Table<SQLitePackingItem>().Where(x => x.LocalUserId == localUserId && x.LocalTripId == row.LocalTripId).Delete();
                     db.Table<SQLitePackingList>().Where(x => x.LocalUserId == localUserId && x.LocalTripId == row.LocalTripId).Delete();
                     db.Table<SQLitePendingPackingItemChange>().Where(x => x.LocalUserId == localUserId && x.LocalTripId == row.LocalTripId).Delete();
