@@ -209,6 +209,7 @@
   <data name="PackingSyncConflict" xml:space="preserve"><value>Some edits could not be applied because the list changed. Check the latest version before editing again.</value></data>
   <data name="Offline" xml:space="preserve"><value>Offline</value></data>
   <data name="Reminders" xml:space="preserve"><value>Reminders</value></data>
+  <data name="RemindersOpen" xml:space="preserve"><value>View reminders</value></data>
   <data name="ReminderTitle" xml:space="preserve"><value>Title</value></data>
   <data name="ReminderBody" xml:space="preserve"><value>Notification text</value></data>
   <data name="ReminderWhen" xml:space="preserve"><value>When?</value></data>

@@ -139,6 +139,7 @@
   <data name="PackingSyncConflict" xml:space="preserve"><value>Część zmian pominięto, ponieważ lista się zmieniła. Sprawdź aktualny stan przed kolejną edycją.</value></data>
   <data name="Offline" xml:space="preserve"><value>Offline</value></data>
   <data name="Reminders" xml:space="preserve"><value>Przypomnienia</value></data>
+  <data name="RemindersOpen" xml:space="preserve"><value>Zobacz przypomnienia</value></data>
   <data name="ReminderTitle" xml:space="preserve"><value>Tytuł</value></data>
   <data name="ReminderBody" xml:space="preserve"><value>Treść powiadomienia</value></data>
   <data name="ReminderWhen" xml:space="preserve"><value>Kiedy przypomnieć?</value></data>

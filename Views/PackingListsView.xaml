@@ -4,56 +4,71 @@
              xmlns:loc="clr-namespace:Packo.Extensions"
              xmlns:views="clr-namespace:Packo.Views"
              x:Class="Packo.Views.PackingListsView">
-    <VerticalStackLayout Spacing="12">
-        <Button x:Name="AddListButton" Text="{loc:Translate AddNamedPackingList}" Clicked="OnAddClicked"
-                HeightRequest="48" CornerRadius="14" FontSize="14" FontAttributes="Bold"
-                BackgroundColor="{StaticResource PackoAccentLight}" TextColor="{StaticResource PackoWhite}" />
-        <Label x:Name="EmptyLabel" Text="{loc:Translate NoNamedPackingLists}" IsVisible="False"
-               FontSize="14" LineBreakMode="WordWrap"
-               TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
-        <VerticalStackLayout x:Name="ListCards" Spacing="12">
-            <BindableLayout.ItemTemplate>
-                <DataTemplate x:DataType="views:PackingListCard">
-                    <Border Padding="20" StrokeThickness="0" StrokeShape="RoundRectangle 22"
-                            BackgroundColor="{AppThemeBinding Light={StaticResource PackoAccentSoftLight}, Dark={StaticResource PackoAccentSoftDark}}">
-                        <VerticalStackLayout Spacing="12">
-                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                                    <Grid.GestureRecognizers>
-                                        <TapGestureRecognizer Tapped="OnOpenList" />
-                                    </Grid.GestureRecognizers>
-                                    <Label Text="{Binding DisplayName}" FontSize="15" FontAttributes="Bold"
-                                           VerticalOptions="Center" LineBreakMode="WordWrap"
-                                           TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
-                                    <Label Grid.Column="1" Text="{Binding ProgressPercent}" FontSize="15" FontAttributes="Bold"
-                                           VerticalOptions="Center"
-                                           TextColor="{AppThemeBinding Light={StaticResource PackoShellAccentLight}, Dark={StaticResource PackoAccentDark}}" />
+    <Border Style="{StaticResource PackoTripSectionCardStyle}" Padding="0">
+        <VerticalStackLayout Spacing="16">
+            <Grid ColumnDefinitions="44,*" ColumnSpacing="12" Margin="20,20,20,0">
+                <Border Style="{StaticResource PackoTripIconTileStyle}">
+                    <Label Text="&#xe8f9;" Style="{StaticResource PackoTripSectionIconStyle}" />
+                </Border>
+                <Label Grid.Column="1" Text="{loc:Translate NamedPackingLists}" Style="{StaticResource PackoSectionTitleStyle}"
+                       VerticalOptions="Center" SemanticProperties.HeadingLevel="Level2" />
+            </Grid>
+            <Button x:Name="AddListButton" Text="{loc:Translate AddNamedPackingList}" Clicked="OnAddClicked"
+                    Margin="20,0" Style="{StaticResource PackoTripOutlineButtonStyle}">
+                <Button.ImageSource>
+                    <FontImageSource Glyph="&#xe145;" FontFamily="MaterialIcons" Size="20"
+                                     Color="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+                </Button.ImageSource>
+            </Button>
+            <Label x:Name="EmptyLabel" Text="{loc:Translate NoNamedPackingLists}" IsVisible="False"
+                   FontSize="14" LineBreakMode="WordWrap" Margin="20,0,20,20"
+                   TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+            <VerticalStackLayout x:Name="ListCards" Spacing="12">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="views:PackingListCard">
+                        <Border Padding="20" StrokeThickness="0" StrokeShape="RoundRectangle 22"
+                                BackgroundColor="{AppThemeBinding Light={StaticResource PackoAccentSoftLight}, Dark={StaticResource PackoAccentSoftDark}}">
+                            <VerticalStackLayout Spacing="16">
+                                <Grid ColumnDefinitions="*,Auto,44" ColumnSpacing="8">
+                                    <Grid ColumnDefinitions="24,*" ColumnSpacing="8">
+                                        <Grid.GestureRecognizers>
+                                            <TapGestureRecognizer Tapped="OnOpenList" />
+                                        </Grid.GestureRecognizers>
+                                        <Label Text="&#xe85d;" Style="{StaticResource PackoTripSectionIconStyle}" FontSize="21" />
+                                        <Label Grid.Column="1" Text="{Binding DisplayName}" FontSize="15" FontAttributes="Bold"
+                                               VerticalOptions="Center" LineBreakMode="WordWrap"
+                                               TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+                                    </Grid>
+                                    <Border Grid.Column="1" Padding="10,5" VerticalOptions="Center"
+                                            StrokeThickness="0" StrokeShape="RoundRectangle 10"
+                                            BackgroundColor="{AppThemeBinding Light={StaticResource PackoSurfaceLight}, Dark={StaticResource PackoSurfaceDark}}">
+                                        <Label Text="{Binding ProgressPercent}" FontSize="13" FontAttributes="Bold"
+                                               TextColor="{AppThemeBinding Light={StaticResource PackoAccentStrongLight}, Dark={StaticResource PackoAccentDark}}" />
+                                    </Border>
+                                    <Button Grid.Column="2" Text="&#xe5d3;" FontFamily="MaterialIcons" Clicked="OnListOptionsClicked"
+                                            SemanticProperties.Description="{loc:Translate PackingListOptions}"
+                                            WidthRequest="44" HeightRequest="44" Padding="0" CornerRadius="12"
+                                            FontSize="22" BackgroundColor="Transparent"
+                                            TextColor="{AppThemeBinding Light={StaticResource PackoAccentStrongLight}, Dark={StaticResource PackoAccentDark}}" />
                                 </Grid>
-                                <Button Grid.Column="1" Text="⋯" Clicked="OnListOptionsClicked"
-                                        SemanticProperties.Description="{loc:Translate PackingListOptions}"
-                                        WidthRequest="44" HeightRequest="44" Padding="0" CornerRadius="12"
-                                        FontSize="21" FontAttributes="Bold" BackgroundColor="Transparent"
-                                        TextColor="{AppThemeBinding Light={StaticResource PackoShellAccentLight}, Dark={StaticResource PackoAccentDark}}" />
-                            </Grid>
-                            <VerticalStackLayout Spacing="12">
-                                <VerticalStackLayout.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnOpenList" />
-                                </VerticalStackLayout.GestureRecognizers>
-                                <ProgressBar Progress="{Binding List.Progress}" HeightRequest="6"
-                                             ProgressColor="{StaticResource PackoAccentLight}"
-                                             BackgroundColor="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoControlBorderDark}}"
-                                             SemanticProperties.Description="{Binding ProgressText}" />
-                                <Label Text="{Binding ProgressText}" FontSize="14" LineBreakMode="WordWrap"
-                                       TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextAltDark}}" />
+                                <VerticalStackLayout Spacing="12">
+                                    <VerticalStackLayout.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnOpenList" />
+                                    </VerticalStackLayout.GestureRecognizers>
+                                    <ProgressBar Progress="{Binding List.Progress}" HeightRequest="6"
+                                                 ProgressColor="{StaticResource PackoAccentLight}"
+                                                 BackgroundColor="{AppThemeBinding Light={StaticResource PackoBorderLight}, Dark={StaticResource PackoControlBorderDark}}"
+                                                 SemanticProperties.Description="{Binding ProgressText}" />
+                                    <Label Text="{Binding ProgressText}" FontSize="14" LineBreakMode="WordWrap"
+                                           TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextAltDark}}" />
+                                </VerticalStackLayout>
+                                <Button Text="{loc:Translate OpenPackingList}" Clicked="OnOpenList"
+                                        Style="{StaticResource PackoTripActionButtonStyle}" />
                             </VerticalStackLayout>
-                            <Button Text="{loc:Translate OpenPackingList}" Clicked="OnOpenList"
-                                    HeightRequest="48" Padding="16,0" CornerRadius="14"
-                                    FontSize="14" FontAttributes="Bold"
-                                    BackgroundColor="{StaticResource PackoAccentLight}" TextColor="{StaticResource PackoWhite}" />
-                        </VerticalStackLayout>
-                    </Border>
-                </DataTemplate>
-            </BindableLayout.ItemTemplate>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
         </VerticalStackLayout>
-    </VerticalStackLayout>
+    </Border>
 </ContentView>

@@ -461,6 +461,54 @@
         <Setter Property="FontAttributes" Value="Bold" />
     </Style>
 
+    <!-- Trip details: shared insets and action sizes keep every section aligned. -->
+    <Style x:Key="PackoTripSectionCardStyle" TargetType="Border" BasedOn="{StaticResource PackoCardBorderStyle}">
+        <Setter Property="Padding" Value="20" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 24" />
+    </Style>
+
+    <Style x:Key="PackoTripIconTileStyle" TargetType="Border">
+        <Setter Property="WidthRequest" Value="44" />
+        <Setter Property="HeightRequest" Value="44" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 14" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PackoAccentSoftLight}, Dark={StaticResource PackoAccentSoftDark}}" />
+        <Setter Property="VerticalOptions" Value="Center" />
+    </Style>
+
+    <Style x:Key="PackoTripSectionIconStyle" TargetType="Label">
+        <Setter Property="FontFamily" Value="MaterialIcons" />
+        <Setter Property="FontSize" Value="23" />
+        <Setter Property="HorizontalTextAlignment" Value="Center" />
+        <Setter Property="VerticalTextAlignment" Value="Center" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource PackoAccentStrongLight}, Dark={StaticResource PackoAccentDark}}" />
+        <Setter Property="InputTransparent" Value="True" />
+        <Setter Property="AutomationProperties.IsInAccessibleTree" Value="False" />
+    </Style>
+
+    <Style x:Key="PackoTripActionButtonStyle" TargetType="Button" BasedOn="{StaticResource PackoPrimaryActionButtonStyle}">
+        <Setter Property="MinimumHeightRequest" Value="50" />
+        <Setter Property="Padding" Value="16,12" />
+        <Setter Property="CornerRadius" Value="14" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="HorizontalOptions" Value="Fill" />
+        <Setter Property="ContentLayout" Value="Left,10" />
+        <Setter Property="LineBreakMode" Value="WordWrap" />
+    </Style>
+
+    <Style x:Key="PackoTripSecondaryButtonStyle" TargetType="Button" BasedOn="{StaticResource PackoTripActionButtonStyle}">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PackoAccentSoftLight}, Dark={StaticResource PackoAccentSoftDark}}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource PackoAccentStrongLight}, Dark={StaticResource PackoAccentDark}}" />
+    </Style>
+
+    <Style x:Key="PackoTripOutlineButtonStyle" TargetType="Button" BasedOn="{StaticResource PackoTripSecondaryButtonStyle}">
+        <Setter Property="BackgroundColor" Value="Transparent" />
+        <Setter Property="BorderWidth" Value="1" />
+        <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource PackoControlBorderLight}, Dark={StaticResource PackoControlBorderDark}}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+    </Style>
+
     <Style x:Key="PackoPopupCardStyle" TargetType="Border" BasedOn="{StaticResource PackoCardBorderStyle}">
         <Setter Property="Padding" Value="24" />
         <Setter Property="Margin" Value="20" />
