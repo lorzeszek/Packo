@@ -4,6 +4,7 @@
                 xmlns:loc="clr-namespace:Packo.Extensions"
                 xmlns:local="clr-namespace:Packo.Models.Pages"
                 xmlns:views="clr-namespace:Packo.Views"
+                xmlns:viewmodels="clr-namespace:Packo.ViewModels"
                 xmlns:dto="clr-namespace:Packo.Models.DTO"
                 x:DataType="TripListViewModel"
                 x:Class="Packo.Views.TripListPage"
@@ -14,22 +15,19 @@
 
     <ContentPage.Resources>
         <ResourceDictionary>
-            <BoolToOpacityConverter x:Key="BoolToOpacityConverter" TrueOpacity="0.72" FalseOpacity="1" />
+            <BoolToOpacityConverter x:Key="BoolToOpacityConverter" TrueOpacity="0.88" FalseOpacity="1" />
+            <Style x:Key="TripPlanButtonStyle" TargetType="Button" BasedOn="{StaticResource PackoTripActionButtonStyle}">
+                <Setter Property="FontSize" Value="15" />
+                <Setter Property="CornerRadius" Value="16" />
+                <Setter Property="MinimumHeightRequest" Value="52" />
+            </Style>
+            <FontImageSource x:Key="TripPlanIcon" Glyph="&#xe905;" FontFamily="MaterialIcons" Size="22"
+                             Color="{StaticResource PackoWhite}" />
         </ResourceDictionary>
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="Auto,*,Auto" RowSpacing="0">
-        <VerticalStackLayout Grid.Row="0" Padding="22,20,22,14" Spacing="6">
-            <Label Text="{loc:Translate TripsEyebrow}" FontSize="11" CharacterSpacing="2.2"
-                   FontAttributes="Bold" TextColor="{StaticResource PackoAccentLight}" />
-            <Label Text="{Binding Title}" FontSize="29" FontAttributes="Bold"
-                   TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
-            <Label Text="{loc:Translate TripsIntro}"
-                   FontSize="14" LineBreakMode="WordWrap"
-                   TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
-        </VerticalStackLayout>
-
-        <VerticalStackLayout Grid.Row="1" IsVisible="{Binding IsLoading}" Spacing="12"
+    <Grid RowDefinitions="*,Auto" RowSpacing="0">
+        <VerticalStackLayout IsVisible="{Binding IsLoading}" Spacing="12"
                              HorizontalOptions="Center" VerticalOptions="Center">
             <ActivityIndicator IsRunning="{Binding IsLoading}" WidthRequest="36" HeightRequest="36"
                                Color="{StaticResource PackoAccentLight}" />
@@ -37,7 +35,7 @@
                    TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
         </VerticalStackLayout>
 
-        <VerticalStackLayout Grid.Row="1" IsVisible="{Binding HasLoadError}" Spacing="16" Padding="32"
+        <VerticalStackLayout IsVisible="{Binding HasLoadError}" Spacing="16" Padding="32"
                              HorizontalOptions="Center" VerticalOptions="Center">
             <Label Text="{loc:Translate StartupLoadError}" HorizontalTextAlignment="Center"
                    TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
@@ -46,14 +44,51 @@
                     CornerRadius="18" Padding="24,12" HorizontalOptions="Center" />
         </VerticalStackLayout>
 
-        <CollectionView Grid.Row="1" ItemsSource="{Binding Trips}" SelectionMode="None"
-                        IsVisible="{Binding ShowTrips}"
-                        ItemsLayout="VerticalList" VerticalScrollBarVisibility="Never">
+        <CollectionView x:Name="TripsCollection" ItemsSource="{Binding TripGroups}" SelectionMode="None"
+                        IsGrouped="True" IsVisible="{Binding ShowTrips}"
+                        VerticalScrollBarVisibility="Default" ItemSizingStrategy="MeasureAllItems">
+            <CollectionView.ItemsLayout>
+                <GridItemsLayout x:Name="TripItemsLayout" Orientation="Vertical" Span="1" />
+            </CollectionView.ItemsLayout>
+            <CollectionView.Header>
+                <Grid Padding="22,18,22,6" ColumnDefinitions="*,Auto" ColumnSpacing="16">
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="{loc:Translate TripsEyebrow}" FontSize="11" CharacterSpacing="2.2"
+                               FontAttributes="Bold" TextColor="{AppThemeBinding Light={StaticResource PackoAccentStrongLight}, Dark={StaticResource PackoAccentDark}}" />
+                        <Label Text="{Binding Title}" FontSize="29" FontAttributes="Bold"
+                               SemanticProperties.HeadingLevel="Level1"
+                               TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+                        <Label Text="{loc:Translate TripsIntro}" FontSize="14" LineBreakMode="WordWrap"
+                               TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+                    </VerticalStackLayout>
+                    <Button x:Name="LandscapePlanButton" Grid.Column="1" IsVisible="False" VerticalOptions="Center"
+                            Text="{loc:Translate PlanTrip}" Command="{Binding AddTripCommand}"
+                            ImageSource="{StaticResource TripPlanIcon}" Style="{StaticResource TripPlanButtonStyle}" />
+                </Grid>
+            </CollectionView.Header>
+            <CollectionView.GroupHeaderTemplate>
+                <DataTemplate x:DataType="viewmodels:TripGroup">
+                    <Grid ColumnDefinitions="36,*,Auto" ColumnSpacing="10" Margin="22,16,22,10">
+                        <Border Style="{StaticResource PackoTripIconTileStyle}" WidthRequest="36" HeightRequest="36">
+                            <Label Text="{Binding Icon}" Style="{StaticResource PackoTripSectionIconStyle}" FontSize="20" />
+                        </Border>
+                        <Label Grid.Column="1" Text="{Binding Title}" FontSize="17" FontAttributes="Bold"
+                               VerticalOptions="Center" SemanticProperties.HeadingLevel="Level2"
+                               TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
+                        <Border Grid.Column="2" Padding="10,4" StrokeThickness="0" StrokeShape="RoundRectangle 10"
+                                VerticalOptions="Center"
+                                BackgroundColor="{AppThemeBinding Light={StaticResource PackoRaisedSurfaceLight}, Dark={StaticResource PackoRaisedSurfaceDark}}">
+                            <Label Text="{Binding Count}" FontSize="12" FontAttributes="Bold"
+                                   TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+                        </Border>
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.GroupHeaderTemplate>
             <CollectionView.EmptyView>
                 <VerticalStackLayout Padding="32" Spacing="14" VerticalOptions="Center"
                                      HorizontalOptions="Center">
                     <Border WidthRequest="76" HeightRequest="76" StrokeThickness="0"
-                            StrokeShape="RoundRectangle 26" BackgroundColor="{StaticResource PackoAccentSoftLight}"
+                            StrokeShape="RoundRectangle 26" BackgroundColor="{AppThemeBinding Light={StaticResource PackoAccentSoftLight}, Dark={StaticResource PackoAccentSoftDark}}"
                             HorizontalOptions="Center">
                         <Label Text="✈" FontSize="32" Rotation="-12" HorizontalTextAlignment="Center"
                                VerticalTextAlignment="Center" TextColor="{StaticResource PackoAccentLight}" />
@@ -69,13 +104,13 @@
 
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="TripViewModel">
-                    <Border Margin="20,8" Padding="0" StrokeThickness="0"
-                            StrokeShape="RoundRectangle 24" HeightRequest="194"
+                    <Border Margin="20,0,20,16" Padding="0" StrokeThickness="0"
+                            StrokeShape="RoundRectangle 24" HeightRequest="208"
                             Opacity="{Binding IsCompleted, Converter={StaticResource BoolToOpacityConverter}}">
                         <Grid>
                             <Image Source="{Binding CoverImageSource}" Aspect="AspectFill" />
                             <BoxView IsVisible="{Binding IsCompleted}"
-                                     BackgroundColor="#241D19" Opacity="0.35" />
+                                     BackgroundColor="#241D19" Opacity="0.18" />
 
                             <Border HorizontalOptions="Fill" VerticalOptions="End" Margin="14"
                                     Padding="14,10" StrokeThickness="0" StrokeShape="RoundRectangle 16"
@@ -84,12 +119,20 @@
                                     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
                                         <Label Text="{Binding Destination}" FontSize="21" FontAttributes="Bold"
                                                LineBreakMode="TailTruncation" MaxLines="1" TextColor="White" />
-                                        <Label Grid.Column="1" Text="{Binding PackingSummary}" FontSize="12" FontAttributes="Bold"
-                                               VerticalOptions="Center"
-                                               TextColor="#F5FFFFFF" />
+                                        <HorizontalStackLayout Grid.Column="1" Spacing="5" VerticalOptions="Center">
+                                            <Label Text="&#xe85d;" FontFamily="MaterialIcons" FontSize="15"
+                                                   TextColor="#F5FFFFFF" VerticalOptions="Center"
+                                                   AutomationProperties.IsInAccessibleTree="False" />
+                                            <Label Text="{Binding PackingSummary}" FontSize="12" FontAttributes="Bold"
+                                                   TextColor="#F5FFFFFF" VerticalOptions="Center" />
+                                        </HorizontalStackLayout>
                                     </Grid>
-                                    <Label Text="{Binding TripDatesRange}" FontSize="12" TextColor="#F5FFFFFF"
-                                           LineBreakMode="WordWrap" MaxLines="2" />
+                                    <Grid ColumnDefinitions="16,*" ColumnSpacing="5">
+                                        <Label Text="&#xe935;" FontFamily="MaterialIcons" FontSize="14" TextColor="#F5FFFFFF"
+                                               VerticalOptions="Center" AutomationProperties.IsInAccessibleTree="False" />
+                                        <Label Grid.Column="1" Text="{Binding TripDatesRange}" FontSize="12" TextColor="#F5FFFFFF"
+                                               LineBreakMode="WordWrap" MaxLines="2" />
+                                    </Grid>
                                     <HorizontalStackLayout IsVisible="{Binding IsShared}" Spacing="6">
                                         <Label Text="{loc:Translate TripShared}" TextColor="White" FontSize="11"
                                                VerticalOptions="Center" />
@@ -124,7 +167,7 @@
                                     <Grid WidthRequest="46" HeightRequest="46">
                                     <Button Text="&#xe7f4;" FontFamily="MaterialIcons" FontSize="22"
                                             WidthRequest="46" HeightRequest="46" Padding="6" CornerRadius="16"
-                                            BackgroundColor="#FFFFFFE8" TextColor="#5D514B"
+                                            BackgroundColor="#F2FFFDF9" TextColor="#5D514B"
                                             SemanticProperties.Description="{loc:Translate Reminders}"
                                             Clicked="OnRemindersClicked" />
                                     <Border IsVisible="{Binding HasReminders}" InputTransparent="True" WidthRequest="8" HeightRequest="8"
@@ -134,11 +177,12 @@
                                     <Button Text="&#xe3c9;" FontFamily="MaterialIcons" FontSize="22"
                                             IsVisible="{Binding CanManageTrip}"
                                             WidthRequest="46" HeightRequest="46" Padding="6" CornerRadius="16"
-                                            BackgroundColor="#FFFFFFE8" TextColor="#5D514B"
+                                            BackgroundColor="#F2FFFDF9" TextColor="#5D514B"
                                             SemanticProperties.Description="{loc:Translate EditTrip}"
                                             Command="{Binding BindingContext.EditTripCommand, Source={x:Reference TripListView}}"
                                             CommandParameter="{Binding .}" />
                                     <views:DeleteIconButton ActionDescription="{loc:Translate DeleteTrip}"
+                                                            SurfaceColor="#F2FFFDF9"
                                                             IsVisible="{Binding CanManageTrip}"
                                                             Command="{Binding BindingContext.TrashTripCommand, Source={x:Reference TripListView}}"
                                                             CommandParameter="{Binding .}" />
@@ -156,12 +200,10 @@
             </CollectionView.ItemTemplate>
         </CollectionView>
 
-        <Border Grid.Row="2" Padding="20,10,20,16" StrokeThickness="0"
+        <Border x:Name="PlanTripFooter" Grid.Row="1" Padding="20,10,20,16" StrokeThickness="0"
                 BackgroundColor="{AppThemeBinding Light={StaticResource PackoPageBackgroundLight}, Dark={StaticResource PackoPageBackgroundDark}}">
             <Button Text="{loc:Translate PlanTrip}" Command="{Binding AddTripCommand}"
-                    BackgroundColor="{StaticResource PackoAccentLight}" TextColor="{StaticResource PackoWhite}"
-                    FontSize="16" FontAttributes="Bold" CornerRadius="18"
-                    HeightRequest="56" Padding="20,12" HorizontalOptions="Fill" />
+                    ImageSource="{StaticResource TripPlanIcon}" Style="{StaticResource TripPlanButtonStyle}" />
         </Border>
     </Grid>
 </local:BasePage>

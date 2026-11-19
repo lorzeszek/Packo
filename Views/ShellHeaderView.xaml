@@ -55,8 +55,13 @@
                 <Button Grid.Column="1" Text="{loc:Translate Logout}" Command="{Binding LogoutCommand}"
                         BackgroundColor="{AppThemeBinding Light={StaticResource PackoAccentSoftLight}, Dark={StaticResource PackoAccentSoftDark}}"
                         TextColor="{AppThemeBinding Light={StaticResource PackoAccentStrongLight}, Dark={StaticResource PackoAccentDark}}"
-                        CornerRadius="12" Padding="10,5" MinimumHeightRequest="34"
-                        FontSize="12" FontAttributes="Bold" />
+                        CornerRadius="12" Padding="10,5" MinimumHeightRequest="40"
+                        ContentLayout="Left,5" FontSize="12" FontAttributes="Bold">
+                    <Button.ImageSource>
+                        <FontImageSource Glyph="&#xe879;" FontFamily="MaterialIcons" Size="16"
+                                         Color="{AppThemeBinding Light={StaticResource PackoAccentStrongLight}, Dark={StaticResource PackoAccentDark}}" />
+                    </Button.ImageSource>
+                </Button>
             </Grid>
         </Border>
     </Grid>

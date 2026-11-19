@@ -13,15 +13,37 @@ using Packo.Views;
 using System.Windows.Input;
 using System.Globalization;
 using System.ComponentModel;
+using System.Collections.ObjectModel;
+using Packo.Models.Enums;
 
 namespace Packo.ViewModels
 {
+    public sealed class TripGroup(TripStatus status) : ObservableCollection<TripViewModel>
+    {
+        public TripStatus Status { get; } = status;
+        public string Title => LocalizationResourceManager.Instance[Status switch
+        {
+            TripStatus.Current => "TripsCurrentSection",
+            TripStatus.Completed => "TripsPastSection",
+            _ => "TripsUpcomingSection"
+        }];
+        public string Icon => Status switch
+        {
+            TripStatus.Current => "\ue539",
+            TripStatus.Completed => "\ue889",
+            _ => "\ue935"
+        };
+
+        public void RefreshTitle() => OnPropertyChanged(new PropertyChangedEventArgs(nameof(Title)));
+    }
+
     public partial class TripListViewModel : BaseViewModel
     {
         private readonly ITripListPreloadService _tripListPreloadService;
         private readonly IWeatherPreloadService _weatherPreloadService;
 
         public ObservableRangeCollection<TripViewModel> Trips { get; } = new();
+        public ObservableCollection<TripGroup> TripGroups { get; } = new();
 
         private bool _isLoading;
         public bool IsLoading
@@ -75,10 +97,16 @@ namespace Packo.ViewModels
         {
             _tripListPreloadService = tripListPreloadService;
             _weatherPreloadService = weatherPreloadService;
+            Trips.CollectionChanged += (_, _) => RefreshTripGroups();
             RetryLoadCommand = new AsyncRelayCommand(() => LoadData(forceRefresh: true, retry: true));
 
             Title = LocalizationResourceManager.Instance["TabTrips"];
-            LocalizationResourceManager.Instance.PropertyChanged += (_, _) => Title = LocalizationResourceManager.Instance["TabTrips"];
+            LocalizationResourceManager.Instance.PropertyChanged += (_, _) =>
+            {
+                Title = LocalizationResourceManager.Instance["TabTrips"];
+                foreach (var group in TripGroups)
+                    group.RefreshTitle();
+            };
 
             //LoginWithGoogleCommand = new AsyncRelayCommand(LoginWithGoogle, () => !IsBusy);
 
@@ -327,6 +355,50 @@ namespace Packo.ViewModels
                 var currentIndex = Trips.IndexOf(ordered[index]);
                 if (currentIndex != index)
                     Trips.Move(currentIndex, index);
+            }
+            RefreshTripGroups();
+        }
+
+        private void RefreshTripGroups()
+        {
+            var groupIndex = 0;
+            foreach (var status in new[] { TripStatus.Current, TripStatus.Upcoming, TripStatus.Completed })
+            {
+                // Trips without dates stay with the plans, so every trip remains accessible.
+                var trips = OrderTrips(Trips.Where(trip =>
+                    (trip.Status == TripStatus.Unknown ? TripStatus.Upcoming : trip.Status) == status)).ToList();
+                var group = TripGroups.FirstOrDefault(item => item.Status == status);
+                if (trips.Count == 0)
+                {
+                    if (group is not null)
+                        TripGroups.Remove(group);
+                    continue;
+                }
+
+                if (group is null)
+                {
+                    group = new TripGroup(status);
+                    foreach (var trip in trips)
+                        group.Add(trip);
+                    TripGroups.Insert(groupIndex, group);
+                }
+                else
+                {
+                    foreach (var removed in group.Where(trip => !trips.Contains(trip)).ToList())
+                        group.Remove(removed);
+                    for (var index = 0; index < trips.Count; index++)
+                    {
+                        var currentIndex = group.IndexOf(trips[index]);
+                        if (currentIndex < 0)
+                            group.Insert(index, trips[index]);
+                        else if (currentIndex != index)
+                            group.Move(currentIndex, index);
+                    }
+                    var currentGroupIndex = TripGroups.IndexOf(group);
+                    if (currentGroupIndex != groupIndex)
+                        TripGroups.Move(currentGroupIndex, groupIndex);
+                }
+                groupIndex++;
             }
         }
 

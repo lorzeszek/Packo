@@ -17,6 +17,7 @@ public partial class TripListPage : BasePage// ContentPage
     private DateTime _nextCollaborationRefresh;
     private bool _collaborationDirty;
     private bool _updatingReminderBadges;
+    private bool? _usesWideLayout;
 
     public TripListPage(TripListViewModel viewModel, TripReminderService reminders)
     {
@@ -53,6 +54,21 @@ public partial class TripListPage : BasePage// ContentPage
             await ReminderListPopup.ShowAsync(this, _reminders, trip.TripModel);
             await UpdateReminderBadgesAsync();
         }
+    }
+
+    protected override void OnSizeAllocated(double width, double height)
+    {
+        base.OnSizeAllocated(width, height);
+        if (TripItemsLayout is null || width <= 0)
+            return;
+
+        var wide = width >= 700;
+        if (_usesWideLayout == wide)
+            return;
+        _usesWideLayout = wide;
+        TripItemsLayout.Span = wide ? 2 : 1;
+        LandscapePlanButton.IsVisible = wide;
+        PlanTripFooter.IsVisible = !wide;
     }
 
     private void OnRemindersChanged() => MainThread.BeginInvokeOnMainThread(async () => await UpdateReminderBadgesAsync());

@@ -28,7 +28,7 @@
   <data name="NextAdventureWaiting" xml:space="preserve"><value>Your next adventure is waiting</value></data>
   <data name="CreateTripToPack" xml:space="preserve"><value>Create a trip to start planning what to pack.</value></data>
   <data name="PastTrip" xml:space="preserve"><value>PAST TRIP</value></data>
-  <data name="PlanTrip" xml:space="preserve"><value>Plan a trip   +</value></data>
+  <data name="PlanTrip" xml:space="preserve"><value>Plan a trip</value></data>
   <data name="PackingEyebrow" xml:space="preserve"><value>ONE THING AT A TIME</value></data>
   <data name="PackingListTitle" xml:space="preserve"><value>Packing list</value></data>
   <data name="ListReady" xml:space="preserve"><value>Your list is ready for ideas</value></data>
@@ -351,4 +351,7 @@
   <data name="WeatherHumidityLow" xml:space="preserve"><value>Low humidity</value></data>
   <data name="WeatherHumidityModerate" xml:space="preserve"><value>Moderate humidity</value></data>
   <data name="WeatherHumidityHigh" xml:space="preserve"><value>High humidity</value></data>
+  <data name="TripsCurrentSection" xml:space="preserve"><value>Happening now</value></data>
+  <data name="TripsUpcomingSection" xml:space="preserve"><value>Upcoming trips</value></data>
+  <data name="TripsPastSection" xml:space="preserve"><value>Past trips</value></data>
 </root>

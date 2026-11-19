@@ -88,6 +88,7 @@ Check(tripListPreload.ForceRefresh && tripList.ShowTrips && tripList.Trips.Singl
 
 await TripDeletionChecks.RunAsync();
 await TripScheduleChecks.RunAsync();
+TripGroupingChecks.Run();
 await CompletedTripChecks.RunAsync();
 await TripCreationChecks.RunAsync();
 
