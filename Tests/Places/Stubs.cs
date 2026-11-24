@@ -6,6 +6,7 @@ namespace Packo.Services.Interfaces
     {
         string? LocalUserId { get; }
         bool GlobalIsBusy { get; }
+        bool IsAuthenticated => true;
     }
 }
 

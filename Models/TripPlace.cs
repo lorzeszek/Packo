@@ -13,8 +13,24 @@ public sealed record TripPlace
     public double? Longitude { get; init; }
     public string? WebsiteUrl { get; init; }
     public string? SourceUrl { get; init; }
+    public string Provider { get; init; } = string.Empty;
+    public string UserLabel { get; init; } = string.Empty;
+    public string UserNote { get; init; } = string.Empty;
+    public List<PlaceAttribution> Attributions { get; init; } = [];
+    public bool IsGoogle => Id.Length > 7 && Id.StartsWith("google:", StringComparison.Ordinal);
+    public bool IsManual => Id.StartsWith("manual:", StringComparison.Ordinal);
 
-    public Uri MapUri => new("https://www.google.com/maps/search/?api=1&query=" +
+    // Google content stays in memory. Only its identifier and the user's own data
+    // belong in the durable list; names, addresses and photo references are transient.
+    public TripPlace ForStorage() => !IsGoogle ? this : new TripPlace
+    {
+        Id = Id, Provider = "google", UserLabel = UserLabel, UserNote = UserNote
+    };
+
+    public Uri MapUri => IsGoogle ? new("https://www.google.com/maps/search/?api=1&query="
+        + Uri.EscapeDataString(string.IsNullOrWhiteSpace(Name) ? "place" : Name)
+        + "&query_place_id=" + Uri.EscapeDataString(Id["google:".Length..]))
+        : new("https://www.google.com/maps/search/?api=1&query=" +
         Uri.EscapeDataString(Latitude.HasValue && Longitude.HasValue
             ? string.Create(CultureInfo.InvariantCulture, $"{Latitude.Value},{Longitude.Value}")
             : $"{Name}, {LocationText}".TrimEnd(',', ' ')));
@@ -24,10 +40,14 @@ public sealed record TripPlace
         && !string.IsNullOrWhiteSpace(uri.Host) && string.IsNullOrEmpty(uri.UserInfo) ? uri : null;
 }
 
+public sealed record PlaceAttribution(string Name, string? Url = null);
+public sealed record TripPlaceDetails(TripPlace Place, string? PhotoReference = null,
+    IReadOnlyList<PlaceAttribution>? PhotoAttributions = null, string? PhotoSourceUrl = null);
+
 public sealed record SavedTripPlace(TripPlace Place, bool Visited = false);
 
 public sealed record TripPlacesState(string ContextKey, IReadOnlyList<TripPlace> Suggestions,
-    IReadOnlyList<SavedTripPlace> Saved, IReadOnlyList<string>? SeenIds = null)
+    IReadOnlyList<SavedTripPlace> Saved)
 {
     public static TripPlacesState Empty => new(string.Empty, [], []);
 }

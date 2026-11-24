@@ -5,6 +5,9 @@
 
 # App secrets
 appsettings.json
+.env
+.env.*
+supabase/.temp/
 
 .nuspec/
 .buildtasks/

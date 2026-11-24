@@ -6,6 +6,48 @@
              x:Class="Packo.Views.TripPlacesPage" x:Name="PlacesPage"
              x:DataType="vm:TripPlacesViewModel" Title="{loc:Translate PlacesTitle}"
              BackgroundColor="{AppThemeBinding Light={StaticResource PackoPageBackgroundLight}, Dark={StaticResource PackoPageBackgroundDark}}">
+    <ContentPage.Resources>
+        <Style x:Key="PlaceActionButton" TargetType="Button">
+            <Setter Property="HeightRequest" Value="44" />
+            <Setter Property="MinimumHeightRequest" Value="44" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="Margin" Value="0,0,6,6" />
+            <Setter Property="ContentLayout" Value="Left,6" />
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PackoAccentSoftLight}, Dark={StaticResource PackoAccentSoftDark}}" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource PackoShellAccentLight}, Dark={StaticResource PackoAccentDark}}" />
+            <Style.Triggers>
+                <Trigger TargetType="Button" Property="IsEnabled" Value="False">
+                    <Setter Property="Opacity" Value="0.45" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="PlaceDangerButton" TargetType="Button" BasedOn="{StaticResource PlaceActionButton}">
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#FDE8E7, Dark=#432429}" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light=#9E3030, Dark=#F3A7A6}" />
+        </Style>
+        <FontImageSource x:Key="PlaceFindIcon" FontFamily="MaterialIcons" Glyph="&#xE87A;" Size="21" Color="White" />
+        <FontImageSource x:Key="PlaceAddIcon" FontFamily="MaterialIcons" Glyph="&#xE145;" Size="20" Color="White" />
+        <FontImageSource x:Key="PlaceSavedIcon" FontFamily="MaterialIcons" Glyph="&#xE5CA;" Size="20" Color="White" />
+        <FontImageSource x:Key="PlaceMapIcon" FontFamily="MaterialIcons" Glyph="&#xE55B;" Size="18"
+                         Color="{AppThemeBinding Light={StaticResource PackoShellAccentLight}, Dark={StaticResource PackoAccentDark}}" />
+        <FontImageSource x:Key="PlaceWebsiteIcon" FontFamily="MaterialIcons" Glyph="&#xE894;" Size="18"
+                         Color="{AppThemeBinding Light={StaticResource PackoShellAccentLight}, Dark={StaticResource PackoAccentDark}}" />
+        <FontImageSource x:Key="PlacePhotosIcon" FontFamily="MaterialIcons" Glyph="&#xE413;" Size="18"
+                         Color="{AppThemeBinding Light={StaticResource PackoShellAccentLight}, Dark={StaticResource PackoAccentDark}}" />
+        <FontImageSource x:Key="PlaceVisitedIcon" FontFamily="MaterialIcons" Glyph="&#xE86C;" Size="18"
+                         Color="{AppThemeBinding Light={StaticResource PackoShellAccentLight}, Dark={StaticResource PackoAccentDark}}" />
+        <FontImageSource x:Key="PlaceNoteIcon" FontFamily="MaterialIcons" Glyph="&#xE3C9;" Size="18"
+                         Color="{AppThemeBinding Light={StaticResource PackoShellAccentLight}, Dark={StaticResource PackoAccentDark}}" />
+        <FontImageSource x:Key="PlaceRemoveIcon" FontFamily="MaterialIcons" Glyph="&#xE872;" Size="18"
+                         Color="{AppThemeBinding Light=#9E3030, Dark=#F3A7A6}" />
+        <FontImageSource x:Key="PlaceClearIcon" FontFamily="MaterialIcons" Glyph="&#xE16C;" Size="18"
+                         Color="{AppThemeBinding Light=#9E3030, Dark=#F3A7A6}" />
+        <FontImageSource x:Key="PlaceExternalIcon" FontFamily="MaterialIcons" Glyph="&#xE89E;" Size="16"
+                         Color="{AppThemeBinding Light=#1F1F1F, Dark=White}" />
+    </ContentPage.Resources>
+    <Grid RowDefinitions="*,Auto">
     <CollectionView ItemsSource="{Binding Items}" SelectionMode="None" Margin="22,16,22,0">
         <CollectionView.Header>
         <VerticalStackLayout Spacing="12" Margin="0,0,0,12">
@@ -44,7 +86,10 @@
             <VerticalStackLayout IsVisible="{Binding ShowSuggestions}" Spacing="8">
                 <Label Text="{loc:Translate PlacesIntro}" FontSize="13" LineBreakMode="WordWrap"
                        TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
-                <Button Text="{Binding FindLabel}" Command="{Binding FindCommand}" AutomationId="FindPlacesButton"
+                <Label Text="{loc:Translate PlacesSignInRequired}" IsVisible="{Binding NeedsSignIn}" FontSize="13" LineBreakMode="WordWrap"
+                       TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+                <Button Text="{loc:Translate PlacesFind}" Command="{Binding FindCommand}" AutomationId="FindPlacesButton"
+                        ImageSource="{StaticResource PlaceFindIcon}" ContentLayout="Left,8"
                         HeightRequest="48" CornerRadius="14" FontAttributes="Bold"
                         BackgroundColor="{StaticResource PackoAccentLight}" TextColor="White" />
             </VerticalStackLayout>
@@ -52,8 +97,13 @@
                 <Label Text="{loc:Translate PlacesLocalList}" FontSize="12" LineBreakMode="WordWrap"
                        TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
                 <Button Text="{loc:Translate PlacesAddManual}" Clicked="OnAddManualClicked" IsEnabled="{Binding CanEdit}"
+                        ImageSource="{StaticResource PlaceAddIcon}" ContentLayout="Left,8"
                         HeightRequest="48" CornerRadius="14" FontAttributes="Bold"
                         BackgroundColor="{StaticResource PackoAccentLight}" TextColor="White" />
+                <Button Text="{loc:Translate PlacesClearList}" Clicked="OnClearListClicked" AutomationId="ClearPlacesButton"
+                        IsVisible="{Binding HasSaved}" IsEnabled="{Binding CanClearSaved}"
+                        ImageSource="{StaticResource PlaceClearIcon}" Style="{StaticResource PlaceDangerButton}"
+                        HorizontalOptions="Start" Margin="0" FontSize="13" FontAttributes="Bold" />
             </VerticalStackLayout>
             <HorizontalStackLayout IsVisible="{Binding IsWorking}" Spacing="10">
                 <ActivityIndicator IsRunning="{Binding IsWorking}" Color="{StaticResource PackoAccentLight}" WidthRequest="24" />
@@ -77,37 +127,64 @@
                         <VerticalStackLayout Spacing="10">
                             <Label Text="{Binding CategoryLabel}" FontSize="11" FontAttributes="Bold" CharacterSpacing="1"
                                    TextColor="{AppThemeBinding Light={StaticResource PackoShellAccentLight}, Dark={StaticResource PackoAccentDark}}" />
-                            <Label Text="{Binding Place.Name}" FontSize="18" FontAttributes="Bold" LineBreakMode="WordWrap"
+                            <Label Text="{Binding DisplayName}" FontSize="18" FontAttributes="Bold" LineBreakMode="WordWrap"
                                    TextColor="{AppThemeBinding Light={StaticResource PackoPrimaryTextLight}, Dark={StaticResource PackoPrimaryTextDark}}" />
-                            <Label Text="{Binding Place.Description}" IsVisible="{Binding HasDescription}" FontSize="14" LineBreakMode="WordWrap"
+                            <Label Text="{Binding DisplayDescription}" IsVisible="{Binding HasDescription}" FontSize="14" LineBreakMode="WordWrap"
                                    TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+                            <Label Text="{Binding Place.UserNote}" IsVisible="{Binding HasNote}" FontSize="14" LineBreakMode="WordWrap"
+                                   TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding Place.Attributions}" Spacing="2">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="PlaceAttribution">
+                                        <Label Text="{Binding Name}" FontSize="12" TextDecorations="Underline"
+                                               TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}">
+                                            <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnAttributionTapped" /></Label.GestureRecognizers>
+                                        </Label>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </VerticalStackLayout>
                             <FlexLayout Wrap="Wrap" Direction="Row" AlignItems="Center">
-                                <Button Text="{loc:Translate PlacesMap}" Clicked="OnMapClicked" Margin="0,0,6,6" HeightRequest="44" CornerRadius="12" FontSize="12"
-                                        BackgroundColor="{AppThemeBinding Light={StaticResource PackoAccentSoftLight}, Dark={StaticResource PackoAccentSoftDark}}"
-                                        TextColor="{AppThemeBinding Light={StaticResource PackoShellAccentLight}, Dark={StaticResource PackoAccentDark}}" />
+                                <Button Text="{loc:Translate PlacesMap}" Clicked="OnMapClicked"
+                                        Style="{StaticResource PlaceActionButton}" ImageSource="{StaticResource PlaceMapIcon}" />
                                 <Button Text="{loc:Translate PlacesWebsite}" Clicked="OnWebsiteClicked" IsVisible="{Binding HasWebsite}"
-                                        Margin="0,0,6,6" HeightRequest="44" CornerRadius="12" FontSize="12"
-                                        BackgroundColor="{AppThemeBinding Light={StaticResource PackoAccentSoftLight}, Dark={StaticResource PackoAccentSoftDark}}"
-                                        TextColor="{AppThemeBinding Light={StaticResource PackoShellAccentLight}, Dark={StaticResource PackoAccentDark}}" />
+                                        Style="{StaticResource PlaceActionButton}" ImageSource="{StaticResource PlaceWebsiteIcon}" />
                                 <Button Text="Wikipedia" Clicked="OnSourceClicked" IsVisible="{Binding HasSource}"
-                                        Margin="0,0,6,6" HeightRequest="44" CornerRadius="12" FontSize="12" BackgroundColor="Transparent"
-                                        TextColor="{AppThemeBinding Light={StaticResource PackoShellAccentLight}, Dark={StaticResource PackoAccentDark}}" />
+                                        Style="{StaticResource PlaceActionButton}" ImageSource="{StaticResource PlaceWebsiteIcon}" />
+                                <Button Text="{loc:Translate PlacesPhotos}" Clicked="OnDetailsClicked" IsVisible="{Binding IsGoogle}"
+                                        Style="{StaticResource PlaceActionButton}" ImageSource="{StaticResource PlacePhotosIcon}" />
                             </FlexLayout>
                             <Button Text="{Binding SaveLabel}" Clicked="OnSaveClicked" IsVisible="{Binding ShowSaveAction}" IsEnabled="{Binding CanSave}"
+                                    ImageSource="{StaticResource PlaceAddIcon}" ContentLayout="Left,6"
                                     HeightRequest="46" CornerRadius="13" FontAttributes="Bold"
-                                    BackgroundColor="{StaticResource PackoAccentLight}" TextColor="White" />
-                            <Grid IsVisible="{Binding ShowSavedActions}" IsEnabled="{Binding CanEdit}"
-                                  ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                                <Button Text="{Binding VisitLabel}" Clicked="OnVisitClicked" HeightRequest="46" CornerRadius="13" FontSize="13"
-                                        BackgroundColor="{AppThemeBinding Light={StaticResource PackoAccentSoftLight}, Dark={StaticResource PackoAccentSoftDark}}"
-                                        TextColor="{AppThemeBinding Light={StaticResource PackoShellAccentLight}, Dark={StaticResource PackoAccentDark}}" />
-                                <Button Grid.Column="1" Text="{loc:Translate PlacesRemove}" Clicked="OnRemoveClicked" HeightRequest="46" CornerRadius="13" FontSize="13"
-                                        BackgroundColor="Transparent"
-                                        TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
-                            </Grid>
+                                    BackgroundColor="{StaticResource PackoAccentLight}" TextColor="White">
+                                <Button.Triggers>
+                                    <DataTrigger TargetType="Button" Binding="{Binding IsSaved}" Value="True">
+                                        <Setter Property="ImageSource" Value="{StaticResource PlaceSavedIcon}" />
+                                    </DataTrigger>
+                                </Button.Triggers>
+                            </Button>
+                            <VerticalStackLayout IsVisible="{Binding ShowSavedActions}" IsEnabled="{Binding CanEdit}" Spacing="8">
+                                <Button Text="{Binding VisitLabel}" Clicked="OnVisitClicked" Margin="0"
+                                        Style="{StaticResource PlaceActionButton}" ImageSource="{StaticResource PlaceVisitedIcon}" />
+                                <FlexLayout Wrap="Wrap" Direction="Row" AlignItems="Center">
+                                    <Button Text="{loc:Translate PlacesMyNote}" Clicked="OnEditPlaceClicked" IsVisible="{Binding IsGoogle}"
+                                            Style="{StaticResource PlaceActionButton}" ImageSource="{StaticResource PlaceNoteIcon}" />
+                                    <Button Text="{loc:Translate PlacesEditPlace}" Clicked="OnEditPlaceClicked" IsVisible="{Binding IsManual}"
+                                            Style="{StaticResource PlaceActionButton}" ImageSource="{StaticResource PlaceNoteIcon}" />
+                                    <Button Text="{loc:Translate PlacesRemove}" Clicked="OnRemoveClicked"
+                                            Style="{StaticResource PlaceDangerButton}" ImageSource="{StaticResource PlaceRemoveIcon}" />
+                                </FlexLayout>
+                            </VerticalStackLayout>
                         </VerticalStackLayout>
                     </Border>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
     </CollectionView>
+    <Button Grid.Row="1" Text="Google Maps" Clicked="OnGoogleMapsClicked" IsVisible="{Binding HasGooglePlaces}"
+            ImageSource="{StaticResource PlaceExternalIcon}" ContentLayout="Right,6"
+            SemanticProperties.Hint="{loc:Translate PlacesOpenGoogleMaps}" AutomationId="PlacesGoogleMapsAttribution"
+            HorizontalOptions="Center" HeightRequest="44" Margin="22,0,22,4" Padding="12,0"
+            BackgroundColor="Transparent" BorderWidth="0" FontSize="12" FontAttributes="None"
+            TextColor="{AppThemeBinding Light=#1F1F1F, Dark=White}" />
+    </Grid>
 </ContentPage>

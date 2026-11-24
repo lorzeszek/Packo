@@ -296,23 +296,22 @@
   <data name="DeleteAccountLocalCleanupFailed" xml:space="preserve"><value>Your account was deleted and you have been signed out, but some data on this device could not be cleared.</value></data>
   <data name="PlacesTitle" xml:space="preserve"><value>Places to visit</value></data>
   <data name="PlacesEntryIntro" xml:space="preserve"><value>Discover interesting places nearby and save your favourites for this trip.</value></data>
-  <data name="PlacesEntryCount" xml:space="preserve"><value>Saved places: {0}. Your list is also available offline.</value></data>
+  <data name="PlacesEntryCount" xml:space="preserve"><value>Saved places: {0}. Your own labels and notes are available offline.</value></data>
   <data name="PlacesOpen" xml:space="preserve"><value>Explore places</value></data>
   <data name="PlacesSuggestions" xml:space="preserve"><value>Suggestions</value></data>
   <data name="PlacesSavedCount" xml:space="preserve"><value>Saved · {0}</value></data>
-  <data name="PlacesIntro" xml:space="preserve"><value>Find places within 10 km of your destination, selected with AI. Check opening hours and tickets on the place’s website.</value></data>
+  <data name="PlacesIntro" xml:space="preserve"><value>Find places from Google Maps for your destination. Places on your saved list are excluded from suggestions.</value></data>
   <data name="PlacesOffline" xml:space="preserve"><value>Finding places is only available online. You can view and edit saved places offline.</value></data>
-  <data name="PlacesLocalList" xml:space="preserve"><value>Your personal list on this device. Available without an internet connection.</value></data>
+  <data name="PlacesLocalList" xml:space="preserve"><value>Your list on this device. Your labels and notes work offline; Google Maps information is available online.</value></data>
   <data name="PlacesFind" xml:space="preserve"><value>Find suggestions</value></data>
-  <data name="PlacesFindMore" xml:space="preserve"><value>Find more suggestions</value></data>
-  <data name="PlacesSave" xml:space="preserve"><value>+ Save</value></data>
-  <data name="PlacesAlreadySaved" xml:space="preserve"><value>✓ Saved</value></data>
-  <data name="PlacesVisited" xml:space="preserve"><value>✓ Visited</value></data>
+  <data name="PlacesSave" xml:space="preserve"><value>Save</value></data>
+  <data name="PlacesAlreadySaved" xml:space="preserve"><value>Saved</value></data>
+  <data name="PlacesVisited" xml:space="preserve"><value>Visited</value></data>
   <data name="PlacesMarkVisited" xml:space="preserve"><value>Mark as visited</value></data>
   <data name="PlacesRemove" xml:space="preserve"><value>Remove</value></data>
   <data name="PlacesMap" xml:space="preserve"><value>Map</value></data>
   <data name="PlacesWebsite" xml:space="preserve"><value>Website</value></data>
-  <data name="PlacesAddManual" xml:space="preserve"><value>+ Add your own place</value></data>
+  <data name="PlacesAddManual" xml:space="preserve"><value>Add your own place</value></data>
   <data name="PlacesName" xml:space="preserve"><value>Place name</value></data>
   <data name="PlacesAddress" xml:space="preserve"><value>Address or town</value></data>
   <data name="PlacesNote" xml:space="preserve"><value>Note (optional)</value></data>
@@ -321,7 +320,7 @@
   <data name="PlacesWorking" xml:space="preserve"><value>Preparing places…</value></data>
   <data name="PlacesSuggestionsEmpty" xml:space="preserve"><value>Tap “Find suggestions” to discover places for this trip.</value></data>
   <data name="PlacesSavedEmpty" xml:space="preserve"><value>Your saved places will appear here. Choose a suggestion or add your own place.</value></data>
-  <data name="PlacesNoMore" xml:space="preserve"><value>No more places were found nearby. You can add your own place under Saved. For a broad destination, try entering a specific town in the trip details.</value></data>
+  <data name="PlacesNoMore" xml:space="preserve"><value>No suggestions outside your saved list were found. You can make the destination more specific or add your own place.</value></data>
   <data name="PlacesSearchFailed" xml:space="preserve"><value>Couldn’t prepare suggestions. Check your connection and try again.</value></data>
   <data name="PlacesLoadFailed" xml:space="preserve"><value>Couldn’t load your places. Open this screen again.</value></data>
   <data name="PlacesSaveFailed" xml:space="preserve"><value>Couldn’t save the change. Please try again.</value></data>
@@ -354,4 +353,30 @@
   <data name="TripsCurrentSection" xml:space="preserve"><value>Happening now</value></data>
   <data name="TripsUpcomingSection" xml:space="preserve"><value>Upcoming trips</value></data>
   <data name="TripsPastSection" xml:space="preserve"><value>Past trips</value></data>
+  <data name="PlacesSignInRequired" xml:space="preserve"><value>Sign in to find places from Google Maps.</value></data>
+  <data name="PlacesQuotaExceeded" xml:space="preserve"><value>The request limit has been reached. Please try again later.</value></data>
+  <data name="PlacesNotFound" xml:space="preserve"><value>This place is no longer available in Google Maps.</value></data>
+  <data name="PlacesNotConfigured" xml:space="preserve"><value>The places service is not ready yet. Please try again later.</value></data>
+  <data name="PlacesSavedGoogle" xml:space="preserve"><value>Saved place</value></data>
+  <data name="PlacesPhotos" xml:space="preserve"><value>Photos</value></data>
+  <data name="PlacesMyNote" xml:space="preserve"><value>My note</value></data>
+  <data name="PlacesOwnLabel" xml:space="preserve"><value>Your label (optional)</value></data>
+  <data name="PlacesCloseDetails" xml:space="preserve"><value>Close</value></data>
+  <data name="PlacesNoWebsite" xml:space="preserve"><value>No website is available for this place.</value></data>
+  <data name="PlacesPhotoSource" xml:space="preserve"><value>Photo source</value></data>
+  <data name="PlacesRequestTooSoon" xml:space="preserve"><value>Wait 2 seconds before trying again.</value></data>
+  <data name="PlacesSearchDailyLimit" xml:space="preserve"><value>The daily place search limit has been reached. Try again after the limit resets.</value></data>
+  <data name="PlacesDetailsDailyLimit" xml:space="preserve"><value>The daily place details limit has been reached. Saved notes and the map are still available.</value></data>
+  <data name="PlacesPhotoDailyLimit" xml:space="preserve"><value>The daily photo limit has been reached. Place information and the map are still available.</value></data>
+  <data name="PlacesWebsiteDailyLimit" xml:space="preserve"><value>The daily website lookup limit has been reached. You can open the place in Google Maps.</value></data>
+  <data name="PlacesGoogleRateLimited" xml:space="preserve"><value>Google Maps is limiting requests right now. Please try again later.</value></data>
+  <data name="PlacesPhotoFailed" xml:space="preserve"><value>Couldn’t load the photo. Place information is still available.</value></data>
+  <data name="PlacesDetailsFailed" xml:space="preserve"><value>Couldn’t load place details. Please try again later.</value></data>
+  <data name="PlacesRemoveTitle" xml:space="preserve"><value>Remove place</value></data>
+  <data name="PlacesRemoveConfirm" xml:space="preserve"><value>Remove “{0}” from your saved places? Its note and visited status will also be removed.</value></data>
+  <data name="PlacesClearList" xml:space="preserve"><value>Clear list</value></data>
+  <data name="PlacesClearListConfirm" xml:space="preserve"><value>Remove all saved places ({0}) for this trip, including their notes and visited status?</value></data>
+  <data name="PlacesOpenGoogleMaps" xml:space="preserve"><value>Open this destination in Google Maps</value></data>
+  <data name="PlacesNoPhotos" xml:space="preserve"><value>No photos are available for this place.</value></data>
+  <data name="PlacesEditPlace" xml:space="preserve"><value>Edit place</value></data>
 </root>

@@ -9,15 +9,15 @@
     <Border x:Name="PopupCard" Style="{StaticResource PackoPopupCardStyle}">
         <ScrollView>
             <VerticalStackLayout Spacing="12">
-                <Label Text="{loc:Translate PlacesAddManual}" Style="{StaticResource PackoPopupTitleStyle}" />
-                <Label Text="{loc:Translate PlacesName}" Style="{StaticResource PackoFieldCaptionStyle}" />
+                <Label x:Name="TitleLabel" Text="{loc:Translate PlacesAddManual}" Style="{StaticResource PackoPopupTitleStyle}" />
+                <Label x:Name="NameCaption" Text="{loc:Translate PlacesName}" Style="{StaticResource PackoFieldCaptionStyle}" />
                 <Entry x:Name="NameEntry" MaxLength="120" TextChanged="OnInputChanged"
                        Placeholder="{loc:Translate PlacesName}" MinimumHeightRequest="48" />
-                <Label Text="{loc:Translate PlacesAddress}" Style="{StaticResource PackoFieldCaptionStyle}" />
+                <Label x:Name="AddressCaption" Text="{loc:Translate PlacesAddress}" Style="{StaticResource PackoFieldCaptionStyle}" />
                 <Entry x:Name="AddressEntry" MaxLength="250" MinimumHeightRequest="48" Placeholder="{loc:Translate PlacesAddress}" />
                 <Label Text="{loc:Translate PlacesNote}" Style="{StaticResource PackoFieldCaptionStyle}" />
                 <Editor x:Name="NoteEditor" MaxLength="500" HeightRequest="80" AutoSize="TextChanges" />
-                <Label Text="{loc:Translate PlacesOptionalWebsite}" Style="{StaticResource PackoFieldCaptionStyle}" />
+                <Label x:Name="WebsiteCaption" Text="{loc:Translate PlacesOptionalWebsite}" Style="{StaticResource PackoFieldCaptionStyle}" />
                 <Entry x:Name="WebsiteEntry" Keyboard="Url" MaxLength="2000" TextChanged="OnInputChanged"
                        Placeholder="https://" MinimumHeightRequest="48" />
                 <Label x:Name="UrlError" Text="{loc:Translate PlacesInvalidUrl}" IsVisible="False" FontSize="12"

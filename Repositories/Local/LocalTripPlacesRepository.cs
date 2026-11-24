@@ -22,17 +22,22 @@ public sealed class LocalTripPlacesRepository(SQLiteAsyncConnection db) : ITripP
         ChangeAsync(trip, state => state with
         {
             ContextKey = contextKey,
-            Suggestions = places.DistinctBy(x => x.Id).Take(8).ToList(),
-            SeenIds = (state.ContextKey == contextKey ? state.SeenIds ?? [] : [])
-                .Concat(places.Select(x => x.Id)).Distinct().TakeLast(200).ToList()
+            Suggestions = places.DistinctBy(x => x.Id).Take(8).ToList()
         });
 
     public Task<TripPlacesState> SaveAsync(TripDTO trip, TripPlace place) =>
-        ChangeAsync(trip, state => state.Saved.Any(x => x.Place.Id == place.Id) ? state
+        ChangeAsync(trip, state => state.Saved.Any(x => x.Place.Id == place.Id)
+            ? state with { Saved = state.Saved.Select(x => x.Place.Id != place.Id ? x
+                : x.Place.IsGoogle && place.IsGoogle
+                    ? x with { Place = x.Place with { UserLabel = place.UserLabel, UserNote = place.UserNote } }
+                    : x.Place.IsManual && place.IsManual ? x with { Place = place } : x).ToList() }
             : state with { Saved = [.. state.Saved, new SavedTripPlace(place)] });
 
     public Task<TripPlacesState> RemoveAsync(TripDTO trip, string placeId) =>
         ChangeAsync(trip, state => state with { Saved = state.Saved.Where(x => x.Place.Id != placeId).ToList() });
+
+    public Task<TripPlacesState> ClearSavedAsync(TripDTO trip) =>
+        ChangeAsync(trip, state => state with { Saved = [] });
 
     public Task<TripPlacesState> SetVisitedAsync(TripDTO trip, string placeId, bool visited) =>
         ChangeAsync(trip, state => state with
@@ -53,7 +58,11 @@ public sealed class LocalTripPlacesRepository(SQLiteAsyncConnection db) : ITripP
             connection.InsertOrReplace(new SQLiteTripPlaces
             {
                 Key = Key(trip), LocalUserId = trip.LocalUserId, LocalTripId = trip.LocalTripId,
-                RemoteTripId = trip.RemoteTripId, StateJson = JsonSerializer.Serialize(updated)
+                RemoteTripId = trip.RemoteTripId, StateJson = JsonSerializer.Serialize(updated with
+                {
+                    Suggestions = updated.Suggestions.Select(x => x.ForStorage()).ToList(),
+                    Saved = updated.Saved.Select(x => x with { Place = x.Place.ForStorage() }).ToList()
+                })
             });
         });
         return updated;

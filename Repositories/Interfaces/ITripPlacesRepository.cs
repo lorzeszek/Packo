@@ -9,5 +9,6 @@ public interface ITripPlacesRepository
     Task<TripPlacesState> ReplaceSuggestionsAsync(TripDTO trip, string contextKey, IReadOnlyList<TripPlace> places);
     Task<TripPlacesState> SaveAsync(TripDTO trip, TripPlace place);
     Task<TripPlacesState> RemoveAsync(TripDTO trip, string placeId);
+    Task<TripPlacesState> ClearSavedAsync(TripDTO trip);
     Task<TripPlacesState> SetVisitedAsync(TripDTO trip, string placeId, bool visited);
 }

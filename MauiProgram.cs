@@ -216,7 +216,8 @@ namespace Packo
             builder.Services.AddSingleton<IAIService, AIService>();
             builder.Services.AddSingleton<IPackingSuggestionService, PackingSuggestionService>();
             builder.Services.AddSingleton<ITripClassificationService, TripClassificationService>();
-            builder.Services.AddHttpClient<IPlaceSuggestionService, PlaceSuggestionService>(client => client.Timeout = TimeSpan.FromSeconds(20));
+            builder.Services.AddHttpClient<IPlacesTransport, SupabasePlacesTransport>(client => client.Timeout = TimeSpan.FromSeconds(25));
+            builder.Services.AddTransient<IPlaceSuggestionService, PlaceSuggestionService>();
             builder.Services.AddHttpClient<WeatherService>(client => client.Timeout = TimeSpan.FromSeconds(15));
             builder.Services.AddSingleton<IWeatherPreloadService, WeatherPreloadService>();
 

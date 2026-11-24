@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<toolkit:Popup x:TypeArguments="models:TripPlace" x:Class="Packo.Popups.TripPlaceDetailsPopup"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:models="clr-namespace:Packo.Models"
+    xmlns:loc="clr-namespace:Packo.Extensions"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    Padding="0" CanBeDismissedByTappingOutsideOfPopup="False">
+    <Border x:Name="PopupCard" Style="{StaticResource PackoPopupCardStyle}">
+        <ScrollView>
+            <VerticalStackLayout Spacing="12">
+                <Label Text="{loc:Translate PlacesPhotos}" FontSize="13" FontAttributes="Bold"
+                       HorizontalTextAlignment="Center"
+                       TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+                <Label x:Name="NameLabel" Style="{StaticResource PackoPopupTitleStyle}" />
+                <Label x:Name="AddressLabel" FontSize="14" LineBreakMode="WordWrap"
+                       TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+                <Label Text="Google Maps" FontSize="12" FontAttributes="None" LineBreakMode="NoWrap"
+                       TextColor="{AppThemeBinding Light=#1F1F1F, Dark=White}" />
+                <VerticalStackLayout x:Name="Attributions" Spacing="4" />
+                <ActivityIndicator x:Name="Loading" IsRunning="True" Color="{StaticResource PackoAccentLight}" />
+                <Image x:Name="Photo" IsVisible="False" Aspect="AspectFit" HeightRequest="220" />
+                <VerticalStackLayout x:Name="PhotoAuthors" Spacing="4" />
+                <Label x:Name="MessageLabel" IsVisible="False" FontSize="13" LineBreakMode="WordWrap"
+                       TextColor="{AppThemeBinding Light={StaticResource PackoSecondaryTextLight}, Dark={StaticResource PackoSecondaryTextDark}}" />
+                <Button Text="{loc:Translate PlacesCloseDetails}" Clicked="OnCloseClicked" Style="{StaticResource PackoPopupPrimaryButtonStyle}" />
+            </VerticalStackLayout>
+        </ScrollView>
+    </Border>
+</toolkit:Popup>

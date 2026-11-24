@@ -1,0 +1,7 @@
+project_id = "PackMeUp"
+
+[functions.trip-places]
+# The handler validates every bearer token with Auth before quota or Google calls.
+# This supports both legacy HS256 and newer asymmetric Supabase signing keys.
+verify_jwt = false
+entrypoint = "./functions/trip-places/index.ts"

@@ -226,23 +226,22 @@
   <data name="DeleteAccountLocalCleanupFailed" xml:space="preserve"><value>Konto zostało usunięte i nastąpiło wylogowanie, ale nie udało się wyczyścić wszystkich danych na tym urządzeniu.</value></data>
   <data name="PlacesTitle" xml:space="preserve"><value>Miejsca do odwiedzenia</value></data>
   <data name="PlacesEntryIntro" xml:space="preserve"><value>Odkryj ciekawe miejsca w okolicy i zapisz wybrane na ten wyjazd.</value></data>
-  <data name="PlacesEntryCount" xml:space="preserve"><value>Zapisano miejsc: {0}. Twoja lista jest dostępna także offline.</value></data>
+  <data name="PlacesEntryCount" xml:space="preserve"><value>Zapisano miejsc: {0}. Twoje własne nazwy i notatki są dostępne offline.</value></data>
   <data name="PlacesOpen" xml:space="preserve"><value>Zobacz miejsca</value></data>
   <data name="PlacesSuggestions" xml:space="preserve"><value>Propozycje</value></data>
   <data name="PlacesSavedCount" xml:space="preserve"><value>Zapisane · {0}</value></data>
-  <data name="PlacesIntro" xml:space="preserve"><value>Znajdź propozycje w promieniu 10 km od celu wyjazdu, dopasowane z pomocą AI. Godziny otwarcia i bilety sprawdzisz na stronie miejsca.</value></data>
+  <data name="PlacesIntro" xml:space="preserve"><value>Znajdź atrakcje w Google Maps dla celu wyjazdu. Miejsca z listy „Zapisane” pomijamy w propozycjach.</value></data>
   <data name="PlacesOffline" xml:space="preserve"><value>Wyszukiwanie miejsc jest dostępne tylko online. Zapisane miejsca możesz przeglądać i edytować offline.</value></data>
-  <data name="PlacesLocalList" xml:space="preserve"><value>Twoja osobista lista na tym urządzeniu. Dostępna także bez internetu.</value></data>
+  <data name="PlacesLocalList" xml:space="preserve"><value>Twoja lista na tym urządzeniu. Własne nazwy i notatki działają offline; informacje z Google Maps są dostępne online.</value></data>
   <data name="PlacesFind" xml:space="preserve"><value>Znajdź propozycje</value></data>
-  <data name="PlacesFindMore" xml:space="preserve"><value>Pokaż kolejne propozycje</value></data>
-  <data name="PlacesSave" xml:space="preserve"><value>+ Zapisz</value></data>
-  <data name="PlacesAlreadySaved" xml:space="preserve"><value>✓ Zapisano</value></data>
-  <data name="PlacesVisited" xml:space="preserve"><value>✓ Odwiedzone</value></data>
+  <data name="PlacesSave" xml:space="preserve"><value>Zapisz</value></data>
+  <data name="PlacesAlreadySaved" xml:space="preserve"><value>Zapisano</value></data>
+  <data name="PlacesVisited" xml:space="preserve"><value>Odwiedzone</value></data>
   <data name="PlacesMarkVisited" xml:space="preserve"><value>Oznacz jako odwiedzone</value></data>
   <data name="PlacesRemove" xml:space="preserve"><value>Usuń</value></data>
   <data name="PlacesMap" xml:space="preserve"><value>Mapa</value></data>
   <data name="PlacesWebsite" xml:space="preserve"><value>Strona miejsca</value></data>
-  <data name="PlacesAddManual" xml:space="preserve"><value>+ Dodaj własne miejsce</value></data>
+  <data name="PlacesAddManual" xml:space="preserve"><value>Dodaj własne miejsce</value></data>
   <data name="PlacesName" xml:space="preserve"><value>Nazwa miejsca</value></data>
   <data name="PlacesAddress" xml:space="preserve"><value>Adres lub miejscowość</value></data>
   <data name="PlacesNote" xml:space="preserve"><value>Notatka (opcjonalnie)</value></data>
@@ -251,7 +250,7 @@
   <data name="PlacesWorking" xml:space="preserve"><value>Przygotowywanie miejsc…</value></data>
   <data name="PlacesSuggestionsEmpty" xml:space="preserve"><value>Kliknij „Znajdź propozycje”, aby odkryć miejsca dla tej wycieczki.</value></data>
   <data name="PlacesSavedEmpty" xml:space="preserve"><value>Tutaj pojawią się zapisane miejsca. Wybierz propozycję lub dodaj własne miejsce.</value></data>
-  <data name="PlacesNoMore" xml:space="preserve"><value>Nie znaleziono kolejnych miejsc w tej okolicy. Możesz dodać własne miejsce w sekcji „Zapisane”. Dla ogólnego celu podróży spróbuj podać konkretne miasto w danych wycieczki.</value></data>
+  <data name="PlacesNoMore" xml:space="preserve"><value>Nie znaleziono propozycji poza zapisaną listą. Możesz doprecyzować cel wycieczki lub dodać własne miejsce.</value></data>
   <data name="PlacesSearchFailed" xml:space="preserve"><value>Nie udało się przygotować propozycji. Sprawdź połączenie i spróbuj ponownie.</value></data>
   <data name="PlacesLoadFailed" xml:space="preserve"><value>Nie udało się odczytać miejsc. Otwórz ten widok ponownie.</value></data>
   <data name="PlacesSaveFailed" xml:space="preserve"><value>Nie udało się zapisać zmiany. Spróbuj ponownie.</value></data>
@@ -284,4 +283,30 @@
   <data name="TripsCurrentSection" xml:space="preserve"><value>W trakcie</value></data>
   <data name="TripsUpcomingSection" xml:space="preserve"><value>Nadchodzące podróże</value></data>
   <data name="TripsPastSection" xml:space="preserve"><value>Minione podróże</value></data>
+  <data name="PlacesSignInRequired" xml:space="preserve"><value>Zaloguj się, aby wyszukiwać miejsca w Google Maps.</value></data>
+  <data name="PlacesQuotaExceeded" xml:space="preserve"><value>Osiągnięto limit zapytań. Spróbuj ponownie później.</value></data>
+  <data name="PlacesNotFound" xml:space="preserve"><value>To miejsce nie jest już dostępne w Google Maps.</value></data>
+  <data name="PlacesNotConfigured" xml:space="preserve"><value>Usługa miejsc nie jest jeszcze gotowa. Spróbuj ponownie później.</value></data>
+  <data name="PlacesSavedGoogle" xml:space="preserve"><value>Zapisane miejsce</value></data>
+  <data name="PlacesPhotos" xml:space="preserve"><value>Zdjęcia</value></data>
+  <data name="PlacesMyNote" xml:space="preserve"><value>Moja notatka</value></data>
+  <data name="PlacesOwnLabel" xml:space="preserve"><value>Twoja nazwa (opcjonalnie)</value></data>
+  <data name="PlacesCloseDetails" xml:space="preserve"><value>Zamknij</value></data>
+  <data name="PlacesNoWebsite" xml:space="preserve"><value>Dla tego miejsca nie udostępniono strony internetowej.</value></data>
+  <data name="PlacesPhotoSource" xml:space="preserve"><value>Źródło zdjęcia</value></data>
+  <data name="PlacesRequestTooSoon" xml:space="preserve"><value>Odczekaj 2 sekundy przed kolejnym kliknięciem.</value></data>
+  <data name="PlacesSearchDailyLimit" xml:space="preserve"><value>Wykorzystano dzienny limit wyszukiwań miejsc. Spróbuj po odnowieniu limitu.</value></data>
+  <data name="PlacesDetailsDailyLimit" xml:space="preserve"><value>Wykorzystano dzienny limit pobierania szczegółów. Zapisane notatki i mapa nadal są dostępne.</value></data>
+  <data name="PlacesPhotoDailyLimit" xml:space="preserve"><value>Wykorzystano dzienny limit zdjęć. Informacje o miejscu i mapa nadal są dostępne.</value></data>
+  <data name="PlacesWebsiteDailyLimit" xml:space="preserve"><value>Wykorzystano dzienny limit pobierania stron WWW. Możesz otworzyć miejsce w Google Maps.</value></data>
+  <data name="PlacesGoogleRateLimited" xml:space="preserve"><value>Google Maps ograniczyło teraz liczbę zapytań. Spróbuj ponownie później.</value></data>
+  <data name="PlacesPhotoFailed" xml:space="preserve"><value>Nie udało się pobrać zdjęcia. Informacje o miejscu nadal są dostępne.</value></data>
+  <data name="PlacesDetailsFailed" xml:space="preserve"><value>Nie udało się pobrać szczegółów miejsca. Spróbuj ponownie później.</value></data>
+  <data name="PlacesRemoveTitle" xml:space="preserve"><value>Usuń miejsce</value></data>
+  <data name="PlacesRemoveConfirm" xml:space="preserve"><value>Czy usunąć „{0}” z zapisanych miejsc? Notatka i status odwiedzenia tego miejsca też zostaną usunięte.</value></data>
+  <data name="PlacesClearList" xml:space="preserve"><value>Wyczyść listę</value></data>
+  <data name="PlacesClearListConfirm" xml:space="preserve"><value>Czy usunąć wszystkie zapisane miejsca ({0}) dla tej wycieczki wraz z ich notatkami i statusem odwiedzenia?</value></data>
+  <data name="PlacesOpenGoogleMaps" xml:space="preserve"><value>Otwórz cel wycieczki w Google Maps</value></data>
+  <data name="PlacesNoPhotos" xml:space="preserve"><value>Brak dostępnych zdjęć tego miejsca.</value></data>
+  <data name="PlacesEditPlace" xml:space="preserve"><value>Edytuj miejsce</value></data>
 </root>

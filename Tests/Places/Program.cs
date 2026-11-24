@@ -1,8 +1,4 @@
 using System.ComponentModel;
-using System.Net;
-using System.Text;
-using System.Text.Json;
-using Microsoft.Extensions.Configuration;
 using Packo.Models;
 using Packo.Models.DTO;
 using Packo.Models.SQLite;
@@ -117,6 +113,7 @@ try
     tripRow.IsInTrash = true;
     await db.UpdateAsync(tripRow);
     await MustFail(() => repository.SaveAsync(trip, new TripPlace { Id = "orphan", Name = "Orphan" }));
+    await MustFail(() => repository.ClearSavedAsync(trip));
     Check(true, "A deleted or trashed trip cannot acquire new saved data from a late request");
 
     Check(TripPlace.WebUri("javascript:alert(1)") is null && TripPlace.WebUri("file:///secret") is null
@@ -128,20 +125,37 @@ try
     System.Globalization.CultureInfo.CurrentCulture = previousCulture;
     Check(Uri.UnescapeDataString(map.Query).Contains("52.25,21.01"), "Map coordinates are independent of the Polish decimal separator");
 
-    var handler = new Sources();
-    var ai = new SelectionAI();
-    var service = new PlaceSuggestionService(new HttpClient(handler), ai);
-    var places = await service.FindAsync(trip, "en", [], CancellationToken.None);
-    Check(places.Count == 1 && places[0].Id == "Q1" && places[0].Name == "Museum"
-        && places[0].SourceUrl == "https://en.wikipedia.org/?curid=10"
-        && places[0].WebsiteUrl == "https://museum.example/",
-        "AI can only select real candidates; names, coordinates and website links come from the sources");
-    Check(ai.Prompt.Contains("Candidates:") && !ai.Prompt.Contains("invented.example"), "AI receives grounded facts, never controls external links");
-    places = await service.FindAsync(trip, "en", ["Q1"], CancellationToken.None);
-    Check(places.Count == 0 && ai.Requests == 1, "Already seen places are excluded before making an AI request");
-    var selected = PlaceSuggestionService.ParseSelection("```json\n[{\"id\":\"Q1\",\"description\":\"Real place\",\"category\":\"bad\"},{\"id\":\"Q404\",\"description\":\"Invented\"},null]\n```",
-        new Dictionary<string, TripPlace> { ["Q1"] = new() { Id = "Q1", Name = "Real" } });
-    Check(selected.Count == 1 && selected[0].Category == "landmark", "Malformed entries and invented place IDs cannot become suggestions");
+    await GatewayChecks.RunAsync(repository, otherTrip, Check);
+
+    var bobRow = new SQLiteTrip { LocalUserId = "bob", Destination = "Toruń" };
+    await db.InsertAsync(bobRow);
+    var bobTrip = new TripDTO { LocalTripId = bobRow.LocalTripId, LocalUserId = "bob", Destination = "Toruń" };
+    await repository.SaveAsync(bobTrip, new TripPlace { Id = "manual:bob", Name = "Bob's place" });
+    await repository.SaveAsync(otherTrip, new TripPlace { Id = "manual:clear", Name = "Clear me", UserNote = "A local note" });
+    var beforeClear = await repository.LoadAsync(otherTrip);
+    var clearView = new TripPlacesViewModel(repository, finder, session);
+    await clearView.LoadAsync(otherTrip);
+    clearView.SetOnline(false);
+    Check(clearView.CanClearSaved && clearView.SavedCount == 2,
+        "A nonempty saved list can be cleared offline");
+    var requestsBeforeClear = finder.Requests;
+    await clearView.ClearSavedAsync();
+    var afterClear = await repository.LoadAsync(otherTrip);
+    Check(clearView.Items.Count == 0 && !clearView.HasSaved && !clearView.CanClearSaved
+        && afterClear.Saved.Count == 0 && finder.Requests == requestsBeforeClear,
+        "Clearing saved places removes all entries and notes in one local operation without API requests");
+    Check(afterClear.ContextKey == beforeClear.ContextKey
+        && afterClear.Suggestions.Select(x => x.Id).SequenceEqual(beforeClear.Suggestions.Select(x => x.Id))
+        && (await repository.LoadAsync(trip)).Saved.Count == 1
+        && (await repository.LoadAsync(bobTrip)).Saved.Count == 1,
+        "Clearing one list preserves suggestions, other trips and other accounts");
+    var clearedRestart = new TripPlacesViewModel(new LocalTripPlacesRepository(db), finder, session);
+    await clearedRestart.LoadAsync(otherTrip);
+    await clearedRestart.ClearSavedAsync();
+    Check(clearedRestart.SavedCount == 0 && !clearedRestart.CanClearSaved,
+        "An empty saved list remains empty on reload and cannot be cleared again");
+
+    await HistoryEditingChecks.RunAsync(db, repository, Check);
 
     await db.CreateTableAsync<SQLiteUser>();
     await db.InsertAsync(new SQLiteUser { LocalUserId = "guest" });
@@ -158,21 +172,6 @@ try
     Check((await repository.LoadAsync(draft)).Saved.Single().Place.Name == "Draft place",
         "Attaching a guest trip to an existing account transfers the saved-place list and its identity");
 
-    if (args.Contains("--live") || args.Contains("--live-ai"))
-    {
-        IAIService liveAI = new FirstCandidateAI();
-        if (args.Contains("--live-ai"))
-        {
-            var settings = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../appsettings.json"));
-            var configuration = new ConfigurationBuilder().AddJsonFile(settings).Build();
-            liveAI = new AIService(new HttpClient { Timeout = TimeSpan.FromSeconds(60) }, configuration);
-        }
-        var live = new PlaceSuggestionService(new HttpClient { Timeout = TimeSpan.FromSeconds(20) }, liveAI);
-        var livePlaces = await live.FindAsync(new TripDTO { Destination = "Warszawa" }, "pl", [], CancellationToken.None);
-        Check(livePlaces.Count > 0 && livePlaces[0].Latitude.HasValue && livePlaces[0].SourceUrl is not null,
-            "Live Open-Meteo, Wikipedia and Wikidata return usable places" + (args.Contains("--live-ai") ? " with the configured AI service" : " (AI selection uses a local stub)"));
-        Console.WriteLine("Live source place: " + livePlaces[0].Name);
-    }
     Console.WriteLine($"{checks} places checks passed.");
 }
 finally
@@ -203,6 +202,7 @@ sealed class PausedRepository(ITripPlacesRepository inner) : ITripPlacesReposito
     }
     public Task<TripPlacesState> SaveAsync(TripDTO trip, TripPlace place) => inner.SaveAsync(trip, place);
     public Task<TripPlacesState> RemoveAsync(TripDTO trip, string id) => inner.RemoveAsync(trip, id);
+    public Task<TripPlacesState> ClearSavedAsync(TripDTO trip) => inner.ClearSavedAsync(trip);
     public Task<TripPlacesState> SetVisitedAsync(TripDTO trip, string id, bool visited) => inner.SetVisitedAsync(trip, id, visited);
 }
 sealed class Finder : IPlaceSuggestionService
@@ -216,38 +216,5 @@ sealed class Finder : IPlaceSuggestionService
         Started.TrySetResult();
         if (Block) await Task.Delay(Timeout.Infinite, token);
         return [new TripPlace { Id = "Q1", Name = "Museum", Description = "A museum", WebsiteUrl = "https://museum.example" }];
-    }
-}
-sealed class SelectionAI : IAIService
-{
-    public int Requests;
-    public string Prompt = "";
-    public Task<string> GetCompletionAsync(string prompt)
-    {
-        Requests++; Prompt = prompt;
-        return Task.FromResult("[{\"id\":\"Q1\",\"description\":\"A museum\",\"category\":\"culture\",\"websiteUrl\":\"https://invented.example\"},{\"id\":\"Q999\",\"description\":\"Fake\"},{\"id\":\"Q1\",\"description\":\"Duplicate\"}]");
-    }
-}
-sealed class FirstCandidateAI : IAIService
-{
-    public Task<string> GetCompletionAsync(string prompt)
-    {
-        var start = prompt.IndexOf("Candidates: ", StringComparison.Ordinal) + "Candidates: ".Length;
-        var end = prompt.IndexOf('\n', start);
-        using var facts = JsonDocument.Parse(prompt[start..end]);
-        var first = facts.RootElement[0];
-        return Task.FromResult(JsonSerializer.Serialize(new[] { new { id = first.GetProperty("Id").GetString(), category = "landmark", description = first.GetProperty("Description").GetString() } }));
-    }
-}
-sealed class Sources : HttpMessageHandler
-{
-    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken token)
-    {
-        var url = request.RequestUri!.AbsoluteUri;
-        var json = url.Contains("open-meteo") ? "{\"results\":[{\"latitude\":52.25,\"longitude\":21.01}]}"
-            : url.Contains("wikipedia") ? "{\"query\":{\"pages\":[{\"pageid\":10,\"title\":\"Museum\",\"pageprops\":{\"wikibase_item\":\"Q1\"},\"coordinates\":[{\"lat\":52.25,\"lon\":21.01}]}]}}"
-            : url.Contains("props=claims") ? "{\"entities\":{\"Q1\":{\"claims\":{\"P856\":[{\"rank\":\"normal\",\"mainsnak\":{\"datavalue\":{\"value\":\"https://museum.example/\"}}}]}}}}"
-            : "{\"entities\":{\"Q1\":{\"labels\":{\"en\":{\"value\":\"Museum\"}},\"descriptions\":{\"en\":{\"value\":\"museum in Warsaw\"}}}}}";
-        return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(json, Encoding.UTF8, "application/json") });
     }
 }

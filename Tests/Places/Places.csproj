@@ -8,7 +8,6 @@
   <ItemGroup>
     <PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.1" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.5" />
     <Compile Include="../../Models/TripPlace.cs" Link="TripPlace.cs" />
     <Compile Include="../../Models/DTO/TripDTO.cs" Link="TripDTO.cs" />
     <Compile Include="../../Models/Enums/TripType.cs" Link="TripType.cs" />
@@ -18,14 +17,13 @@
     <Compile Include="../../Repositories/Interfaces/ITripPlacesRepository.cs" Link="ITripPlacesRepository.cs" />
     <Compile Include="../../Repositories/Local/LocalTripPlacesRepository.cs" Link="LocalTripPlacesRepository.cs" />
     <Compile Include="../../Services/Interfaces/IPlaceSuggestionService.cs" Link="IPlaceSuggestionService.cs" />
-    <Compile Include="../../Services/Interfaces/IAIService.cs" Link="IAIService.cs" />
+    <Compile Include="../../Services/Interfaces/IPlacesTransport.cs" Link="IPlacesTransport.cs" />
+    <Compile Include="../../Services/PlacesApiException.cs" Link="PlacesApiException.cs" />
     <Compile Include="../../Services/PlaceSuggestionService.cs" Link="PlaceSuggestionService.cs" />
-    <Compile Include="../../Services/AIService.cs" Link="AIService.cs" />
     <Compile Include="../../Services/LocalUserService.cs" Link="LocalUserService.cs" />
     <Compile Include="../../Services/Interfaces/ILocalUserService.cs" Link="ILocalUserService.cs" />
     <Compile Include="../../Models/SQLite/SQLiteUser.cs" Link="SQLiteUser.cs" />
     <Compile Include="../../Models/SQLite/SQLiteTripReminder.cs" Link="SQLiteTripReminder.cs" />
-    <Compile Include="../../Services/RequestObjects/OpenAIResponse.cs" Link="OpenAIResponse.cs" />
     <Compile Include="../../Extensions/ObservableRangeCollection.cs" Link="ObservableRangeCollection.cs" />
     <Compile Include="../../ViewModels/TripPlacesViewModel.cs" Link="TripPlacesViewModel.cs" />
   </ItemGroup>
